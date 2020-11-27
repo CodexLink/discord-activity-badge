@@ -1,13 +1,13 @@
-name: "Python Container Action Template"
-description: "Get started with Python Container actions"
-author: "Jacob Tomlinson"
+name: "ProfileMD DRP Container Action Workflow"
+description: "A docker container that utilizes someone's README and make changes based on Discord Activity."
+author: "Janrey Licas"
 inputs:
-  myInput:
-    description: "Input to use"
-    default: "world"
+  GITHUB_TOKEN:
+    description: "The token of the Github Workflow Instance. To be used in authentication for changes of the repository."
+    required: true
 outputs:
-  myOutput:
-    description: "Output from the action"
+  WORKFLOW_RET_CODE:
+    description: "The Error Code, you can check in the author's repository for more information."
 runs:
   using: "docker"
   image: "Dockerfile"

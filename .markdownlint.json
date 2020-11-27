@@ -1,0 +1,7 @@
+{
+    "MD033": {
+        "allowed_elements": ["div", "h1", "h4"]
+    },
+    "MD013": false,
+    "MD041": false
+}

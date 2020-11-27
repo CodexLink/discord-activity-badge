@@ -1,85 +1,96 @@
-# Python Container Action Template
+<h1 align="center">Discord Rich Presence to Github Profile Badge</h1>
+<h4 align="center">A Dockerized Github Workflow utilizing Discord.py for Rich Presence Display, Powered by Python.</h4>
 
-[![Action Template](https://img.shields.io/badge/Action%20Template-Python%20Container%20Action-blue.svg?colorA=24292e&colorB=0366d6&style=flat&longCache=true&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAM6wAADOsB5dZE0gAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAERSURBVCiRhZG/SsMxFEZPfsVJ61jbxaF0cRQRcRJ9hlYn30IHN/+9iquDCOIsblIrOjqKgy5aKoJQj4O3EEtbPwhJbr6Te28CmdSKeqzeqr0YbfVIrTBKakvtOl5dtTkK+v4HfA9PEyBFCY9AGVgCBLaBp1jPAyfAJ/AAdIEG0dNAiyP7+K1qIfMdonZic6+WJoBJvQlvuwDqcXadUuqPA1NKAlexbRTAIMvMOCjTbMwl1LtI/6KWJ5Q6rT6Ht1MA58AX8Apcqqt5r2qhrgAXQC3CZ6i1+KMd9TRu3MvA3aH/fFPnBodb6oe6HM8+lYHrGdRXW8M9bMZtPXUji69lmf5Cmamq7quNLFZXD9Rq7v0Bpc1o/tp0fisAAAAASUVORK5CYII=)](https://github.com/jacobtomlinson/python-container-action)
-[![Actions Status](https://github.com/jacobtomlinson/python-container-action/workflows/Lint/badge.svg)](https://github.com/jacobtomlinson/python-container-action/actions)
-[![Actions Status](https://github.com/jacobtomlinson/python-container-action/workflows/Integration%20Test/badge.svg)](https://github.com/jacobtomlinson/python-container-action/actions)
+<div align="center">
 
-This is a template for creating GitHub actions and contains a small Python application which will be built into a minimal [Container Action](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-a-docker-container-action). Our final container from this template is ~50MB, yours may be a little bigger once you add some code. If you want something smaller check out my [go-container-action template](https://github.com/jacobtomlinson/go-container-action/actions).
+![Codacy Grade](https://img.shields.io/codacy/grade/d2da8866a48145be8c330a9056b35743?label=Codacy%20Grade&logo=codacy)
+[![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/CodexLink/dquerybotboilerplate?label=CodeFactor%20Grade&logo=codefactor)](https://www.codefactor.io/repository/github/codexlink/dquerybotboilerplate)
+[![Repository License](https://img.shields.io/badge/Repo%20License-MIT-blueviolet)](https://github.com/CodexLink/discord-rich-presence-activity-badge/blob/main/LICENSE)
+</div>
 
-In `main.py` you will find a small example of accessing Action inputs and returning Action outputs. For more information on communicating with the workflow see the [development tools for GitHub Actions](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/development-tools-for-github-actions).
+## Welcome
 
-> 🏁 To get started, click the `Use this template` button on this repository [which will create a new repository based on this template](https://github.blog/2019-06-06-generate-new-repositories-with-repository-templates/).
+To be constructed.
 
 ## Usage
 
-Describe how to use your action here.
+The usage of this workflow action is similarly the same to other actions. You need to instantiate the name of this repo with `uses` in `step` along `with` required parameters.
 
-### Example workflow
+### Workflow
 
-```yaml
-name: My Workflow
-on: [push, pull_request]
+The following `YAML` workflow is a bare-minimum that you may need to paste on your profile's repo located in `.github/actions` .
+
+``` yaml
+name: Discord Rich Presence Activity Badge
+on:
+  schedule:
+
+    - cron: "30 0-23 * * *" # Customizable 15 Minutes Less Not Allowed!, At minute 30 past every hour from 0 through 23.
+
+  workflow_dispatch:
+
 jobs:
-  build:
+  BadgeUpdater:
+    name: Discord Activity Watcher
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@master
-    - name: Run action
 
-      # Put your action repo here
-      uses: me/myaction@master
+      - name: Step 1 | Repository Checkout
+      - uses: actions/checkout@master
 
-      # Put an example of your mandatory inputs here
-      with:
-        myInput: world
+      - name: Step 2 | Update README Discord Badge to Latest Upstream
+      - uses: CodexLink/discord-rich-presence-activity-badge@main
+
+        with:
+          # These are required inputs.
+          # More information on README - Parameters Section.
+          WORKFLOW_INSTANCE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCORD_USERNAME: ${{ secrets.DISCORD_USERNAME }}
+          DISCORD_USERNAME_TAG: ${{ secrets.DISCORD_USERNAME_TAG }}
+          OVERRIDE_COMMIT_MESSAGE: 'Discord Activity Reading Finished.'
+
 ```
+> This workflow will work once it has been dispatched (manually), and is on set, to iterate every **30 minutes per hour** to check for the user's status.
 
-### Inputs
+### Parameters
 
-| Input                                             | Description                                        |
+In this section, it contains the required inputs along with customization parameters which are optional.
+
+#### Required Inputs
+
+These inputs are required in order to run the Docker Container or the action workflow that you referred, which is this repo.
+
+| Inputs                                             | Description                                        |
 |------------------------------------------------------|-----------------------------------------------|
-| `myInput`  | An example mandatory input    |
-| `anotherInput` _(optional)_  | An example optional input    |
+| `WORKFLOW_INSTANCE_TOKEN` | An auto-generated token for authentication use in order to make changes to the user's profile `README.md`.    |
+| `DISCORD_USERNAME`  | The user's discord username. `Required` as a target for the status lookup.    |
+| `DISCORD_USERNAME_TAG` | The user's discord unique tag. `Required` as there are other instance were you have a same username to other users.   |
 
-### Outputs
+#### Optional Inputs
 
-| Output                                             | Description                                        |
+These inputs are optional and has the capability to override the display of the badge and the commit message.
+
+| Inputs                                             | Description                                        |
 |------------------------------------------------------|-----------------------------------------------|
-| `myOutput`  | An example output (returns 'Hello world')    |
+| `` | To be constructed.    |
+| ``   | To be constructed.    |
 
 ## Examples
 
-> NOTE: People ❤️ cut and paste examples. Be generous with them!
+With multiple variety of output of this workflow, here's an example of occurences along with Parameters given and the Result.
 
-### Using the optional input
+| Parameters                                             | Result                                        |
+|------------------------------------------------------|-----------------------------------------------|
+| `` | To be constructed.    |
+| ``   | To be constructed.    |
 
-This is how to use the optional input.
+## Credits
 
-```yaml
-with:
-  myInput: world
-  anotherInput: optional
-```
+* [Discord.py](https://github.com/Rapptz/discord.py) — An API wrapper for Discord written in Python.
+* [PEP 8 Guidelines Tl;DR Version](https://realpython.com/python-pep8/#naming-conventions) — Huge thanks to [Jasmine Finer](https://github.com/jasminefiner) (who made the article) for TL;DR or compressed version of PEP 8 Guidelines.
+* [Shields.io](https://shields.io/) — Concise, consistent, and legible badges in SVG and raster format.
 
-### Using outputs
+## License
 
-Show people how to use your outputs in another action.
-
-```yaml
-steps:
-- uses: actions/checkout@master
-- name: Run action
-  id: myaction
-
-  # Put your action name here
-  uses: me/myaction@master
-
-  # Put an example of your mandatory arguments here
-  with:
-    myInput: world
-
-# Put an example of using your outputs here
-- name: Check outputs
-    run: |
-    echo "Outputs - ${{ steps.myaction.outputs.myOutput }}"
-```
+This project is licensed under the **MIT License** by [Janrey Licas](https://github.com/CodexLink) - see the [LICENSE.md](https://github.com/CodexLink/discord-rich-presence-activity-badge/blob/main/LICENSE) file for more information.
