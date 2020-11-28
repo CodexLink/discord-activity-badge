@@ -1,13 +1,88 @@
-name: "ProfileMD DRP Container Action Workflow"
+name: "Discord Rich Presence Activity Badge"
 description: "A docker container that utilizes someone's README and make changes based on Discord Activity."
 author: "Janrey Licas"
 inputs:
-  GITHUB_TOKEN:
+  WORKFLOW_TOKEN:
     description: "The token of the Github Workflow Instance. To be used in authentication for changes of the repository."
     required: true
-outputs:
-  WORKFLOW_RET_CODE:
-    description: "The Error Code, you can check in the author's repository for more information."
+  DISCORD_USERNAME:
+    description: "The user's discord username. Required as a target for the rich presence status lookup."
+    required: true
+  DISCORD_USERNAME_TAG:
+    description: "The user's discord unique tag. Required for user's unique identity."
+    required: true
+  CONTACTABLE_ON_CLICK:
+    description: "The user's discord unique tag. Required for user's unique identity."
+    default: "false"
+    required: false
+  OVERRIDE_DEFAULT_COLOR:
+    description: "Overrides default color of the badge. Ignores the status of user when declared. (Online, AFK, DND, Offline)"
+    required: false
+  OVERRIDE_BADGE_ONLINE_COLOR:
+    description: ""
+    required: false
+  OVERRIDE_BADGE_OFFLINE_COLOR:
+    description: ""
+    required: false
+  OVERRIDE_BADGE_DND_COLOR:
+    description: ""
+    required: false
+  OVERRIDE_BADGE_IDLE_COLOR:
+    description: ""
+    required: false
+
+  HIDE_PRESENCE_STATE:
+    description: ""
+    required: false
+  SHOW_CUSTOM_STATUS_INSTEAD:
+    description: ""
+    required: false
+  SHOW_DETAIL_INSTEAD:
+    description: ""
+    required: false
+  SHOW_TIME_DURATION:
+    description: ""
+    required: false
+
+
+  OVERRIDE_MIN_PRESENCE_ONLINE_COLOR:
+    description: ""
+    required: false
+  OVERRIDE_MIN_PRESENCE_IDLE_COLOR:
+    description: ""
+    required: false
+  OVERRIDE_MIN_PRESENCE_DND_COLOR:
+    description: ""
+    required: false
+  OVERRIDE_MIN_PRESENCE_OFFLINE_COLOR:
+    description: ""
+    required: false
+
+  OVERRIDE_NO_PRESENCE_ONLINE_COLOR:
+    description: ""
+    required: false
+  OVERRIDE_NO_PRESENCE_IDLE_COLOR:
+    description: ""
+    required: false
+  OVERRIDE_NO_PRESENCE_DND_COLOR:
+    description: ""
+    required: false
+  OVERRIDE_NO_PRESENCE_OFFLINE_COLOR:
+    description: ""
+    required: false
+
+  CUSTOM_NO_PRESENCE_ONLINE_STATUS:
+    description: ""
+    required: false
+  CUSTOM_NO_PRESENCE_IDLE_STATUS:
+    description: ""
+    required: false
+  CUSTOM_NO_PRESENCE_DND_STATUS:
+    description: ""
+    required: false
+  CUSTOM_NO_PRESENCE_OFFLINE_STATUS:
+    description: ""
+    required: false
 runs:
   using: "docker"
   image: "Dockerfile"

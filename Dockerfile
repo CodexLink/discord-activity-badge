@@ -1,14 +1,20 @@
-FROM python:3-slim AS builder
-ADD . /app
-WORKDIR /app
 
-# We are installing a dependency here directly into our app source dir
-RUN pip install --target=/app requests
+LABEL name="Discord Rich Presence Activity Badge Container"
+LABEL version="beta.0.11282020"
+LABEL description="A containerized python application that aims to display User's Discord Rich Presence to their Github Profile Badge."
+LABEL maintainer="Janrey 'CodexLink' Licas <self.codexlink@gmail.com>"
 
-# A distroless container image with Python and some basics like SSL certificates
-# https://github.com/GoogleContainerTools/distroless
+FROM python:3.8-slim-buster as base-img-env
+
+RUN pip install pipenv
+RUN pipenv install
+RUN pipenv shell
+
+WORKDIR /src
+
 FROM gcr.io/distroless/python3-debian10
-COPY --from=builder /app /app
-WORKDIR /app
-ENV PYTHONPATH /app
+COPY --from=base-img-env /src /src
+
+WORKDIR /src
 CMD ["/app/src/entrypoint.py"]
+# CMD ["/app/src/main.py"]

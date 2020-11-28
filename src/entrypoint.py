@@ -1,15 +1,14 @@
 #
-# # entrypoint.py |  A Client's Workflow of Entrypoint. Used by Github Workflows...
+# # entrypoint.py | A Client's Workflow of Entrypoint.
+# * Executed in Docker Container as Main Entrypoint.
 # ! Created by Janrey "CodexLink" Licas
 
 from .attributes.constants import *
 from sys import argv
-from ast import literal_eval
+from os import
 import discord
 
 class DiscBadgeWorkflow(object):
-    # * Parameter Checking with Optional Argument "discPresenceMap".
-    # * discPresenceMap is used for Updating User's README.md.
     def __init__(self, entryMode, **discPresenceMap=None):
         if not entryMode:
             raise SystemExit(

@@ -1,0 +1,9 @@
+# Set of Files to Ignore to Docker Client Filesystem
+
+.tests
+docs/*
+assets/*
+.github/*
+README.md
+Pipfile
+Pipfile.lock

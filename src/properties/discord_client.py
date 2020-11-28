@@ -4,10 +4,9 @@
 # * For use both, workflow_entrypoint.py.
 
 import discord
-from handler_attributes import handler_intents
 
 class DiscordClientHandler(discord.Client):
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         print("Client Bot {0}".format(self.user))
         # self.change_presence(status=discord.Status.online, activity=)
 
@@ -16,7 +15,4 @@ class DiscordClientHandler(discord.Client):
 
 
 if __name__ == "__main__":
-    print("Preparing Discord Client Intents.")
-
-    client = DiscordClientHandler(intent=handler_intents)
-    client.run("None")
+    raise SystemExit("You're about to run a Properties Module which is not allowed! Run the src/entrypoint.py instead!")

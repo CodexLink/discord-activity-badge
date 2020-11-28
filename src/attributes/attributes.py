@@ -3,7 +3,8 @@ if __name__ == "__main__":
         "You're about to run an Attribute Module which is not allowed! Run the src/entrypoint.py instead!"
     )
 else:
-    from datetime import timedelta as timeConstraint
+    from discord import Intents
     from typing import Final
 
-    _ALLOWABLE_TIME_TO_COMMIT: Final = timeConstraint(minutes=30)
+    client_intents = Intents.none()
+    client_intents.presence = True

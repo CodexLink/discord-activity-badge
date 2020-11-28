@@ -4,6 +4,7 @@
 <div align="center">
 
 ![Codacy Grade](https://img.shields.io/codacy/grade/d2da8866a48145be8c330a9056b35743?label=Codacy%20Grade&logo=codacy)
+
 [![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/CodexLink/dquerybotboilerplate?label=CodeFactor%20Grade&logo=codefactor)](https://www.codefactor.io/repository/github/codexlink/dquerybotboilerplate)
 [![Repository License](https://img.shields.io/badge/Repo%20License-MIT-blueviolet)](https://github.com/CodexLink/discord-rich-presence-activity-badge/blob/main/LICENSE)
 </div>
@@ -51,6 +52,7 @@ jobs:
           OVERRIDE_COMMIT_MESSAGE: 'Discord Activity Reading Finished.'
 
 ```
+
 > This workflow will work once it has been dispatched (manually), and is on set, to iterate every **30 minutes per hour** to check for the user's status.
 
 ### Parameters
@@ -63,33 +65,66 @@ These inputs are required in order to run the Docker Container or the action wor
 
 | Inputs                                             | Description                                        |
 |------------------------------------------------------|-----------------------------------------------|
-| `WORKFLOW_INSTANCE_TOKEN` | An auto-generated token for authentication use in order to make changes to the user's profile `README.md`.    |
-| `DISCORD_USERNAME`  | The user's discord username. `Required` as a target for the status lookup.    |
+| `WORKFLOW_TOKEN` | An auto-generated token for authentication use in order to make changes to the user's profile `README.md` .    |
+| `DISCORD_USERNAME` | The user's discord username. Required as a target for the rich presence status lookup.    |
 | `DISCORD_USERNAME_TAG` | The user's discord unique tag. `Required` as there are other instance were you have a same username to other users.   |
 
 #### Optional Inputs
 
 These inputs are optional and has the capability to override the display of the badge and the commit message.
 
-| Inputs                                             | Description                                        |
-|------------------------------------------------------|-----------------------------------------------|
-| `` | To be constructed.    |
-| ``   | To be constructed.    |
+To make ease with the usage of these optional inputs, please check the results of the table row for each command.
+
+| Input       | Type        | Description | Result |
+| ----------- | ----------- | ----------- | ---------------------- |
+| `CONTACTABLE_ON_CLICK`      | `bool`       | Allows viewers to click on the badge to PM the user.       | <!--RESULT:TEST_CASE:CONTACTABLE_ON_CLICK> |
+| `OVERRIDE_DEFAULT_COLOR`   | `bool`        | Overrides default color of the badge.<br>**Ignores the status** of user. *(Online, AFK, DND, Offline)*        | <!--RESULT:TEST_CASE:OVERRIDE_DEFAULT_COLOR> |
+| `HIDE_PRESENCE_STATE`   | `bool`        | Overrides default color of the badge.<br>**Ignores the status** of user. *(Online, AFK, DND, Offline)*        | <!--RESULT:TEST_CASE:HIDE_PRESENCE_STATE> |
+| `SHOW_CUSTOM_STATUS_INSTEAD`   | `bool`        | Overrides default color of the badge.<br>**Ignores the status** of user. *(Online, AFK, DND, Offline)*        | <!--RESULT:TEST_CASE:SHOW_CUSTOM_STATUS_INSTEAD> |
+| `SHOW_DETAIL_INSTEAD`   | `bool`        | Overrides default color of the badge.<br>**Ignores the status** of user. *(Online, AFK, DND, Offline)*        | <!--RESULT:TEST_CASE:SHOW_DETAIL_INSTEAD> |
+| `SHOW_TIME_DURATION`   | `bool`        | Overrides default color of the badge.<br>**Ignores the status** of user. *(Online, AFK, DND, Offline)*        | <!--RESULT:TEST_CASE:SHOW_TIME_DURATION> |
+
+#### No Presence or Minimal Presence Customization
+
+Sometimes, you might wanna do some flexibility on different cases of your status badge. The following table might help you do it.
+
+| Inputs | Type | Description | Result |
+| -------- | ----------- | -------- | ----------- |
+| `OVERRIDE_MIN_PRESENCE_ONLINE_COLOR`  | `str` | To be constructed.    | <!--RESULT:TEST_CASE:OVERRIDE_MIN_PRESENCE_ONLINE_COLOR> |
+| `OVERRIDE_MIN_PRESENCE_IDLE_COLOR` | `str` | To be constructed.    | <!--RESULT:TEST_CASE:OVERRIDE_MIN_PRESENCE_IDLE_COLOR> |
+| `OVERRIDE_MIN_PRESENCE_DND_COLOR` | `str` | To be constructed.    | <!--RESULT:TEST_CASE:OVERRIDE_MIN_PRESENCE_DND_COLOR> |
+| `OVERRIDE_MIN_PRESENCE_OFFLINE_COLOR` | `str` | To be constructed.    | <!--RESULT:TEST_CASE:OVERRIDE_MIN_PRESENCE_OFFLINE_COLOR> |
+| `OVERRIDE_NO_PRESENCE_ONLINE_COLOR` | `str` | To be constructed.    | <!--RESULT:TEST_CASE:OVERRIDE_NO_PRESENCE_ONLINE_COLOR> |
+| `OVERRIDE_NO_PRESENCE_IDLE_COLOR` | `str` | To be constructed.    | <!--RESULT:TEST_CASE:OVERRIDE_NO_PRESENCE_IDLE_COLOR> |
+| `OVERRIDE_NO_PRESENCE_DND_COLOR` | `str` | To be constructed.    | <!--RESULT:TEST_CASE:OVERRIDE_NO_PRESENCE_DND_COLOR> |
+| `OVERRIDE_NO_PRESENCE_OFFLINE_COLOR` | `str` | To be constructed.    | <!--RESULT:TEST_CASE:OVERRIDE_NO_PRESENCE_OFFLINE_COLOR> |
+
+| `CUSTOM_NO_PRESENCE_ONLINE_STATUS` | `str` | To be constructed.    | <!--RESULT:TEST_CASE:CUSTOM_NO_PRESENCE_ONLINE_STATUS> |
+| `CUSTOM_NO_PRESENCE_IDLE_STATUS` | `str` | To be constructed.    | <!--RESULT:TEST_CASE:CUSTOM_NO_PRESENCE_IDLE_STATUS> |
+| `CUSTOM_NO_PRESENCE_DND_STATUS` | `str` | To be constructed.    | <!--RESULT:TEST_CASE:CUSTOM_NO_PRESENCE_DND_STATUS> |
+| `CUSTOM_NO_PRESENCE_OFFLINE_STATUS` | `str` | To be constructed.    | <!--RESULT:TEST_CASE:CUSTOM_NO_PRESENCE_OFFLINE_STATUS> |
 
 ## Examples
 
-With multiple variety of output of this workflow, here's an example of occurences along with Parameters given and the Result.
+The examples are already in [**Parameters**](#parameters) Section, or from the above of this section.
+
+If you wanna look at real-life examples, check out the following profiles (only first 10 people can be appended on this lists.)
+
+1. CodexLink's [Github Profile](https://github.com/CodexLink)
 
 | Parameters                                             | Result                                        |
 |------------------------------------------------------|-----------------------------------------------|
-| `` | To be constructed.    |
+| `CONTACTABLE_ON_CLICK` | To be constructed.    |
 | ``   | To be constructed.    |
 
 ## Credits
 
+* [Act](https://github.com/nektos/act) — Run your GitHub Actions locally 🚀
 * [Discord.py](https://github.com/Rapptz/discord.py) — An API wrapper for Discord written in Python.
-* [PEP 8 Guidelines Tl;DR Version](https://realpython.com/python-pep8/#naming-conventions) — Huge thanks to [Jasmine Finer](https://github.com/jasminefiner) (who made the article) for TL;DR or compressed version of PEP 8 Guidelines.
+* [PEP 8 Guidelines Tl; DR Version](https://realpython.com/python-pep8/#naming-conventions) — Huge thanks to [Jasmine Finer](https://github.com/jasminefiner) (who made the article) for TL; DR or compressed version of PEP 8 Guidelines.
 * [Shields.io](https://shields.io/) — Concise, consistent, and legible badges in SVG and raster format.
+
+https://pythonspeed.com/articles/base-image-python-docker-images/
 
 ## License
 
