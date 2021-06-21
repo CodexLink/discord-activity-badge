@@ -1,9 +1,14 @@
 # Set of Files to Ignore to Docker Client Filesystem
 
-.tests
+
+*.gitignore
+*.json
+*.lock
+*.md
+*.toml
+*.yml
 docs/*
 assets/*
 .github/*
-README.md
-Pipfile
-Pipfile.lock
+.vscode/*
+LICENSE

@@ -128,7 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Other Things To Ignore
-**/private.py
-.vscode/
-experiments/
+# Custom — Other things to ignore.
+.vscode/**

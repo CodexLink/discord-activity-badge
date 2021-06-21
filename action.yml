@@ -5,6 +5,10 @@ inputs:
   WORKFLOW_TOKEN:
     description: "The token of the Github Workflow Instance. To be used in authentication for changes of the repository."
     required: true
+    default: ${{ github.token }}
+  DISCORD_TOKEN_ID:
+    description: "the token of the Discord Bot. For use to access the user's rich presence."
+    required: true
   DISCORD_USERNAME:
     description: "The user's discord username. Required as a target for the rich presence status lookup."
     required: true
@@ -83,6 +87,7 @@ inputs:
   CUSTOM_NO_PRESENCE_OFFLINE_STATUS:
     description: ""
     required: false
+
 runs:
   using: "docker"
   image: "Dockerfile"

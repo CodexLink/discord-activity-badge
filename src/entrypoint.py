@@ -1,11 +1,11 @@
-#
+# Add Shebang here later.
+
 # # entrypoint.py | A Client's Workflow of Entrypoint.
 # * Executed in Docker Container as Main Entrypoint.
 # ! Created by Janrey "CodexLink" Licas
 
 from .attributes.constants import *
 from sys import argv
-from os import
 import discord
 
 class DiscBadgeWorkflow(object):

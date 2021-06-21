@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "discord-rich-presence-activity-badge"
+version = "0.1.0"
+description = "Show your Discord Presence Activity to your Github Profile README as a Badge. | Powered by Docker, Discord.py, and PyGithub."
+authors = ["Janrey Licas <self.codexlink@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+Flask = "^2.0.1"
+"discord.py" = "^1.7.3"
+python-dotenv = "^0.18.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+coveralls = "^3.1.0"
+flake8 = "^3.9.2"
+black = "^21.6b0"
+PyYAML = "^5.4.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
