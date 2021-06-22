@@ -14,7 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from subprocess import Popen
-from typing import Final
+if __name__ == "__main__":
+    raise SystemExit(
+        "You're about to run an Attribute Module which is not allowed! Run the src/entrypoint.py instead!"
+    )
+else:
+    from datetime import timedelta as timeConstraint
+    from typing import Final
 
-""" To be done later."""
+    _ALLOWABLE_TIME_TO_COMMIT: Final = timeConstraint(minutes=30)

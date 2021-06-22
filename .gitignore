@@ -130,3 +130,5 @@ dmypy.json
 
 # Custom — Other things to ignore.
 .vscode/**
+.gitignore
+*.yml

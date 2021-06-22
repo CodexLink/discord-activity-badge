@@ -14,7 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from subprocess import Popen
-from typing import Final
+if __name__ == "__main__":
+    raise SystemExit(
+        "You're about to run an Attribute Module which is not allowed! Run the src/entrypoint.py instead!"
+    )
+else:
+    from discord import Intents
+    from typing import Final
 
-""" To be done later."""
+    client_intents = Intents.none()
+    client_intents.presence = True

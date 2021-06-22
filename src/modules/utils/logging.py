@@ -14,7 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from subprocess import Popen
-from typing import Final
+import logging
 
-""" To be done later."""
+
+class ModuleLogging(object):
+	"""A utility that can instantiate logging for both modules.
+
+	Args:
+		subclass (Unknown): [description]
+	"""

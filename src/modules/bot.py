@@ -14,7 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from subprocess import Popen
-from typing import Final
+from discord.ext.commands import Bot
+from discord import Member
+from dotenv import load_dotenv
+import os
 
-""" To be done later."""
+bot = Bot('!')
+
+@bot.command(pass_context=True, name='status')
+async def status(ctx, member: Member):
+    await bot.say(str(member.status))
+
+load_dotenv("../../.env")
+bot.run(os.environ.get("DISCORD_BOT_TOKEN"))
