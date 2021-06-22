@@ -1,4 +1,3 @@
-#
 """
 Copyright 2021 Janrey "CodexLink" Licas
 
@@ -15,12 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# # Entrypoint of the Application Services — entrypoint.py
-# Insert the module here.
+from discord.ext.commands import Bot
+from discord import Member
+from dotenv import load_dotenv
+import os
 
-class ActivityBadgeServices(object):
-    def __init__(self: object) -> None:
-        pass
+bot = Bot('!')
 
-if __name__ == "__main__":
-    client_instance = ActivityBadgeServices()
+@bot.command(pass_context=True, name='status')
+async def status(ctx, member: Member):
+    await bot.say(str(member.status))
+
+load_dotenv("../../.env")
+bot.run(os.environ.get("DISCORD_BOT_TOKEN"))

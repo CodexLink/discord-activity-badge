@@ -1,4 +1,3 @@
-#
 """
 Copyright 2021 Janrey "CodexLink" Licas
 
@@ -15,12 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# # Entrypoint of the Application Services — entrypoint.py
-# Insert the module here.
-
-class ActivityBadgeServices(object):
-    def __init__(self: object) -> None:
-        pass
-
 if __name__ == "__main__":
-    client_instance = ActivityBadgeServices()
+    raise SystemExit(
+        "You're about to run an Attribute Module which is not allowed! Run the src/entrypoint.py instead!"
+    )
+else:
+	pass # Do something here.

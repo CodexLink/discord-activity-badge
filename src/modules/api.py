@@ -1,4 +1,3 @@
-#
 """
 Copyright 2021 Janrey "CodexLink" Licas
 
@@ -14,13 +13,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-# # Entrypoint of the Application Services — entrypoint.py
-# Insert the module here.
-
-class ActivityBadgeServices(object):
-    def __init__(self: object) -> None:
-        pass
-
-if __name__ == "__main__":
-    client_instance = ActivityBadgeServices()

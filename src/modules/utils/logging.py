@@ -1,4 +1,3 @@
-#
 """
 Copyright 2021 Janrey "CodexLink" Licas
 
@@ -15,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# # Entrypoint of the Application Services — entrypoint.py
-# Insert the module here.
+import logging
 
-class ActivityBadgeServices(object):
-    def __init__(self: object) -> None:
-        pass
 
-if __name__ == "__main__":
-    client_instance = ActivityBadgeServices()
+class ModuleLogging(object):
+	"""A utility that can instantiate logging for both modules.
+
+	Args:
+		subclass (Unknown): [description]
+	"""
