@@ -21,7 +21,7 @@ limitations under the License.
 from multiprocessing import Condition
 from typing import Literal
 import asyncio
-from util_discord_client import DiscordClientHandler
+from modules import DiscordClientHandler
 
 
 if __name__ != "__main__":
@@ -29,10 +29,10 @@ if __name__ != "__main__":
     raise EntryImportNotAllowed
 
 else:
-    from util_args import ArgsHandler
+    from utils import InconstantArguments
     from typing import Any
 
-    class ActivityBadgeServices(ArgsHandler, DiscordClientHandler):
+    class ActivityBadgeServices(InconstantArguments, DiscordClientHandler):
         """ The start of everything. This is the core from initializing the workflow to generating the badge. """
 
         # Step 0 | Ensure that we fill up properties of certain things only. /???
@@ -47,7 +47,7 @@ else:
             print(super().loaded_by_who)
             exit(0)
 
-            self.condition_checks() # Step 1 | Check anything before we start. Assume that everything is clean.
+            self.__condition_checks() # Step 1 | Check anything before we start. Assume that everything is clean.
 
 
         def __initiate_proc(self) -> None:
