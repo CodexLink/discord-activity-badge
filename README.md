@@ -16,13 +16,60 @@ To be constructed.
 
 To be constructed.
 
+## Workflow
+
+The following `YAML` workflow is a bare-minimum that you may need to paste on your profile's repo located in `.github/actions` .
+
+``` yaml
+name: Discord Rich Presence Activity Badge
+on:
+  schedule:
+
+    - cron: "30 0-23 * * *" # Customizable 15 Minutes Less Not Allowed!, At minute 30 past every hour from 0 through 23.
+
+  workflow_dispatch:
+
+jobs:
+  BadgeUpdater:
+    name: Discord Activity Watcher
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Step 1 | Repository Checkout
+      - uses: actions/checkout@master
+
+      - name: Step 2 | Update README Discord Badge to Latest Upstream
+      - uses: CodexLink/discord-rich-presence-activity-badge@main
+
+        with:
+          # These are required inputs.
+          # More information on README - Parameters Section.
+          WORKFLOW_INSTANCE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCORD_USERNAME: ${{ secrets.DISCORD_USERNAME }}
+          DISCORD_USERNAME_TAG: ${{ secrets.DISCORD_USERNAME_TAG }}
+          OVERRIDE_COMMIT_MESSAGE: 'Discord Activity Reading Finished.'
+
+```
+
+> This workflow will work once it has been dispatched (manually), and is on set, to iterate every **30 minutes per hour** to check for the user's status.
+
+
 ### Parameters
 
 In this section, it contains the required inputs along with customization parameters which are optional.
 
 #### Required Inputs
 
-***Not known yet.***
+***The following are the initial possible of required inputs.***
+
+These inputs are required in order to run the Docker Container or the action workflow that you referred, which is this repo.
+
+| Inputs                                             | Description                                        |
+|------------------------------------------------------|-----------------------------------------------|
+| `WORKFLOW_TOKEN` | An auto-generated token for authentication use in order to make changes to the user's profile `README.md` .    |
+| `DISCORD_USERNAME` | The user's discord username. Required as a target for the rich presence status lookup.    |
+| `DISCORD_USERNAME_TAG` | The user's discord unique tag. `Required` as there are other instance were you have a same username to other users.   |
 
 #### Optional Inputs
 
@@ -65,6 +112,7 @@ Sometimes, you might wanna do some flexibility on different cases of your status
 |------------------------------------------------------|-----------------------------------------------|
 | `CONTACTABLE_ON_CLICK` | To be constructed.    |
 | ``   | To be constructed.    | -->
+
 ## Examples
 
 Coming soon.
