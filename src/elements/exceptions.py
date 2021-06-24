@@ -14,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+# todo: Whenever as possible, do dry principles here.
+from typing import Final
+
 # # Discord Exceptions
 class MutualGuildsNotFound(Exception):
 	"""Cannot find a guild where the bot is residing with the user who requests for presence badge.
@@ -25,20 +28,28 @@ class MutualGuildsNotFound(Exception):
 
 
 class UserDoesNotExists(Exception):
-	"""[Handles exception 'when received object is not a discord.user.User, exclusively.']
-
-	Args:
-		Exception ([type]): [description]
+	"""
 	"""
 	pass
 
 # # Module Exceptions
 
-class IsolateExecNotAllowed(Exception):
-	"""The use of modules under isolation is not allowed; hence, raising this error.
-	Args:
-		Exception (Class): Inherits Exception Class.
-	"""
-	def __init__(self: object) -> None:
-		messages : str = "The use of modules without instantiating the entrypoitn is not allowed."
+class IsolatedExecNotAllowed(Exception):
+	""" The use of modules under isolation is not allowed; hence, raising this error. """
+	def __init__(self) -> None:
+  		messages : Final[str] = "The use of modules without instantiating the entrypoint is not allowed."
 	  	super().__init__(messages)
+
+class EntryImportNotAllowed(Exception):
+	""" The use of entrypoint for other use is not allowed. """
+
+	def __init__(self) -> None:
+		messages : Final[str] = "The use of entrypoint for other use (importing to other package) is not allowed."
+		super().__init__(messages)
+
+class NoLoggerDetected(Exception):
+	""" The application is tempted to do logging but the user disables it. """
+
+	def __init__(self) -> None:
+		messages : Final[str] = "Application is expected to log but the user disables it explicitly. Please do not dismantle."
+		super().__init__(messages)
