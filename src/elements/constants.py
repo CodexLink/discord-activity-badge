@@ -27,30 +27,35 @@ if __name__ == "__main__":
 
 else:
     from datetime import timedelta as timeConstraint
-    from typing import Final
-    from types import * # todo: Remove later.
+    from typing import Final, List
 
     # This is an intentional implementation, I just prefer to keep long strings to another file.
     # And let short constants intact so that the context is not out of blue.
 
     # # Classified Arguments Information
     ARG_CONSTANTS : Final[dict[str, str]] = { # Cannot evaluate less.
-        "ENTRY_PARSER_DESC": "An application that enables writing User's Discord Presence in Badge Form to README.md.",
+        "ENTRY_PARSER_DESC": "An application that runs under workflow to evaluate User's Discord Activity Presence to Displayable Badge for their README.md.",
         "ENTRY_PARSER_EPILOG": "The use of arguments are intended for debugging purposes only. Please be careful.",
-        "HELP_DESC_DISABLE_LOG":  "Disables logging to be saved in the container.",
-        "HELP_DESC_NO_ALERT_USR": "Does not alert the developer from the possible crashes (this also invokes the do-not-send logs.)",
-        "HELP_DESC_PRINT_LOG_REALTIME": "Prints the log output and at the same time save them. Pre-req: HELP_DESC_DISABLE_LOG should be omitted."
+        "HELP_DESC_NO_LOGGING":  "Disables logging but does not surpress outputting logs to console, if enabled.",
+        "HELP_DESC_DRY_RUN": "Runs the whole script without commiting changes to external involved factors (ie. README.md)",
+        "HELP_DESC_NO_ALERT_USR": "Does not alert the user / developer from the possible crashes through Direct Messages (this also invokes the do-not-send logs.)",
+        "HELP_DESC_LOG_TO_CONSOLE": "Prints the log output to the console, whenever the case."
         }
 
     # # Class Container Metadata
     ARG_PLAIN_CONTAINER_NAME : Final[str] = "ArgsContainer"
     ARG_PLAIN_DOC_INFO : Final[str] = "This is a plain class to where the args has been living after being evaluated."
 
-    # # Pre-Condition Constraints
-    ALLOWABLE_TIME_TO_COMMIT: Final = timeConstraint(minutes=30) # todo: Clarify this. This is connected from the workflow recommended refresh rate. Also rate-limits.
+    # # Discord Client Bot Message Context
+    # To be done later.
 
     # # Logger Information
 
     LOGGER_LOG_LOCATION : Final[str] = "../../"
     LOGGER_FILENAME: Final[str] = "idk.log" # todo: lmao, do something about this. Let's try automation later.
     LOGGER_OUTPUT_FORMAT: Final[str] = "" # todo: this one as well.
+
+    # VALID_ARGS_PROPERTIES : Final[List[str]] = ["disable_logs", "no_alert", "", ""] # # Classified Arguments to Container
+
+    # # Pre-Condition Constraints
+    ALLOWABLE_TIME_TO_COMMIT: Final = timeConstraint(minutes=30) # todo: Clarify this. This is connected from the workflow recommended refresh rate. Also rate-limits.
