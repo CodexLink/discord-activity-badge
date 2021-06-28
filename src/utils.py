@@ -14,155 +14,245 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from email.mime import base
-
-
 if __name__ == "__main__":
-	from elements.exceptions import IsolatedExecNotAllowed
+    from elements.exceptions import IsolatedExecNotAllowed
 
-	raise IsolatedExecNotAllowed
+    raise IsolatedExecNotAllowed
 
 else:
-	import logging
-	from typing import Any, Generator, Union
-	from argparse import ArgumentParser
-	from elements.constants import (
-		ARG_CONSTANTS,
-		ARG_PLAIN_CONTAINER_NAME,
-		ARG_PLAIN_DOC_INFO,
-	)
-	from asyncio import create_task, sleep as asyncio_sleep, Task
+    from logging import (
+        basicConfig,
+        info,
+        critical,
+        error,
+        warning,
+        INFO,
+        DEBUG,
+        WARNING,
+        ERROR,
+    )  # todo: Finalize this later.
+    from typing import Any, List, Literal, Union
+    from argparse import ArgumentParser
+    from elements.constants import (
+        ARG_CONSTANTS,
+        ARG_PLAIN_CONTAINER_NAME,
+        ARG_PLAIN_DOC_INFO,
+    )
+    from asyncio import create_task, sleep as asyncio_sleep, Task
+    from elements.constants import (
+        LOGGER_DATETIME_FORMAT,
+        LOGGER_FILENAME,
+        LOGGER_LOG_LOCATION,
+        LOGGER_OUTPUT_FORMAT,
+    )
 
-	class LoggerComponent:  # For this scenario, we might assume that
-		"""A utility that can instantiate logging for both modules."""
+    class LoggerComponent:
+        """
+        A utility that can instantiate logging for both modules.
 
-		# Class Attributes (Non-Shared)
+        Providing flexibility by wrapping a string to a special function of something. WIP.
 
-		# For everytime that the logger is instantiated. Get the superclass name.
-		async def __init__(self, **kwargs: dict[Any, Any]) -> None:
-			print(self.__class__.__name__, self.__class__.__base__)
-			print(f"This was called in {self.__class__.__base__} | Should be LoggerComponent")
+        todo: ???
+        """
 
-		def set_logging_state_child(self) -> None:
-			pass
+        async def __init__(self, **kwargs: dict[Any, Any]) -> None:
+            """
+            Instantiates [...]
 
-		@property
-		def who_is_parent(self):
-			pass
+            Credits: https://stackoverflow.com/a/17558764/5353223 | For LoggerAdapter, I just knew it when I looked at the main page, not in HOW TO.
+                                         https://stackoverflow.com/a/17558757/5353223 | Shortcut
+            """
 
-		@property
-		def show_child(self):
-			pass
+            basicConfig(
+                filename=LOGGER_LOG_LOCATION + LOGGER_FILENAME,
+                format=LOGGER_OUTPUT_FORMAT,
+                level=INFO,
+                datefmt=LOGGER_DATETIME_FORMAT,
+                filemode="w+",
+            )
 
-		def output_to(self):
-			pass
+            self.__children: dict[str, object] = {}
 
-		# todo: Handle this later.
-		# logger = logging.getLogger('discord')
-		# logger.setLevel(logging.DEBUG)
-		# handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-		# handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-		# logger.addHandler(handler)
+        async def register(
+            self, cls: object
+        ) -> Literal[True]:  # todo: Create an enumeration here.
 
-		@property
-		# todo: This can return an enum later.
-		def get_current_level(self: object) -> str:
-			pass
+            return True  # for now.
 
-	class ArgumentResolver:
-		async def __init__(self, **kwargs: dict[Any, Any]) -> None:
-			# * Value Containers
-			print(f"This was called in {self.__class__.__base__} | Should be Argument Resolvers")
-			self.__is_args_loaded: bool = False
-			self.__task_container: object = None
+        @property
+        def who_is_parent(self) -> str:  # todo: Refer to Line 50.
+            return (
+                self.__class__.__name__
+            )  # Please evaluate if this really returns, who inherite this in the first case.
 
-			# * Task Containers
-			self.__task_container_create: Task = create_task(self.__preload_container())
-			self.__task_parser_loader: Task = create_task(self.__load_args())
+        @property
+        def show_child(self) -> Union[str, dict[str, str], List[str]]:
+            """
+            A property function that returns the state of classes that was registered in this case.
+            """
+            return "str"
 
-		# todo: Style this one.
-		# Properly Update the string based on the received string.
-		def __repr__(self) -> str:
-			return f"<Argument Handler, Received: Argument/s, Loaded: {self.is_loaded} | Subclassed by {self.__class__.__name__}>"
+        def is_state_status(
+            self, attr_name: str
+        ) -> Literal[True]:  # todo: Refer to Line 50.
+            """
+            This function returns the certain state of this class.
 
-		async def __preload_container(self) -> None:
-			self.__task_container = type(
-				ARG_PLAIN_CONTAINER_NAME, (object,), {"__info__": ARG_PLAIN_DOC_INFO}
-			)
+            todo: Create possible attributes here.
+            """
 
-		async def __load_args(self) -> None:
-			self.__parser = ArgumentParser(
-				description=str(ARG_CONSTANTS["ENTRY_PARSER_DESC"]),
-				epilog=str(ARG_CONSTANTS["ENTRY_PARSER_EPILOG"]),
-			)
+            return True
 
-			self.__parser.add_argument(
-				"-dn",
-				"--do-not-alert-user",
-				action="store_true",
-				help=ARG_CONSTANTS["HELP_DESC_NO_ALERT_USR"],
-				required=False,
-			)
+        # todo: Handle this later.
+        # logger = logging.getLogger('discord')
+        # logger.setLevel(logging.DEBUG)
+        # handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+        # handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+        # logger.addHandler(handler)
 
-			self.__parser.add_argument(
-				"-dr",
-				"--dry-run",
-				action="store_true",
-				help=ARG_CONSTANTS["HELP_DESC_DRY_RUN"],
-			)
+        @property
+        # todo: This can return an enum later.
+        def get_current_level(self: object) -> str:
+            pass
 
-			self.__parser.add_argument(
-				"-nl",
-				"--no-logging",
-				action="store_true",
-				help=ARG_CONSTANTS["HELP_DESC_NO_LOGGING"],
-				required=False,
-			)
+    class ArgumentResolver:
+        """
+        An over-detailed async class that helps entrypoint class to manage arguments and deliver them at any subclasses, either specific or all of it.
+        """
 
-			self.__parser.add_argument(
-				"-lc",
-				"--log-to-console",
-				action="store_true",
-				help=ARG_CONSTANTS["HELP_DESC_LOG_TO_CONSOLE"],
-				required=False,
-			)
+        async def __init__(self, **kwargs: dict[Any, Any]) -> None:
+            """
+            Contains State and Task Containers. Initialized when called via await from fellow async (super)class.
 
-			await self.__task_container_create  # We wait for the container to finish (from another task) and push those data to the container.
+            Enumerations:
+                            Class State Containers
+                                    - self.__is_args_evaluated
+                                    - self.__task_container
 
-			# I would rather catch this than subclassing ArgumentParser to override exit methods to compensate with the use of asyncio for all use case.
-			try:
-				self.__parser.parse_args(namespace=self.__task_container)
-				await asyncio_sleep(0.25)
+            Task Containers
+                                    - self.__task_container_create 	|  A task that creates a hidden class container for the evaluated args to reside after operation.
+                                    - self.__task_parser_loader		| A task that initializes loading and evaluation of arguments. Created for future use. (ie. do not load until env is good)
+            """
 
-			except SystemExit:
-				await asyncio_sleep(0.1)
+            self.__is_args_evaluated: bool = False
+            self.__task_container: object = None
 
-			self.__is_args_loaded: bool = True
+            # * Task Containers
+            self.__task_container_create: Task = create_task(self.__preload_container())
+            self.__task_parser_loader: Task = create_task(self.__load_args())
 
-		async def get_parameter_value(
-			self, arg_key: str
-		) -> Union[bool, dict[str, bool], None]:
-			await self.__task_parser_loader  # If we start too early, then await.
+        def __repr__(self) -> str:
+            """
+            Represents the Class State when called or referred.
 
-			__valid_properties: Union[dict[str, bool], None] = None
+            Returns:
+                    str: Containing Class Container, combined in str.
+            """
 
-			if arg_key == "*":
-				__valid_properties = {}
-				for key, data in vars(self.__task_container).items():
+            return f"<Argument Handler, Parent: {self.__class__.__name__}, Evaluated? {self.__is_args_evaluated}>"
 
-					if not key.startswith("__"):
-						__valid_properties[key] = data
-						await asyncio_sleep(0.05)
-			else:
-				__valid_properties = vars(self.__task_container).get(arg_key, None)
+        async def __preload_container(self) -> None:
+            """
+            Creates a container for the class to forward evaluated args. Accessible under variable named "self.__task_container"
+            """
 
-			return __valid_properties
+            self.__task_container = type(
+                ARG_PLAIN_CONTAINER_NAME, (object,), {"__info__": ARG_PLAIN_DOC_INFO}
+            )
 
-		# These properties are for debugging purposes only. Might subject to remove if still not used in unit-testing.
-		@property  # self-check
-		def is_loaded(self) -> bool:
-			return self.__is_args_loaded
+        async def __load_args(self) -> None:
+            """
+            Loads the arguments given by the user or the machine upon running this script, if instructed.
+            """
 
-		@property
-		def loaded_by_who(self) -> str:
-			return self.__class__.__name__
+            self.__parser = ArgumentParser(
+                description=str(ARG_CONSTANTS["ENTRY_PARSER_DESC"]),
+                epilog=str(ARG_CONSTANTS["ENTRY_PARSER_EPILOG"]),
+            )
+
+            self.__parser.add_argument(
+                "-dn",
+                "--do-not-alert-user",
+                action="store_true",
+                help=ARG_CONSTANTS["HELP_DESC_NO_ALERT_USR"],
+                required=False,
+            )
+
+            self.__parser.add_argument(
+                "-dr",
+                "--dry-run",
+                action="store_true",
+                help=ARG_CONSTANTS["HELP_DESC_DRY_RUN"],
+            )
+
+            self.__parser.add_argument(
+                "-nl",
+                "--no-logging",
+                action="store_true",
+                help=ARG_CONSTANTS["HELP_DESC_NO_LOGGING"],
+                required=False,
+            )
+
+            self.__parser.add_argument(
+                "-lc",
+                "--log-to-console",
+                action="store_true",
+                help=ARG_CONSTANTS["HELP_DESC_LOG_TO_CONSOLE"],
+                required=False,
+            )
+
+            # We wait for the container to finish (from another task) and push those data to the container.
+            await self.__task_container_create
+
+            # I would rather catch this than subclassing ArgumentParser to override exit methods
+            # to compensate with the use of asyncio for all use case.
+            try:
+                self.__parser.parse_args(namespace=self.__task_container)
+                await asyncio_sleep(0.25)
+
+            except SystemExit:
+                await asyncio_sleep(0.1)
+
+            # Once done, let other function checkers that the args is available for use.
+            self.__is_args_evaluated: bool = True
+
+        async def get_parameter_value(
+            self, arg_key: str
+        ) -> Union[bool, dict[str, bool], None]:
+            """
+            Allows other class who inherits the superclass to access the arguments by requesting them.
+
+            Args:
+                arg_key (str): Invoke "*" if the class wants to receive the whole arguments forwarded, invoked or not (True or False).
+                    : Invoke "attribute | property" to get a singleton result.
+
+            Returns:
+                Union[bool, dict[str, bool], None]: Returns either True or False if property was invoked. Or a dictionary containing `str` as key and `bool` as value if "*" is invoked.
+
+            todos: Maybe implement, exception_on_not_found?
+            """
+
+            await self.__task_parser_loader  # If we start too early, await.
+
+            __valid_properties: Union[dict[str, bool], None] = None
+
+            if arg_key == "*":
+                __valid_properties = {}
+                for key, data in vars(self.__task_container).items():
+
+                    if not key.startswith("__"):
+                        __valid_properties[key] = data
+                        await asyncio_sleep(0.05)
+            else:
+                __valid_properties = vars(self.__task_container).get(arg_key, None)
+
+            return __valid_properties
+
+        # These properties are for debugging purposes only. Might subject to remove if still not used in unit-testing.
+        @property  # self-check
+        def is_loaded(self) -> bool:
+            return self.__is_args_evaluated
+
+        @property
+        def loaded_by_who(self) -> str:
+            return self.__class__.__name__

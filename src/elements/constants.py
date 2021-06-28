@@ -18,44 +18,64 @@ limitations under the License.
 # Version dev.0.06232021
 
 
-from typing import final
-
-
 if __name__ == "__main__":
-    from .exceptions import IsolatedExecNotAllowed
+    from exceptions import IsolatedExecNotAllowed
+
     raise IsolatedExecNotAllowed
 
 else:
     from datetime import timedelta as timeConstraint
-    from typing import Final, List
+    from typing import Any, Final, List
 
-    # This is an intentional implementation, I just prefer to keep long strings to another file.
-    # And let short constants intact so that the context is not out of blue.
+    """
+    This is an intentional implementation, I just prefer to keep long strings to another file.
+    And let short constants intact so that the context is not out of blue.
+    """
 
     # # Classified Arguments Information
-    ARG_CONSTANTS : Final[dict[str, str]] = { # Cannot evaluate less.
+    ARG_CONSTANTS: Final[dict[str, str]] = {  # Cannot evaluate less.
         "ENTRY_PARSER_DESC": "An application that runs under workflow to evaluate User's Discord Activity Presence to Displayable Badge for their README.md.",
         "ENTRY_PARSER_EPILOG": "The use of arguments are intended for debugging purposes only. Please be careful.",
-        "HELP_DESC_NO_LOGGING":  "Disables logging but does not surpress outputting logs to console, if enabled.",
+        "HELP_DESC_NO_LOGGING": "Disables logging but does not surpress outputting logs to console, if enabled.",
         "HELP_DESC_DRY_RUN": "Runs the whole script without commiting changes to external involved factors (ie. README.md)",
         "HELP_DESC_NO_ALERT_USR": "Does not alert the user / developer from the possible crashes through Direct Messages (this also invokes the do-not-send logs.)",
-        "HELP_DESC_LOG_TO_CONSOLE": "Prints the log output to the console, whenever the case."
-        }
+        "HELP_DESC_LOG_TO_CONSOLE": "Prints the log output to the console, whenever the case.",
+    }
 
     # # Class Container Metadata
-    ARG_PLAIN_CONTAINER_NAME : Final[str] = "ArgsContainer"
-    ARG_PLAIN_DOC_INFO : Final[str] = "This is a plain class to where the args has been living after being evaluated."
+    ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgsContainer"
+    ARG_PLAIN_DOC_INFO: Final[
+        str
+    ] = "This is a plain class to where the args has been living after being evaluated."
 
     # # Discord Client Bot Message Context
-    # To be done later.
+    DISCORD_DATA_CONTAINER: Final[str] = "DiscUserCtxContainer"
+    DISCORD_DATA_CONTAINER_ATTRS: Final[
+        dict[str, Any]
+    ] = {  # todo: Fill it up later. +  Ref: https://stackoverflow.com/questions/3603502/prevent-creating-new-attributes-outside-init
+        "__usr__": {},  # Contains user's information, this excludes the Discord Rich Presence.
+        "__guild__": {},  # Contains guild information.
+        "__presence__": {},  # Contains user's presence activity.
+    }
+    DISCORD_ON_READY_MSG: Final[
+        str
+    ] = "Client (%s) is ready for evaluation of user's activity presence."
 
     # # Logger Information
+    LOGGER_FILENAME: Final[
+        str
+    ] = "idk.log"  # todo: be dynamic about this. Use Date.
+    LOGGER_LOG_LOCATION: Final[str] = "../../"
+    LOGGER_OUTPUT_FORMAT: Final[str] = "[%(asctime)s] %(cls_name)s @ %(filename)s [%(lineno)d] -> %(levelname)s | %(message)s"
+    LOGGER_DATETIME_FORMAT: Final[str] = "" # todo.
 
-    LOGGER_LOG_LOCATION : Final[str] = "../../"
-    LOGGER_FILENAME: Final[str] = "idk.log" # todo: lmao, do something about this. Let's try automation later.
-    LOGGER_OUTPUT_FORMAT: Final[str] = "" # todo: this one as well.
-
-    # VALID_ARGS_PROPERTIES : Final[List[str]] = ["disable_logs", "no_alert", "", ""] # # Classified Arguments to Container
+    # # Logger Enumerations
+    # LOGGER_RET_SUCCESS
+    # LOGGER_RET_FAILED
+    # LOGGER_RET_SET_FAILED
+    # LOGGER_RET_SET_SUCCESS
 
     # # Pre-Condition Constraints
-    ALLOWABLE_TIME_TO_COMMIT: Final = timeConstraint(minutes=30) # todo: Clarify this. This is connected from the workflow recommended refresh rate. Also rate-limits.
+    ALLOWABLE_TIME_TO_COMMIT: Final = timeConstraint(
+        minutes=30
+    )  # todo: Clarify this. This is connected from the workflow recommended refresh rate. Also rate-limits.

@@ -16,29 +16,25 @@ limitations under the License.
 """
 
 # # Entrypoint of the Application Services — entrypoint.py
-# Insert the module here.
-
-from multiprocessing import Condition
-from typing import Callable, Coroutine, Generator, Literal, Any
-from asyncio import AbstractEventLoop, get_event_loop
-# from modules import DiscordClientHandler
-# from utils import LoggerComponent
-
-from elements.properties import client_intents # For binding discord later.
-
 
 if __name__ != "__main__":
     from elements.exceptions import EntryImportNotAllowed
+
     raise EntryImportNotAllowed
 
 else:
     from utils import ArgumentResolver, LoggerComponent
     from typing import Any
+    from typing import Generator, Any
+    from asyncio import AbstractEventLoop, get_event_loop
+    from modules import DiscordClientHandler  # For binding discord later.
+    from dotenv import load_dotenv as LOAD_ENV
 
-    class ActivityBadgeServices(ArgumentResolver, LoggerComponent): #, DiscordClientHandler, Bad):
-        """ The start of everything. This is the core from initializing the workflow to generating the badge. """
+    class ActivityBadgeServices(
+        ArgumentResolver, LoggerComponent, #DiscordClientHandler,# BadgeGenerator
+    ):
+        """The start of everything. This is the core from initializing the workflow to generating the badge."""
 
-        # Step 0 | Ensure that we fill up properties of certain things only. /???
         def __init__(self, **kwargs: dict[Any, Any]) -> None:
             return None
 
@@ -57,6 +53,13 @@ else:
 
             await super().__init__()
             await super(ArgumentResolver, self).__init__()
+
+
+            print(self.__class__.__mro__)
+
+            exit(0)
+            # Register those classes in the logger.
+            # await super(ArgumentResolver, self). register()
 
             # Once we are d
             # req_args = await super().get_parameter_value("no_logging")
@@ -101,14 +104,15 @@ else:
         #     pass
 
         @property
-        def current_state(self) -> bool: # todo: Create a classification here.
-            return True # Placeholder for now.
+        def current_state(self) -> bool:  # todo: Create a classification here.
+            return True  # Placeholder for now.
 
         def __repr__(self) -> str:
             return f"<Activity Badge Service, State: n/a | Discord User: n/a | Curr. Process: n/a>"
 
     if __name__ == "__main__":
-        loop_instance : AbstractEventLoop = get_event_loop()
+        LOAD_ENV(".env")
+        loop_instance: AbstractEventLoop = get_event_loop()
 
         entry_instance = loop_instance.run_until_complete(ActivityBadgeServices())
         # # entry_instance = ActivityBadgeServices()
