@@ -17,6 +17,9 @@ limitations under the License.
 
 # # Entrypoint of the Application Services — entrypoint.py
 
+from click import Argument
+
+
 if __name__ != "__main__":
     from elements.exceptions import EntryImportNotAllowed
 
@@ -29,14 +32,20 @@ else:
     from asyncio import AbstractEventLoop, get_event_loop
     from modules import DiscordClientHandler  # For binding discord later.
     from dotenv import load_dotenv as LOAD_ENV
+    import os
+    from elements.properties import (
+        client_intents as CLIENT_INTENTS,
+    )  # todo: To be removed later.
 
     class ActivityBadgeServices(
-        ArgumentResolver, LoggerComponent, #DiscordClientHandler,# BadgeGenerator
+        ArgumentResolver,
+        LoggerComponent,
+        DiscordClientHandler,  # BadgeGenerator
     ):
         """The start of everything. This is the core from initializing the workflow to generating the badge."""
 
         def __init__(self, **kwargs: dict[Any, Any]) -> None:
-            return None
+            LOAD_ENV("../.env")
 
         async def __preload_subclasses(self) -> Any:
             """Instantiates all subclasses (that inherits by this class, formerly known as Base Class) to prepare the module for the process.
@@ -44,6 +53,8 @@ else:
             Notes:
                 (1) The first super().__init__() instantiates ArgumentResolver, this is more of, prepare and evaluate arguments, given on launch.
                 (2) The second super() instantiates LoggerComponent by moving up to ArgumentResolver as base MRO pattern function searching.
+                (3)
+                (4)
                 As we evaluate the code, the await is invalid because it expects the super() to return None, it isn't.
 
             Credits:
@@ -51,13 +62,28 @@ else:
                 (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
             """
 
+            os.system("CLS") # # Temporary.
+
+
             await super().__init__()
             await super(ArgumentResolver, self).__init__()
 
 
-            print(self.__class__.__mro__)
+            await self.register((self.__class__.__bases__[1:] + (self.__class__, )))
+            # await self.register("*")
+            # await self.register("LoggerComponent")
+
+
+            print(f" Would this work? > {await self.registered_cls}")
 
             exit(0)
+
+            super(LoggerComponent, self).__init__()
+
+            await self.start(os.environ.get("DISCORD_TOKEN"))
+            # await super(LoggerComponent, self).start(os.environ.get("DISCORD_TOKEN"))
+
+
             # Register those classes in the logger.
             # await super(ArgumentResolver, self). register()
 

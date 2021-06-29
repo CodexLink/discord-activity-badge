@@ -26,6 +26,7 @@ if __name__ == "__main__":
 else:
     from datetime import timedelta as timeConstraint
     from typing import Any, Final, List
+    from enum import Enum, IntEnum
 
     """
     This is an intentional implementation, I just prefer to keep long strings to another file.
@@ -65,17 +66,43 @@ else:
     LOGGER_FILENAME: Final[
         str
     ] = "idk.log"  # todo: be dynamic about this. Use Date.
-    LOGGER_LOG_LOCATION: Final[str] = "../../"
-    LOGGER_OUTPUT_FORMAT: Final[str] = "[%(asctime)s] %(cls_name)s @ %(filename)s [%(lineno)d] -> %(levelname)s | %(message)s"
+    LOGGER_LOG_LOCATION: Final[str] = "../../" # todo: resolve unresolved class name.
+    LOGGER_OUTPUT_FORMAT: Final[str] = "[%(asctime)s] Some Class @ %(filename)s [%(lineno)d] -> %(levelname)s | %(message)s"
     LOGGER_DATETIME_FORMAT: Final[str] = "" # todo.
 
-    # # Logger Enumerations
-    # LOGGER_RET_SUCCESS
-    # LOGGER_RET_FAILED
-    # LOGGER_RET_SET_FAILED
-    # LOGGER_RET_SET_SUCCESS
+    # # Logger Code Enumerations
+
+    class LoggerCodeRet(IntEnum):
+        # todo: Clean this later.
+
+        NO_RECORDED_RET_CODE = -1
+        OP_SUCCESS = 0
+        OP_FAILED  = 1
+
+        SET_LEVEL_SUCCESS = 2
+        SET_LEVEL_FAILED = 3
+
+        NO_CHILD_REGISTERED = 4
+
+        REFERRED_CHILD_DOES_NOT_EXIST = 8
+        INVALID_REFERRED_LEVEL_FUNC = 9
+
+        REFERRED_ATTR_IS_INVALID = 10
+
+        SUPPLIED_INVALID_ELEMENT = 11
+        DOES_NOT_CONTAIN_VALUE = 12
+
+        VALID_REGISTERED_CLS = 7
+        INVALID_REGISTERED_CLS = 5
+
+        UNREGISTER_SUCCESS = 6
+        UNREGISTER_FAILED  = 7
+
+    # # Logger Code Raised Error Messages
+
+
 
     # # Pre-Condition Constraints
-    ALLOWABLE_TIME_TO_COMMIT: Final = timeConstraint(
+    ALLOWABLE_TIME_TO_COMMIT: Final[object] = timeConstraint(
         minutes=30
     )  # todo: Clarify this. This is connected from the workflow recommended refresh rate. Also rate-limits.
