@@ -41,7 +41,7 @@ else:
 	from elements.constants import (
 		ARG_CONSTANTS,
 		ARG_PLAIN_CONTAINER_NAME,
-		ARG_PLAIN_DOC_INFO,
+		ARG_PLAIN_DOC_INFO
 	)
 	from asyncio import create_task, sleep as asyncio_sleep, Task
 	from elements.constants import (
@@ -50,7 +50,8 @@ else:
 		LOGGER_LOG_LOCATION,
 		LOGGER_OUTPUT_FORMAT,
 		LoggerCodeRet,
-	)
+		LOGGER_CHILD_PROPERTIES
+  	)
 
 	from elements.exceptions import LoggerRegistrationFailed
 
@@ -79,10 +80,13 @@ else:
 				level=INFO,
 				datefmt=LOGGER_DATETIME_FORMAT,
 				filemode="w+",
-			)
+			) # todo: Change the level in accordance to cover all levels and handle it through the custom function log().
 
-			self.__children: List[str] = []
+			self.__children: dict[str[dict[..., ...]]] = {}
 			self.__last_ret_code: LoggerCodeRet = LoggerCodeRet.NO_RECORDED_RET_CODE
+
+			self.ENV_PARAMS : dict[str, str] = {} # todo: Evaluate if possible.
+
 			self.__to_console : bool = False # To be evaluated later.
 
 			print(f"This was printed under the {LoggerComponent.__name__} Class.")
@@ -97,10 +101,35 @@ else:
 		async def __check_if_child(self) -> bool:
 			return False
 
-		async def __verify_and_push(self, cls_name: str) -> None:
-			for each_cls in self.__class__.__mro__[:-1]: # Excludes object.
+		async def __setup_child_props(self, ordered_values: List[Union[bool, int]]) -> dict[str, Union[bool, int]]:
+			"""Setups the registered child props along with value to be pushed as one later.
+
+			Args:
+				ordered_values (List[Union[bool, int]]): A values that contains can_log, can_print and level_coveragein order.
+
+			Returns:
+				dict[str, Union[bool, int]]: Returns the context to be pushed later into the child.
+			"""
+
+			__default_props__ : dict[str, Union[bool, int]] = {}
+
+			for idx, each_props in enumerate(LOGGER_CHILD_PROPERTIES):
+				if each_props == "is_verified":
+					__default_props__[each_props] = True
+					continue
+
+				__default_props__[each_props] = ordered_values[idx]
+
+			return __default_props__
+
+
+		async def __verify_and_push(self, cls_name: str, props_value: List[Union[bool, int]]) -> None:
+			for each_cls in self.__class__.__mro__[:-1]: # Excludes "this" object.
 				if cls_name in each_cls.__name__ and not cls_name in self.__children:
-					self.__children.append(cls_name)
+
+					__props_ctx__ = await self.__setup_child_props(props_value)
+
+					self.__children[cls_name] = __props_ctx__
 
 					await asyncio_sleep(0.2)
 					break
@@ -114,7 +143,7 @@ else:
 
 		# # Main Functions
 		async def register(
-			self, cls: Union[str, Iterable[tuple[str]]]
+			self, cls: Union[str, Iterable[tuple[str]]], can_log: bool = False, can_print: bool = False, level_coverage: int = INFO
 		) -> None: # todo: Create a custom type of this one.
 			"""
 			An async function that provides more control of whose class is candidated to log their output.
@@ -126,17 +155,19 @@ else:
 
 			# First, let's check whether the parent inherits this class. If not reject it.
 
+			__props_value__ : List[Union[bool, int]] = [can_log, can_print, level_coverage]
+
 			if type(cls) == str: # Expects singleton.
-				await create_task(self.__verify_and_push(cls))
-				await asyncio_sleep(0.5)
+				await create_task(self.__verify_and_push(cls, __props_value__))
+				await asyncio_sleep(0.3)
 				return
 
 			elif type(cls) == tuple:
 				if len(cls):
 					for each_str in cls:
 						if not each_str == LoggerComponent:
-							await create_task(self.__verify_and_push(each_str.__name__))
-							await asyncio_sleep(0.3)
+							await create_task(self.__verify_and_push(each_str.__name__, __props_value__))
+							await asyncio_sleep(0.1)
 					return
 
 				raise LoggerRegistrationFailed(LoggerCodeRet.DOES_NOT_CONTAIN_VALUE)
@@ -151,7 +182,7 @@ else:
 		]:
 			raise NotImplementedError
 
-		async def set_level(
+		async def set_level_coverage(
 			self,
 			child_cls_name: str,
 			level=Callable[..., None],
@@ -162,10 +193,43 @@ else:
 			Literal[LoggerCodeRet.REFERRED_CHILD_DOES_NOT_EXIST],
 			Literal[LoggerCodeRet.INVALID_REFERRED_LEVEL_FUNC],
 		]:
+			"""
+   			An async function that set multiple levels per registered classes.
+
+			If the logging library can do it for all modules, we can do it per class with magic ^^.
+	  		"""
 			raise NotImplementedError
 
-		async def log(self, msg: str, temp_level: Optional[Callable]) -> Any:
+		async def log(self, level: Callable, msg : str) -> None:
+			""" Unknown for now.
+
+			Args:
+				level (Callable): ???
+				msg (str): The message to display from the logger.
+
+			Returns:
+				Any: [description]
+
+			todo: the following
+
+			This should be the following way on how this code will gonna output in the end.
+			(1) Verify the called class if they are the one in the listed self.__children.
+			(2) Verify the level given, we expect that this is int, so strict the values based from the logging.
+			(3) Check if we should do the print to console. If yes, then called that function.
+			(4) Log it ! todo: Check for cls_name keyword in the format.
+			(5) Done. We are expected to return None.
+
+
+			"""
 			return None
+
+		async def set_child_props(self, target_cls: str, prop: str, value: Any) -> Any
+			"""A function to set child's properties to a certain.
+
+			Returns:
+				[type]: [description]
+			"""
+			return None # lol. todo.
 
 		# # Property Functions
 
@@ -179,6 +243,8 @@ else:
 			"""
 			A property function that returns either a string representing a single class, or a list if multiple.
 			"""
+
+			print(self.__children)
 			return list(self.__children) if not len(self.__children) == 1 else str(list(self.__children)[0])
 
 		@property
@@ -218,6 +284,8 @@ else:
 			await self.__task_parser_loader     # This is temporary.
 
 			print(f"Loaded. This was printed under {self.__class__.__base__.__name__}")
+
+
 		def __repr__(self) -> str:
 			"""
 			Represents the Class State when called or referred.

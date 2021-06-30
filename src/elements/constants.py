@@ -27,7 +27,6 @@ else:
     from datetime import timedelta as timeConstraint
     from typing import Any, Final, List
     from enum import Enum, IntEnum
-
     """
     This is an intentional implementation, I just prefer to keep long strings to another file.
     And let short constants intact so that the context is not out of blue.
@@ -63,12 +62,12 @@ else:
     ] = "Client (%s) is ready for evaluation of user's activity presence."
 
     # # Logger Information
-    LOGGER_FILENAME: Final[
+    LOGGER_FILENAME: Final[str] = "idk.log"  # todo: be dynamic about this. Use Date.
+    LOGGER_LOG_LOCATION: Final[str] = "../../"  # todo: resolve unresolved class name.
+    LOGGER_OUTPUT_FORMAT: Final[
         str
-    ] = "idk.log"  # todo: be dynamic about this. Use Date.
-    LOGGER_LOG_LOCATION: Final[str] = "../../" # todo: resolve unresolved class name.
-    LOGGER_OUTPUT_FORMAT: Final[str] = "[%(asctime)s] Some Class @ %(filename)s [%(lineno)d] -> %(levelname)s | %(message)s"
-    LOGGER_DATETIME_FORMAT: Final[str] = "" # todo.
+    ] = "[%(asctime)s] Some Class @ %(filename)s [%(lineno)d] -> %(levelname)s | %(message)s"
+    LOGGER_DATETIME_FORMAT: Final[str] = ""  # todo.
 
     # # Logger Code Enumerations
 
@@ -77,7 +76,7 @@ else:
 
         NO_RECORDED_RET_CODE = -1
         OP_SUCCESS = 0
-        OP_FAILED  = 1
+        OP_FAILED = 1
 
         SET_LEVEL_SUCCESS = 2
         SET_LEVEL_FAILED = 3
@@ -96,11 +95,21 @@ else:
         INVALID_REGISTERED_CLS = 5
 
         UNREGISTER_SUCCESS = 6
-        UNREGISTER_FAILED  = 7
+        UNREGISTER_FAILED = 7
 
     # # Logger Code Raised Error Messages
 
 
+    # # Children Properties from Logger Component.
+    LOGGER_CHILD_PROPERTIES: Final[List[str]] = [
+        "is_logging_enabled",  # Disables / Enables logging of the certain module, evaluated to True unless explicitly changed by parent.
+        "is_priting_enabled",  # Disables / Enables printing to console of the certain module, evaluated to False if there's no switch.
+        "level_coverage",  # A level indicator (and above) from where the logger should output.
+        "is_verified",  # A boolean that indicates whether this one is verified and pushed implicitly.
+    ] # ! This could have been done as Dict(). But there may be a use case to validate this one later.
+
+    # # Required Parameters @ ENV
+    REQUIRED_PARAMS_IN_ENV: List[str] = [""]  # todo...
 
     # # Pre-Condition Constraints
     ALLOWABLE_TIME_TO_COMMIT: Final[object] = timeConstraint(

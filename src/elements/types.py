@@ -16,4 +16,4 @@ limitations under the Licens:e.
 
 # #  Type Definitions | types.py
 
-from typing import NewType
+from typing import NewType as _N

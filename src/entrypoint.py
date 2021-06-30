@@ -17,6 +17,8 @@ limitations under the License.
 
 # # Entrypoint of the Application Services — entrypoint.py
 
+from distutils.log import INFO
+from pickle import TRUE
 from click import Argument
 
 
@@ -69,10 +71,7 @@ else:
             await super(ArgumentResolver, self).__init__()
 
 
-            await self.register((self.__class__.__bases__[1:] + (self.__class__, )))
-            # await self.register("*")
-            # await self.register("LoggerComponent")
-
+            await self.register((self.__class__.__bases__[1:] + (self.__class__, ))) # todo: Will explain later because it's unreadable.
 
             print(f" Would this work? > {await self.registered_cls}")
 
