@@ -29,11 +29,6 @@ else:
     from time import strftime
     from discord import Intents
 
-    """
-    This is an intentional implementation, I just prefer to keep long strings to another file.
-    And let short constants intact so that the context is not out of blue.
-    """
-
     # # Classified Arguments Information
     ARG_CONSTANTS: Final[dict[str, str]] = {  # Cannot evaluate less.
         "ENTRY_PARSER_DESC": "An application that runs under workflow to evaluate User's Discord Activity Presence to Displayable Badge for their README.md.",
@@ -65,16 +60,23 @@ else:
 
     # # Discord Client
 
-    DISCORD_CLIENT_INTENTS = Intents.none() # todo: Make this one finalized later.
+    DISCORD_CLIENT_INTENTS : Intents = Intents.none() # todo: Make this one finalized later.
     DISCORD_CLIENT_INTENTS.presences = True
+
+    # # Identification of Return Codes
+    RET_DOTENV_NOT_FOUND : Final[int] = -1
+
+
+    # # Message of Return Codes
 
 
     # # Logger Information
     ROOT_LOCATION: Final[str] = "../"
+    ENV_FILENAME : Final[str] = ".env"
     LOGGER_FILENAME: Final[str] = ROOT_LOCATION + strftime("%m%d%Y-%H%M-") + "discord-activity-badge.log"
     LOGGER_OUTPUT_FORMAT: Final[
         str
-    ] = "[%(relativeCreated)d ms] | [%(levelname)s] in %(module)s.py:%(lineno)d -> %(message)s"
+    ] = "[%(relativeCreated)d ms, %(levelname)s\t]\tin %(module)s.py:%(lineno)d -> %(message)s"
 
     # # Required Parameters @ ENV
     REQUIRED_PARAMS_IN_ENV: List[str] = [""]  # todo...

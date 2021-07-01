@@ -57,11 +57,12 @@ class EntryImportNotAllowed(Exception):
         super().__init__(messages)
 
 
-class NoLoggerDetected(Exception):
-    """The application is tempted to do logging but the user disables it."""
+class DotEnvFileNotFound(Exception):
+    """An exception that expands the capabilities of exception SystemExit by adding message and the return code + name."""
 
-    def __init__(self) -> None:
+    def __init__(self, *args) -> None:
         messages: Final[
             str
-        ] = "Application is expected to log but the user disables it explicitly. Please do not dismantle."
+        ] = f"Error Code: {args[0]=} | Dotenv File cannot be found. Please check your specified path or the name of the file and try again."
+
         super().__init__(messages)

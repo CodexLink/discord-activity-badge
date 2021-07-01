@@ -17,8 +17,7 @@ limitations under the License.
 
 # # Entrypoint of the Application Services — entrypoint.py
 
-from ast import FormattedValue
-from logging import Formatter
+from venv import create
 
 
 if __name__ != "__main__":
@@ -28,20 +27,33 @@ if __name__ != "__main__":
 
 else:
     from args import ArgumentResolver
-    from typing import Generator, Any
-    from asyncio import AbstractEventLoop, get_event_loop
+    from typing import Generator, Any, Tuple
+    from asyncio import (
+        AbstractEventLoop,
+        create_task,
+        Future,
+        gather,
+        get_event_loop,
+        sleep as asyncio_sleep,
+        shield,
+        Task,
+    )
     from client import DiscordClientHandler
-    from dotenv import load_dotenv
+    from dotenv import find_dotenv, load_dotenv
     import os
     from sys import stdout
     import logging
     from typing import Optional
 
+    from elements.exceptions import DotEnvFileNotFound
+
     from elements.constants import (
-        LOGGER_FILENAME,
-        ROOT_LOCATION,
-        LOGGER_OUTPUT_FORMAT,
+        ENV_FILENAME,
         DISCORD_CLIENT_INTENTS,
+        RET_DOTENV_NOT_FOUND,
+        LOGGER_FILENAME,
+        LOGGER_OUTPUT_FORMAT,
+        ROOT_LOCATION,
     )
 
     class ActivityBadgeServices(
@@ -52,43 +64,82 @@ else:
         """The start of everything. This is the core from initializing the workflow to generating the badge."""
 
         def __init__(self, **kwargs: dict[Any, Any]) -> None:
-            load_dotenv(ROOT_LOCATION + ".env")
+            """
+            Step 0.1 | Prepare non-async functions to load other assets that will be needed later.
+            If function "find_dotenv" raise an error, the script won't run.
+            Or else, run Step 0.2.
+            """
+            try:
+                load_dotenv(
+                    find_dotenv(
+                        filename=ROOT_LOCATION + ENV_FILENAME,
+                        raise_error_if_not_found=True,
+                    )
+                )
+            except IOError:
+                raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
 
         async def __preload_subclasses(self) -> Any:
-            """Instantiates all subclasses (that inherits by this class, formerly known as Base Class) to prepare the module for the process.
+            """
+            Step 0.2 | Instantiates all subclasses to prepare the module for the process.
 
             Notes:
-                (1) The first super().__init__() instantiates ArgumentResolver, this is more of, prepare and evaluate arguments, given on launch.
-                (2) The second super() instantiates LoggerComponent by moving up to ArgumentResolver as base MRO pattern function searching.
-                (3)
-                (4)
-                As we evaluate the code, the await is invalid because it expects the super() to return None, it isn't.
+                (1.a) Let's load the logger first to enable backtracking incase if there's anything happened wrong. [If explicitly stated to run based on arguments.]
+                (1.b) We migh want to shield this async function to avoid corruption. We don't want a malformed output.
+                (2) Await the first super().__init__() which instantiates ArgumentResolver, this is required before we do tasking since we need to evaluate the given arguments.
+                (3.a) Instantiate the super().__init__(intents) which belongs to DiscordClientHandler. This is required to load other properties that is required by its methods.
+                (3.b) We cannot await this one because discord.__init__ is not a coroutine. And it shouldn't be, which is right.
+                (4) And once we load the properties, we can now asynchronously load discord in task.
+                (5) There will be another task that is gathered into one so that it is distinguishly different than other await functions. They are quite important under same context.
 
             Credits:
                 (1) https://stackoverflow.com/questions/33128325/how-to-set-class-attribute-with-await-in-init.
                 (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
             """
-            await self.__load_logger(level_coverage=logging.DEBUG, log_to_file=True, out_to_console=True)
+            await shield(
+                self.__load_logger(
+                    level_coverage=logging.DEBUG, log_to_file=False, out_to_console=True
+                )
+            )  # * (1) [a,b]
+            await super().__init__()  # * (2)
 
-            await super().__init__()
-            super(ArgumentResolver, self).__init__(intents=DISCORD_CLIENT_INTENTS)
+            super(ArgumentResolver, self).__init__(
+                intents=DISCORD_CLIENT_INTENTS
+            )  # * (3) [a,b]
 
-            await super(ArgumentResolver, self).start(os.environ.get("DISCORD_TOKEN"))
+            self.discord_client_task: Task = create_task(
+                super(ArgumentResolver, self).start(os.environ.get("DISCORD_TOKEN"))
+            )  # * (4)
+
+            self.constraint_checkers: Future[Tuple[Any, None]] = gather(
+                self.__requirement_validation(), self.__param_eval()
+            )  # * (5)
+
+            await self.constraint_checkers
+
             self.logger.debug("Done.")
 
-            # req_args = await super().get_parameter_value("no_logging")
-            # print(f"The output of req_args is {req_args}")
+            await self.discord_client_task  # If this is still not yet done then let's await.
 
         def __await__(self) -> Generator:
             return self.__preload_subclasses().__await__()
 
-        async def __load_logger(  # todo: Not sure with this one.
+        async def __load_logger(
             self,
             level_coverage: Optional[int] = logging.DEBUG,
             log_to_file: Optional[bool] = False,
             out_to_console: Optional[bool] = False,
         ) -> None:
-            """Loads the logger for all associated modules + this module."""
+            """
+            Step 0.3 | Loads the logger for all associated modules.
+
+            Args:
+                level_coverage (Optional[int], optional): Sets the level (and above) to cover it in the logs or in stream. Defaults to logging.DEBUG.
+                log_to_file (Optional[bool], optional): Creates a file and logs the data if set to True, or otherwise. Defaults to False.
+                out_to_console (Optional[bool], optional): Output the log reports in the console, if enabled. Defaults to False.
+
+            Summary: todo.
+            """
 
             __levels__ = [
                 logging.DEBUG,
@@ -99,7 +150,7 @@ else:
             ]
 
             # Expressed Statements
-            __LOGGER_HANDLER_FORMATTER: Optional[Formatter] = logging.Formatter(
+            __LOGGER_HANDLER_FORMATTER: Optional[logging.Formatter] = logging.Formatter(
                 LOGGER_OUTPUT_FORMAT
             )
             __LOGGER_LEVEL_COVERAGE: int = (
@@ -116,10 +167,14 @@ else:
                 file_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
                 self.logger.addHandler(file_handler)
 
+                await asyncio_sleep(0.2)
+
             if out_to_console:
                 console_handler = logging.StreamHandler(stdout)
                 console_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
                 self.logger.addHandler(console_handler)
+
+                await asyncio_sleep(0.2)
 
             if not level_coverage in __levels__:
                 self.logger.warning(
@@ -127,18 +182,24 @@ else:
                 )
 
             else:
-                self.logger.info(f"Logger Coverage Level was set to {level_coverage}.") # todo: Make it enumerated to show the name.
+                self.logger.info(
+                    f"Logger Coverage Level was set to {level_coverage}."
+                )  # todo: Make it enumerated to show the name.
 
             self.logger.info("The logger has been loaded.")
 
-        # Step 1 | Checking of parameters before doing anything.
-        def __condition_checks(self) -> Any:
+        async def __requirement_validation(self) -> Any:
+            # Step 0.4a | Checking of parameters before doing anything.
             # 1.1 | Parameter Key Validatation.
             # 1.2 | README Checking Indicators.
             pass
 
-        # Step 2 | Evaluation of Parameters from Discord to Args.
-        def __param_eval(self) -> None:
+        async def __param_eval(self) -> None:
+            # Step 0.4b | Evaluation of Parameters from Discord to Args.
+            pass
+
+        # Wrapper of other steps.
+        async def __process(self) -> None:
             pass
 
         # Step 3 | Discord Accessing and Caching of Data.
