@@ -26,7 +26,9 @@ if __name__ == "__main__":
 else:
     from datetime import timedelta as timeConstraint
     from typing import Any, Final, List
-    from enum import Enum, IntEnum
+    from time import strftime
+    from discord import Intents
+
     """
     This is an intentional implementation, I just prefer to keep long strings to another file.
     And let short constants intact so that the context is not out of blue.
@@ -36,10 +38,10 @@ else:
     ARG_CONSTANTS: Final[dict[str, str]] = {  # Cannot evaluate less.
         "ENTRY_PARSER_DESC": "An application that runs under workflow to evaluate User's Discord Activity Presence to Displayable Badge for their README.md.",
         "ENTRY_PARSER_EPILOG": "The use of arguments are intended for debugging purposes only. Please be careful.",
-        "HELP_DESC_NO_LOGGING": "Disables logging but does not surpress outputting logs to console, if enabled.",
         "HELP_DESC_DRY_RUN": "Runs the whole script without commiting changes to external involved factors (ie. README.md)",
-        "HELP_DESC_NO_ALERT_USR": "Does not alert the user / developer from the possible crashes through Direct Messages (this also invokes the do-not-send logs.)",
         "HELP_DESC_LOG_TO_CONSOLE": "Prints the log output to the console, whenever the case.",
+        "HELP_DESC_NO_ALERT_USR": "Does not alert the user / developer from the possible crashes through Direct Messages (this also invokes the do-not-send logs.)",
+        "HELP_DESC_NO_LOG_TO_FILE": "Disables logging to file but does not surpress outputting logs to console, if specified.",
     }
 
     # # Class Container Metadata
@@ -48,8 +50,8 @@ else:
         str
     ] = "This is a plain class to where the args has been living after being evaluated."
 
-    # # Discord Client Bot Message Context
-    DISCORD_DATA_CONTAINER: Final[str] = "DiscUserCtxContainer"
+    # # Discord Client
+    DISCORD_DATA_CONTAINER : Final[str] = "DiscUserCtxContainer"
     DISCORD_DATA_CONTAINER_ATTRS: Final[
         dict[str, Any]
     ] = {  # todo: Fill it up later. +  Ref: https://stackoverflow.com/questions/3603502/prevent-creating-new-attributes-outside-init
@@ -61,52 +63,18 @@ else:
         str
     ] = "Client (%s) is ready for evaluation of user's activity presence."
 
+    # # Discord Client
+
+    DISCORD_CLIENT_INTENTS = Intents.none() # todo: Make this one finalized later.
+    DISCORD_CLIENT_INTENTS.presences = True
+
+
     # # Logger Information
-    LOGGER_FILENAME: Final[str] = "idk.log"  # todo: be dynamic about this. Use Date.
-    LOGGER_LOG_LOCATION: Final[str] = "../../"  # todo: resolve unresolved class name.
+    ROOT_LOCATION: Final[str] = "../"
+    LOGGER_FILENAME: Final[str] = ROOT_LOCATION + strftime("%m%d%Y-%H%M-") + "discord-activity-badge.log"
     LOGGER_OUTPUT_FORMAT: Final[
         str
-    ] = "[%(asctime)s] Some Class @ %(filename)s [%(lineno)d] -> %(levelname)s | %(message)s"
-    LOGGER_DATETIME_FORMAT: Final[str] = ""  # todo.
-
-    # # Logger Code Enumerations
-
-    class LoggerCodeRet(IntEnum):
-        # todo: Clean this later.
-
-        NO_RECORDED_RET_CODE = -1
-        OP_SUCCESS = 0
-        OP_FAILED = 1
-
-        SET_LEVEL_SUCCESS = 2
-        SET_LEVEL_FAILED = 3
-
-        NO_CHILD_REGISTERED = 4
-
-        REFERRED_CHILD_DOES_NOT_EXIST = 8
-        INVALID_REFERRED_LEVEL_FUNC = 9
-
-        REFERRED_ATTR_IS_INVALID = 10
-
-        SUPPLIED_INVALID_ELEMENT = 11
-        DOES_NOT_CONTAIN_VALUE = 12
-
-        VALID_REGISTERED_CLS = 7
-        INVALID_REGISTERED_CLS = 5
-
-        UNREGISTER_SUCCESS = 6
-        UNREGISTER_FAILED = 7
-
-    # # Logger Code Raised Error Messages
-
-
-    # # Children Properties from Logger Component.
-    LOGGER_CHILD_PROPERTIES: Final[List[str]] = [
-        "is_logging_enabled",  # Disables / Enables logging of the certain module, evaluated to True unless explicitly changed by parent.
-        "is_priting_enabled",  # Disables / Enables printing to console of the certain module, evaluated to False if there's no switch.
-        "level_coverage",  # A level indicator (and above) from where the logger should output.
-        "is_verified",  # A boolean that indicates whether this one is verified and pushed implicitly.
-    ] # ! This could have been done as Dict(). But there may be a use case to validate this one later.
+    ] = "[%(relativeCreated)d ms] | [%(levelname)s] in %(module)s.py:%(lineno)d -> %(message)s"
 
     # # Required Parameters @ ENV
     REQUIRED_PARAMS_IN_ENV: List[str] = [""]  # todo...

@@ -17,9 +17,8 @@ limitations under the License.
 
 # # Entrypoint of the Application Services — entrypoint.py
 
-from distutils.log import INFO
-from pickle import TRUE
-from click import Argument
+from ast import FormattedValue
+from logging import Formatter
 
 
 if __name__ != "__main__":
@@ -28,26 +27,32 @@ if __name__ != "__main__":
     raise EntryImportNotAllowed
 
 else:
-    from utils import ArgumentResolver, LoggerComponent
-    from typing import Any
+    from args import ArgumentResolver
     from typing import Generator, Any
     from asyncio import AbstractEventLoop, get_event_loop
-    from modules import DiscordClientHandler  # For binding discord later.
-    from dotenv import load_dotenv as LOAD_ENV
+    from client import DiscordClientHandler
+    from dotenv import load_dotenv
     import os
-    from elements.properties import (
-        client_intents as CLIENT_INTENTS,
-    )  # todo: To be removed later.
+    from sys import stdout
+    import logging
+    from typing import Optional
+
+    from elements.constants import (
+        LOGGER_FILENAME,
+        ROOT_LOCATION,
+        LOGGER_OUTPUT_FORMAT,
+        DISCORD_CLIENT_INTENTS,
+    )
 
     class ActivityBadgeServices(
         ArgumentResolver,
-        LoggerComponent,
-        DiscordClientHandler,  # BadgeGenerator
+        DiscordClientHandler,
+        # BadgeGenerator
     ):
         """The start of everything. This is the core from initializing the workflow to generating the badge."""
 
         def __init__(self, **kwargs: dict[Any, Any]) -> None:
-            LOAD_ENV("../.env")
+            load_dotenv(ROOT_LOCATION + ".env")
 
         async def __preload_subclasses(self) -> Any:
             """Instantiates all subclasses (that inherits by this class, formerly known as Base Class) to prepare the module for the process.
@@ -63,43 +68,68 @@ else:
                 (1) https://stackoverflow.com/questions/33128325/how-to-set-class-attribute-with-await-in-init.
                 (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
             """
-
-            os.system("CLS") # # Temporary.
-
+            await self.__load_logger(level_coverage=logging.DEBUG, log_to_file=True, out_to_console=True)
 
             await super().__init__()
-            await super(ArgumentResolver, self).__init__()
+            super(ArgumentResolver, self).__init__(intents=DISCORD_CLIENT_INTENTS)
 
+            await super(ArgumentResolver, self).start(os.environ.get("DISCORD_TOKEN"))
+            self.logger.debug("Done.")
 
-            await self.register((self.__class__.__bases__[1:] + (self.__class__, ))) # todo: Will explain later because it's unreadable.
-
-            print(f" Would this work? > {await self.registered_cls}")
-
-            exit(0)
-
-            super(LoggerComponent, self).__init__()
-
-            await self.start(os.environ.get("DISCORD_TOKEN"))
-            # await super(LoggerComponent, self).start(os.environ.get("DISCORD_TOKEN"))
-
-
-            # Register those classes in the logger.
-            # await super(ArgumentResolver, self). register()
-
-            # Once we are d
             # req_args = await super().get_parameter_value("no_logging")
-
             # print(f"The output of req_args is {req_args}")
 
         def __await__(self) -> Generator:
             return self.__preload_subclasses().__await__()
 
-        def __preload(self) -> None:
-            # We assume that anything that parameters that we received is evaluated by our InconstantArguments Subclass.
-            print()
+        async def __load_logger(  # todo: Not sure with this one.
+            self,
+            level_coverage: Optional[int] = logging.DEBUG,
+            log_to_file: Optional[bool] = False,
+            out_to_console: Optional[bool] = False,
+        ) -> None:
+            """Loads the logger for all associated modules + this module."""
 
-        def __initiate_proc(self) -> None:
-            pass
+            __levels__ = [
+                logging.DEBUG,
+                logging.INFO,
+                logging.WARNING,
+                logging.ERROR,
+                logging.CRITICAL,
+            ]
+
+            # Expressed Statements
+            __LOGGER_HANDLER_FORMATTER: Optional[Formatter] = logging.Formatter(
+                LOGGER_OUTPUT_FORMAT
+            )
+            __LOGGER_LEVEL_COVERAGE: int = (
+                level_coverage if level_coverage in __levels__ else logging.DEBUG
+            )
+
+            self.logger = logging.getLogger(__name__)
+            self.logger.setLevel(__LOGGER_LEVEL_COVERAGE)
+
+            if log_to_file:
+                file_handler = logging.FileHandler(
+                    filename=LOGGER_FILENAME, encoding="utf-8", mode="w"
+                )
+                file_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
+                self.logger.addHandler(file_handler)
+
+            if out_to_console:
+                console_handler = logging.StreamHandler(stdout)
+                console_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
+                self.logger.addHandler(console_handler)
+
+            if not level_coverage in __levels__:
+                self.logger.warning(
+                    "Argument level_coverage is invalid from any of the list in __level__. setLevel() will use a default value (logging.DEBUG) instead."
+                )
+
+            else:
+                self.logger.info(f"Logger Coverage Level was set to {level_coverage}.") # todo: Make it enumerated to show the name.
+
+            self.logger.info("The logger has been loaded.")
 
         # Step 1 | Checking of parameters before doing anything.
         def __condition_checks(self) -> Any:
@@ -135,15 +165,15 @@ else:
         def __repr__(self) -> str:
             return f"<Activity Badge Service, State: n/a | Discord User: n/a | Curr. Process: n/a>"
 
-    if __name__ == "__main__":
-        LOAD_ENV(".env")
-        loop_instance: AbstractEventLoop = get_event_loop()
+        def __del__(self) -> None:
+            pass
+            # logging.shutdown()  # todo: Refer to handler.
 
+    if __name__ == "__main__":
+        loop_instance: AbstractEventLoop = get_event_loop()
         entry_instance = loop_instance.run_until_complete(ActivityBadgeServices())
-        # # entry_instance = ActivityBadgeServices()
 
         # if entry_instance.current_state:
-
         #     exit(0)
         # else:
         #     pass # Raise the error and exit it under that error code.

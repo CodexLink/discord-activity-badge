@@ -65,18 +65,3 @@ class NoLoggerDetected(Exception):
             str
         ] = "Application is expected to log but the user disables it explicitly. Please do not dismantle."
         super().__init__(messages)
-
-
-class LoggerOperationFailed(Exception):
-    """An exception specifically for the Logger Component. [...]"""
-
-
-class LoggerRegistrationFailed(Exception):
-    """An exception used to handle register() function return. This should stop everything"""
-
-    def __init__(self, *args: tuple[Any]) -> None:
-        messages: str = (
-            "The logger failed to register due to the following error code: %s | %d"
-            % (args[0].name, args[0].value)
-        )
-        super().__init__(messages)
