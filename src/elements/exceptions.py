@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# todo: Whenever as possible, do dry principles here.
+# todo: Whenever as possible, do DRY principles here.
+
 from typing import Any, Final
 
 # # Discord Exceptions
@@ -26,16 +27,6 @@ class MutualGuildsNotFound(Exception):
     """
 
     pass
-
-
-class UserDoesNotExists(Exception):
-    """ """
-
-    pass
-
-
-# # Module Exceptions
-
 
 class IsolatedExecNotAllowed(Exception):
     """The use of modules under isolation is not allowed; hence, raising this error."""

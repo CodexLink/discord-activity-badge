@@ -19,7 +19,7 @@ limitations under the License.
 
 
 if __name__ == "__main__":
-    from exceptions import IsolatedExecNotAllowed
+    from .exceptions import IsolatedExecNotAllowed
 
     raise IsolatedExecNotAllowed
 
@@ -29,6 +29,17 @@ else:
     from time import strftime
     from discord import Intents
 
+    # # Badge Generator Constants
+
+    BADGE_BASE_URL: Final[str] = "https://badgen.net"
+    BADGE_URI: Final[str] = BADGE_BASE_URL + "/badge/%s/%s/%s"
+    BADGE_DEFAULT_SUBJECT: Final[str] = "Rich Presence"
+    BADGE_DEFAULT_SUBJECT_BG_COLOR: Final[str] = "black"
+    BADGE_DEFAULT_STATUS: Final[str] = "%s %s"
+    BADGE_DEFAULT_STATUS_BG_COLOR: Final[str] = "red"
+    BADGE_DEFAULT_STATUS_SEP_CHAR: Final[str] = "|"
+    BADGE_ICON: Final[str] = "discord"
+
     # # Classified Arguments Information
     ARG_CONSTANTS: Final[dict[str, str]] = {  # Cannot evaluate less.
         "ENTRY_PARSER_DESC": "An application that runs under workflow to evaluate User's Discord Activity Presence to Displayable Badge for their README.md.",
@@ -37,6 +48,7 @@ else:
         "HELP_DESC_LOG_TO_CONSOLE": "Prints the log output to the console, whenever the case.",
         "HELP_DESC_NO_ALERT_USR": "Does not alert the user / developer from the possible crashes through Direct Messages (this also invokes the do-not-send logs.)",
         "HELP_DESC_NO_LOG_TO_FILE": "Disables logging to file but does not surpress outputting logs to console, if specified.",
+        "HELP_DESC_VERBOSE_CLIENT": "Allows Discord Client API to log. This is useful to check if Discord.py is doing something while the log is silent.",
     }
 
     # # Class Container Metadata
@@ -46,13 +58,21 @@ else:
     ] = "This is a plain class to where the args has been living after being evaluated."
 
     # # Discord Client
-    DISCORD_DATA_CONTAINER : Final[str] = "DiscUserCtxContainer"
+    DISCORD_DATA_CONTAINER: Final[str] = "DiscUserCtxContainer"
     DISCORD_DATA_CONTAINER_ATTRS: Final[
         dict[str, Any]
     ] = {  # todo: Fill it up later. +  Ref: https://stackoverflow.com/questions/3603502/prevent-creating-new-attributes-outside-init
-        "__usr__": {},  # Contains user's information, this excludes the Discord Rich Presence.
-        "__guild__": {},  # Contains guild information.
-        "__presence__": {},  # Contains user's presence activity.
+        "__usr__": {
+            "id": None,
+            "name": None,
+            "discriminator": None,
+        },  # Contains user's information, this excludes the Discord Rich Presence.
+        "__guild__": {
+            "": None,
+        },  # Contains guild information.
+        "__presence__": {
+            "": None,
+        },  # Contains user's presence activity.
     }
     DISCORD_ON_READY_MSG: Final[
         str
@@ -60,23 +80,25 @@ else:
 
     # # Discord Client
 
-    DISCORD_CLIENT_INTENTS : Intents = Intents.none() # todo: Make this one finalized later.
+    DISCORD_CLIENT_INTENTS: Intents = Intents.none()
+    DISCORD_CLIENT_INTENTS.guilds = True
+    DISCORD_CLIENT_INTENTS.members = True
     DISCORD_CLIENT_INTENTS.presences = True
 
     # # Identification of Return Codes
-    RET_DOTENV_NOT_FOUND : Final[int] = -1
-
+    RET_DOTENV_NOT_FOUND: Final[int] = -1
 
     # # Message of Return Codes
 
-
     # # Logger Information
     ROOT_LOCATION: Final[str] = "../"
-    ENV_FILENAME : Final[str] = ".env"
-    LOGGER_FILENAME: Final[str] = ROOT_LOCATION + strftime("%m%d%Y-%H%M-") + "discord-activity-badge.log"
+    ENV_FILENAME: Final[str] = ".env"
+    LOGGER_FILENAME: Final[str] = (
+        ROOT_LOCATION + strftime("%m%d%Y-%H%M-") + "discord-activity-badge.log"
+    )
     LOGGER_OUTPUT_FORMAT: Final[
         str
-    ] = "[%(relativeCreated)d ms, %(levelname)s\t]\tin %(module)s.py:%(lineno)d -> %(message)s"
+    ] = "[%(relativeCreated)d ms, %(levelname)s\t]\tat %(module)s.py:%(lineno)d -> %(message)s"
 
     # # Required Parameters @ ENV
     REQUIRED_PARAMS_IN_ENV: List[str] = [""]  # todo...

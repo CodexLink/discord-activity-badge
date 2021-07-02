@@ -137,6 +137,16 @@ else:
 
 			self.logger.debug(f"ArgumentParser: Argument -nl added.")
 
+			self.__parser.add_argument(
+				"-vc",
+				"--verbose_client",
+				action="store_true",
+				help=ARG_CONSTANTS["HELP_DESC_VERBOSE_CLIENT"],
+				required=False,
+			)
+
+			self.logger.debug(f"ArgumentParser: Argument -vc added.")
+
 			# We wait for the container to finish (from another task) and push those data to the container.
 			await self.__task_container_create
 			self.logger.debug(f"Awaited Task (2): {self.__task_container_create=}")

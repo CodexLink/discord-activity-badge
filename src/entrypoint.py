@@ -17,49 +17,44 @@ limitations under the License.
 
 # # Entrypoint of the Application Services — entrypoint.py
 
-from venv import create
-
-
 if __name__ != "__main__":
     from elements.exceptions import EntryImportNotAllowed
 
     raise EntryImportNotAllowed
 
 else:
-    from args import ArgumentResolver
-    from typing import Generator, Any, Tuple
+    import logging
+    import os
     from asyncio import (
         AbstractEventLoop,
-        create_task,
         Future,
+        Task,
+        create_task,
         gather,
         get_event_loop,
-        sleep as asyncio_sleep,
         shield,
-        Task,
     )
-    from client import DiscordClientHandler
-    from dotenv import find_dotenv, load_dotenv
-    import os
+    from asyncio import sleep as asyncio_sleep
     from sys import stdout
-    import logging
-    from typing import Optional
 
-    from elements.exceptions import DotEnvFileNotFound
+    from typing import Any, Generator, Optional, Tuple
+    from dotenv import find_dotenv, load_dotenv
 
+    from args import ArgumentResolver
+    from badge import BadgeConstructor
+    from client import DiscordClientHandler
     from elements.constants import (
-        ENV_FILENAME,
         DISCORD_CLIENT_INTENTS,
-        RET_DOTENV_NOT_FOUND,
+        ENV_FILENAME,
         LOGGER_FILENAME,
         LOGGER_OUTPUT_FORMAT,
+        RET_DOTENV_NOT_FOUND,
         ROOT_LOCATION,
     )
+    from elements.exceptions import DotEnvFileNotFound
 
     class ActivityBadgeServices(
-        ArgumentResolver,
-        DiscordClientHandler,
-        # BadgeGenerator
+        ArgumentResolver, DiscordClientHandler, BadgeConstructor
     ):
         """The start of everything. This is the core from initializing the workflow to generating the badge."""
 
@@ -79,7 +74,7 @@ else:
             except IOError:
                 raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
 
-        async def __preload_subclasses(self) -> Any:
+        async def __load_tasks(self) -> Any:
             """
             Step 0.2 | Instantiates all subclasses to prepare the module for the process.
 
@@ -89,7 +84,7 @@ else:
                 (2) Await the first super().__init__() which instantiates ArgumentResolver, this is required before we do tasking since we need to evaluate the given arguments.
                 (3.a) Instantiate the super().__init__(intents) which belongs to DiscordClientHandler. This is required to load other properties that is required by its methods.
                 (3.b) We cannot await this one because discord.__init__ is not a coroutine. And it shouldn't be, which is right.
-                (4) And once we load the properties, we can now asynchronously load discord in task.
+                (4) And once we load the properties, we can now asynchronously load discord in task. Do not await this task!
                 (5) There will be another task that is gathered into one so that it is distinguishly different than other await functions. They are quite important under same context.
 
             Credits:
@@ -98,18 +93,22 @@ else:
             """
             await shield(
                 self.__load_logger(
-                    level_coverage=logging.DEBUG, log_to_file=False, out_to_console=True
+                    level_coverage=logging.DEBUG, log_to_file=False, out_to_console=True, # verbose_client=True
                 )
             )  # * (1) [a,b]
             await super().__init__()  # * (2)
 
-            super(ArgumentResolver, self).__init__(
+            print("MRO of this class > ", self.__class__.__mro__)
+
+            super(DiscordClientHandler, self).__init__(
                 intents=DISCORD_CLIENT_INTENTS
             )  # * (3) [a,b]
 
+            create_task(self.init_badge_services())  # * ?? [a, b]
+
             self.discord_client_task: Task = create_task(
-                super(ArgumentResolver, self).start(os.environ.get("DISCORD_TOKEN"))
-            )  # * (4)
+                super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN"))
+            )  # * (4), start while we check something else.
 
             self.constraint_checkers: Future[Tuple[Any, None]] = gather(
                 self.__requirement_validation(), self.__param_eval()
@@ -119,16 +118,18 @@ else:
 
             self.logger.debug("Done.")
 
-            await self.discord_client_task  # If this is still not yet done then let's await.
+            await asyncio_sleep(60)
+
 
         def __await__(self) -> Generator:
-            return self.__preload_subclasses().__await__()
+            return self.__load_tasks().__await__()
 
         async def __load_logger(
             self,
             level_coverage: Optional[int] = logging.DEBUG,
             log_to_file: Optional[bool] = False,
             out_to_console: Optional[bool] = False,
+            verbose_client: Optional[bool] = False,
         ) -> None:
             """
             Step 0.3 | Loads the logger for all associated modules.
@@ -157,7 +158,8 @@ else:
                 level_coverage if level_coverage in __levels__ else logging.DEBUG
             )
 
-            self.logger = logging.getLogger(__name__)
+
+            self.logger = logging.getLogger(__name__ if not verbose_client else "discord")
             self.logger.setLevel(__LOGGER_LEVEL_COVERAGE)
 
             if log_to_file:
@@ -218,10 +220,6 @@ else:
         # def __git_commit(self) -> None:
         #     # todo: Create a Todo about the enums that this function can emit.
         #     pass
-
-        @property
-        def current_state(self) -> bool:  # todo: Create a classification here.
-            return True  # Placeholder for now.
 
         def __repr__(self) -> str:
             return f"<Activity Badge Service, State: n/a | Discord User: n/a | Curr. Process: n/a>"
