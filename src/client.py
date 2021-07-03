@@ -1,5 +1,5 @@
 """
-copyright 2021 janrey "codexlink" licas
+Copyright 2021 Janrey "CodexLink" Licas
 
 licensed under the apache license, version 2.0 (the "license");
 you may not use this file except in compliance with the license.
@@ -14,23 +14,6 @@ see the license for the specific language governing permissions and
 limitations under the license.
 """
 
-# # A set of functions used for intended proceses — modules.py
-
-from stat import FILE_ATTRIBUTE_ARCHIVE
-from discord import Activity, ActivityType, Client as DiscordClient, Status
-from discord.errors import Forbidden, NotFound
-from discord.user import User
-from discord.guild import Guild
-import logging
-import os
-from asyncio import create_task, Future, Task, Queue
-from typing import Any
-from elements.constants import (
-	DISCORD_ON_READY_MSG,
-	DISCORD_DATA_CONTAINER,
-	DISCORD_DATA_CONTAINER_ATTRS,
-)
-
 if __name__ == "__main__":
 	from elements.exceptions import IsolatedExecNotAllowed
 
@@ -38,33 +21,65 @@ if __name__ == "__main__":
 
 else:
 
+	import os
+	from asyncio import create_task, ensure_future
+	from typing import List
+
+	from discord import Activity, ActivityType
+	from discord import Client as DiscordClient
+	from discord import Status
+	from discord.activity import Activity, CustomActivity, Game
+	from discord.errors import NotFound
+	from discord.guild import Guild
+	from discord.user import User
+
+	from elements.constants import (
+		DISCORD_CLIENT_INTENTS,
+		DISCORD_DATA_CONTAINER,
+		DISCORD_DATA_CONTAINER_ATTRS,
+		DISCORD_DATA_FIELD_CUSTOM,
+		DISCORD_DATA_FIELD_GAME,
+		DISCORD_DATA_FIELD_PRESENCE,
+		DISCORD_DATA_FIELD_UNSPECIFIED,
+		DISCORD_ON_READY_MSG,
+	)
+
 	class DiscordClientHandler(DiscordClient):
-		"""An Async-Class Wrapper for handling Discord API to fetch User's Discord Rich Presence State."""
+		"""
+		A DiscordClient Async Wrapper for handling request of user's related activities for badge processing.
+
+		Args:
+			DiscordClient (object): The class "Client" that is normally used to instantiate from a variable.
+		"""
+
+		def __init__(self) -> None:
+			"""
+			A constructor that initializes another constructor, which is directly referring to DiscordClient (known as discord.Client) to instantiate resources.
+			"""
+			super(DiscordClientHandler, self).__init__(intents=DISCORD_CLIENT_INTENTS)
 
 		async def on_ready(self) -> None:
 			"""
-			Creates an object container (which is a class) that contains everything about the user and their properties that is related from this activity.
-
-			Returns:
-											object: Returns a referrable object to be used later.
-
-			Preloads attributes and properties to be used in the latter process.
+			An entrypoint function to load attributes and properties to be used in the latter process.
+			This is the part where discord.py takes awhile to initialize because of Discord's API Rules.
 
 			Notes:
-											(1): The following class doesn't save anything about the user, it was just there to retain on runtime so that it can be referrable for future use of discord.py API.
-											(2): If you are curious on what does this object contain, please check the elements.constants.py.
-											(3): The object that gets returned is a freeze class, meaning, from how they are initialized, should stay like that.
+				(1.a) Creates an object container (class) that contains necessarity information user and it's activity/ies.
+				(1.b) The following class contains a dict() that maps the user's status and its activity later. For more information, go check elements.constants | Discord Client Container Metadata.
+				(2) Instantiates Presence Activity in the Bot, this was done just for an indicator. So it's not a big deal at all.
+				(3.a) Two-stacked awaitable functions are done in order to ensure that we have the user's context first, and then we get the status and its activity via outer scope function.
+				(3.b) The use of asyncio.gather() or Queue() won't work here because we need to wait for the inner scope function to finish first. Can't do asynchronously on this space.
 
-			todo: ref on (3) -> elements.constants about this matter.
 			"""
+
 			self.logger.info(DISCORD_ON_READY_MSG % self.user)
+
 
 			self.__client_container: object = type(
 				DISCORD_DATA_CONTAINER, (object,), DISCORD_DATA_CONTAINER_ATTRS
-			)  # Creates a container for use later. No need to await this one.
-			# todo: Try to resolve other missing things with typing later.
+			)  # * (1) [a, b]
 
-			create_task(
+			ensure_future(
 				(
 					self.change_presence(
 						status=Status.online,
@@ -73,17 +88,34 @@ else:
 						),
 					)
 				)
-			)  # Changes the bot's presence concurrently.
+			)  # * (2)
 
 			self.logger.info(
 				f"Instance of {DiscordClientHandler.__name__} has finished setting tasks asynchronously. Access to ... (property) is now allowed."
 			)
 
 			# Get the user first, then get the guild context.
-			await self.get_presence_via_guild(await self.__get_user())
+			await self._get_activities_via_guild(await self.__get_user())  # * 3 [a, b]
+
+			self.logger.info("Discord Client is finished fetching data and is saved under self._client_container for badge processing. Closing connection to Discord API.")
+			await self.close()
+			self.logger.info("Discord Client API Connection is successfully closed.")
 
 		async def __get_user(self) -> User:
-			"""Gets the Discord Information from the User and will encapsulated by a Class."""
+			"""
+			Obtains Discord User's Basic Information and returns it as a "discord.user.User".
+
+			The obtained information will be used to find the user in the guild to get the "Activity" of the user.
+			Sadly, we can't just do it directly with User. It's the Discord's API limitation, as far as I know.
+
+			Notes:
+				(1) The implementation of variable assignments is quite uncommon in this case. The self.__client_container.user is non-existent
+				(1) unless instantiated. Please refer to elements.constants | Discord Client Container Metadata to see the elements that is mypy unable to find.
+
+			Returns:
+				User: Contains information of the user encapsulated in <class 'discord.user.Users'>.
+			"""
+
 			self.logger.info(
 				"Step 1 of 2 | Attempting to fetch discord user's info for validation use."
 			)
@@ -93,16 +125,12 @@ else:
 					os.environ.get("STATIC_TARGET_USER")
 				)
 
-				print(type(__user_info__))
-
-				self.__client_container.__usr__["id"] = __user_info__.id
-				self.__client_container.__usr__["name"] = __user_info__.name
-				self.__client_container.__usr__[
+				# * (1) and similar.
+				self.__client_container.user["id"] = __user_info__.id
+				self.__client_container.user["name"] = __user_info__.name
+				self.__client_container.user[
 					"discriminator"
 				] = __user_info__.discriminator
-
-				# await __user_info__.create_dm()
-				# await __user_info__.send("Hello, this is a test.")
 
 				self.logger.info(
 					"Finished fetching user information. (id, name, and discriminator)"
@@ -110,41 +138,107 @@ else:
 
 				return __user_info__
 
-			except NotFound:  # Add custom error here.
+			except NotFound:
 				self.logger.error(
-					"The user cannot be found. Are you sure you have typed your ID properly?"
+					"The user cannot be found. Did you typed your Discord ID properly?"
 				)
 				os._exit(-2)
 
-		async def get_presence_via_guild(self, _fetched_user: User) -> None:
-			"""Get's the mutual guild of an existing Discord User and generate badge based from their activity"""
-			# Before we get the guild context, check if we have the bot and the user reside on a certain guilds (ie. mutual guilds). Or else message them being an error or supressed.
+		async def _get_activities_via_guild(self, _fetched_user: User) -> None:
+			"""
+			Retrieves User Activities by accessing a (Mutual) Guild with the Bot.
+
+			Args:
+				_fetched_user (User): The context of the inner scope function, which should contain the User's Information.
+
+			Notes:
+				(1.1.a) Before we get the guild, check if we have the bot and the user reside on a certain guilds (ie. mutual guilds).
+				(1.1.b) If ever there will be a context, ensure that the types we are seeing is a type of <class 'discord.guild.Guild'>
+				(2) Fetch the guild from the user and fetch it as a member from that guild.
+				(3) Fetch all activities from the user and serialize it in a way where it can be contained in self.__client_container under key "presence" (self.__client_container["presence"])
+				(3) Every attributes can be a dict() by calling to_dict() that is embedded from the activity.
+				(3) Each Activity Type will be renamed to accomodate the lower-case, underscore-space key and consistency.
+				(3) Once done, push the activity name (__cls_name__) to __activity_picked__ (List) so that no other duplicates can be inserted to the container.
+				(4) The discord.user.User itself doesn't provide much information of the user in real-time. I have to go through Guilds to see what's their current status.
+				(4) This is the exact reason of why this scope is not included to the DiscordClientHandler.__get_user() context.
+
+			Concept Notes:
+				(3) Keep in note that the loop only fetch the first object of a certain type of the activity. This means that, at the end of the loop, for every n has their distinct types.
+				(3) They cannot have more than 1 but should be exactly 1. This is similar to first-in, first-out.
+
+			"""
 
 			self.logger.info(
 				"Step 2 of 2 | Attempting to fetch guild context from where the bot also resides."
 			)
 
-			try:
-				if _fetched_user.mutual_guilds is None:
-					self.logger.error(f"Discord User doesn't have any Mutual Guilds with {self.user}. Please add the bot to your server and try again.")
-					os._exit(-3)
+			# * (1.1.a)
+			if _fetched_user.mutual_guilds is None:
+				self.logger.error(
+					f"Discord User doesn't have any Mutual Guilds with {self.user}. Please add the bot to your server and try again."
+				)
+				os._exit(-3)
 
-				if type(_fetched_user.mutual_guilds[0]) != Guild:
-					self.logger.critical(f"The list of mutual guild is expected to be {Guild} but received a type {type(_fetched_user.mutual_guilds)}")
-					os._exit(-4)
+			# * (1.1.b)
+			if not isinstance(_fetched_user.mutual_guilds[0], Guild):
+				self.logger.critical(
+					f"The list of mutual guild/s is/are expected to be {Guild}, but received a type {type(_fetched_user.mutual_guilds[0])}"
+				)
+				os._exit(-4)
 
-				c = _fetched_user.mutual_guilds[0].get_member(_fetched_user.id)
+			# * (1.2)
+			__fetched_member = _fetched_user.mutual_guilds[0].get_member(
+				_fetched_user.id
+			)
 
-				# todo: Create options, on what to display. Either CustomActivity or Activity or Mixed. Depending to user.
+			# * (2)
+			if __fetched_member.activities is None:
+				self.logger.warning(
+					"This user doesn't have any activity. Letting BadgeConstructor to fill it."
+				)
 
-				print(c.activity)
-				print(c.activities)
+			else:
 
-				print(c.status)
-				print(c.web_status)
-				print(c.desktop_status)
-				print(c.mobile_status)
-				print(c.is_on_mobile())
+				__activity_picked__: List[str] = []
 
+				# * (3)
+				for each_activities in __fetched_member.activities:
+					if not each_activities in __activity_picked__:
+						__activity__ = each_activities.to_dict()
+						__cls_name__ = each_activities.__class__.__name__
 
-			self.logger.info("Step 2 of 2 | Done.")
+						__resolved_activity_name__ = (
+							DISCORD_DATA_FIELD_CUSTOM
+							if __cls_name__ == CustomActivity.__name__
+							else DISCORD_DATA_FIELD_PRESENCE
+							if __cls_name__ == Activity.__name__
+							else DISCORD_DATA_FIELD_GAME
+							if __cls_name__ == Game.__name__
+							else DISCORD_DATA_FIELD_UNSPECIFIED
+						)
+
+						self.__client_container.user["presence"][
+							__resolved_activity_name__
+						] = __activity__
+						__activity_picked__.append(__cls_name__)
+
+				# * (4)
+				self.__client_container.user["status"][
+					"status"
+				] = __fetched_member.status.value
+				self.__client_container.user["status"][
+					"on_web"
+				] = __fetched_member.web_status.value
+				self.__client_container.user["status"][
+					"on_desktop"
+				] = __fetched_member.desktop_status.value
+				self.__client_container.user["status"][
+					"on_mobile"
+				] = __fetched_member.mobile_status.value
+
+				self.logger.info(
+					"Step 2 of 2 | Finished Fetching Discord User's Rich Presence and Other Activities."
+				)
+				self.logger.debug(
+					f"Client Container ({DISCORD_DATA_CONTAINER}) now contains the following: {self.__client_container.user}"
+				)

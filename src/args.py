@@ -20,7 +20,6 @@ if __name__ == "__main__":
 	raise IsolatedExecNotAllowed
 
 else:
-	import logging
 	from typing import Any, Callable, List, Literal, Optional, Union
 	from argparse import ArgumentParser
 	from elements.constants import (
@@ -28,7 +27,7 @@ else:
 		ARG_PLAIN_CONTAINER_NAME,
 		ARG_PLAIN_DOC_INFO
 	)
-	from asyncio import create_task, sleep as asyncio_sleep, Task
+	from asyncio import create_task, sleep as asyncio_sleep, Task, ensure_future
 
 	class ArgumentResolver(object):
 		"""
@@ -53,8 +52,8 @@ else:
 			self.__task_container: object = None
 
 			# * Task Containers
-			self.__task_container_create: Task = create_task(self.__preload_container())
-			self.__task_parser_loader: Task = create_task(self.__load_args())
+			self.__task_container_create: Task = ensure_future(self.__preload_container())
+			self.__task_parser_loader: Task = ensure_future(self.__load_args())
 
 			await asyncio_sleep(1) # This is defined but undefined.
 
@@ -65,6 +64,8 @@ else:
 			await self.__task_parser_loader     # This is temporary.
 			self.logger.debug(f"Awaited Task: {self.__task_parser_loader=}")
 			self.logger.info(f"Instance of {ArgumentResolver.__name__} was done doing tasks asynchronously.")
+
+			super().__init__() # todo: Annotate this one.
 
 		def __repr__(self) -> str:
 			"""

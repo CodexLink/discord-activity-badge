@@ -125,6 +125,7 @@ Coming soon.
 * [PEP 8 Guidelines Tl; DR Version](https://realpython.com/python-pep8/#naming-conventions) — Huge thanks to [Jasmine Finer](https://github.com/jasminefiner) (who made the article) for TL; DR or compressed version of PEP 8 Guidelines.
 * [Shields.io](https://shields.io/) — Concise, consistent, and legible badges in SVG and raster format.
 https://pythonspeed.com/articles/base-image-python-docker-images/
+https://stackoverflow.com/questions/36342899/asyncio-ensure-future-vs-baseeventloop-create-task-vs-simple-coroutine
 
 ## License
 

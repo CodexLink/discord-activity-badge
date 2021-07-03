@@ -57,33 +57,41 @@ else:
         str
     ] = "This is a plain class to where the args has been living after being evaluated."
 
-    # # Discord Client
-    DISCORD_DATA_CONTAINER: Final[str] = "DiscUserCtxContainer"
+    # # Discord Client Container Metadata
+    DISCORD_DATA_CONTAINER: Final[str] = "StatusContainer"
     DISCORD_DATA_CONTAINER_ATTRS: Final[
         dict[str, Any]
     ] = {  # todo: Fill it up later. +  Ref: https://stackoverflow.com/questions/3603502/prevent-creating-new-attributes-outside-init
-        "__usr__": {
+        "user": {
             "id": None,
             "name": None,
             "discriminator": None,
+            "status": {
+                "state": None,
+                "on_web": None,
+                "on_mobile": None,
+            },
+            "presence": {},  # Contains user's presence activity. Field is known over runtime since we have two distinct types.
         },  # Contains user's information, this excludes the Discord Rich Presence.
-        "__guild__": {
-            "": None,
-        },  # Contains guild information.
-        "__presence__": {
-            "": None,
-        },  # Contains user's presence activity.
     }
+
+    # # Discord Client Data Container Fields
+    DISCORD_DATA_FIELD_CUSTOM : Final[str] = "custom_activity"
+    DISCORD_DATA_FIELD_GAME : Final[str] = "game_activity"
+    DISCORD_DATA_FIELD_PRESENCE : Final[str] = "rich_presence"
+    DISCORD_DATA_FIELD_UNSPECIFIED: Final[str] = "unspecified_activity"
+
+
     DISCORD_ON_READY_MSG: Final[
         str
     ] = "Client (%s) is ready for evaluation of user's activity presence."
 
-    # # Discord Client
-
+    # # Discord Client Intents
     DISCORD_CLIENT_INTENTS: Intents = Intents.none()
     DISCORD_CLIENT_INTENTS.guilds = True
     DISCORD_CLIENT_INTENTS.members = True
     DISCORD_CLIENT_INTENTS.presences = True
+
 
     # # Identification of Return Codes
     RET_DOTENV_NOT_FOUND: Final[int] = -1

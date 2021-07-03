@@ -34,7 +34,7 @@ else:
         get_event_loop,
         shield,
     )
-    from asyncio import sleep as asyncio_sleep
+    from asyncio import all_tasks, sleep as asyncio_sleep, current_task, ensure_future
     from sys import stdout
 
     from typing import Any, Generator, Optional, Tuple
@@ -44,7 +44,6 @@ else:
     from badge import BadgeConstructor
     from client import DiscordClientHandler
     from elements.constants import (
-        DISCORD_CLIENT_INTENTS,
         ENV_FILENAME,
         LOGGER_FILENAME,
         LOGGER_OUTPUT_FORMAT,
@@ -96,17 +95,11 @@ else:
                     level_coverage=logging.DEBUG, log_to_file=False, out_to_console=True, # verbose_client=True
                 )
             )  # * (1) [a,b]
+
             await super().__init__()  # * (2)
+            ensure_future(self.init_badge_services())  # * ?? [a, b]
 
-            print("MRO of this class > ", self.__class__.__mro__)
-
-            super(DiscordClientHandler, self).__init__(
-                intents=DISCORD_CLIENT_INTENTS
-            )  # * (3) [a,b]
-
-            create_task(self.init_badge_services())  # * ?? [a, b]
-
-            self.discord_client_task: Task = create_task(
+            self.discord_client_task: Task = ensure_future(
                 super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN"))
             )  # * (4), start while we check something else.
 
@@ -118,7 +111,16 @@ else:
 
             self.logger.debug("Done.")
 
-            await asyncio_sleep(60)
+            # Await and check for other task to finish before closing it out.
+            while True:
+                self.logger.debug(f"End of Entrypoint. Current Tasks > {current_task()}")
+                __all__ = all_tasks()
+                print(__all__)
+                self.logger.debug(f"# of Tasks: {len(__all__)}")
+                await asyncio_sleep(1)
+                self.logger.debug(f"Unfinished Tasks > {all_tasks()}")
+                self.logger.debug(type(__all__))
+            # await self.close()
 
 
         def __await__(self) -> Generator:
@@ -231,6 +233,7 @@ else:
     if __name__ == "__main__":
         loop_instance: AbstractEventLoop = get_event_loop()
         entry_instance = loop_instance.run_until_complete(ActivityBadgeServices())
+        # loop_instance.run_forever()
 
         # if entry_instance.current_state:
         #     exit(0)

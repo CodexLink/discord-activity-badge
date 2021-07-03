@@ -29,6 +29,31 @@ else:
 
 		"""
 
+    	# By this point, there are a variety of Activities. We need to select one and avail to resolve from what the user wants.
+    	# First let's evaluate what user wants to display in their badge.
+		# todo: We need a parameter that PREFER_CUSTOM_ACTIVITY_OVER_PRESENCE.
+
+		# First we have to understand that, the way how discord displays the status of user by order.
+		# CustomActivity (Custom Status) > Activity (Rich Presence) > Game (Game)
+		# The way how Discord.py stores activities: CustomActivity(Custom Status) > Game (Game) > Activity (Rich Presence)
+
+		# We will follow how Discord Client displays it.
+
+		"""
+			Example:
+			Set of Activities:  (<CustomActivity name='I wanna hug and pat teri~' emoji=<PartialEmoji animated=True name='TeriPats' id=???>>,
+			<Game name='Honkai Impact 3'>,
+			<Activity type=<ActivityType.playing: 0> name='osu!' url=None details=None application_id=??? session_id=None emoji=None>,
+			<Activity type=<ActivityType.playing: 0> name='Visual Studio Code' url=None details='Editing client.py: 165:79 (211)' application_id=??? session_id='??? emoji=None>)
+		"""
+
+		# todo: Let's push this one on the BadgeGenerator instead.
+		# if os.environ.get("PREFERRED_ACTIVITY_TO_DISPLAY") in ["ALL_ACTIVITIES", "CUSTOM_ACTIVITY", "RICH_PRESENCE", "GAME_ACTIVITY"]:
+		# pass
+		# else:
+		# 	self.logger.error("The supplied value of PREFERRED_ACTIVITY_TO_DISPLAY is invalid. Please check the documentation, check your workflow secret/input and try again.")
+		# 	os._exit(-7)
+
 		async def __init__(self) -> None: # todo: Remove this later if still unused.
 			pass
 
