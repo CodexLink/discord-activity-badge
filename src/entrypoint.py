@@ -107,20 +107,27 @@ else:
                 self.__requirement_validation(), self.__param_eval()
             )  # * (5)
 
-            await self.constraint_checkers
+            # await self.constraint_checkers
 
-            self.logger.debug("Done.")
+            self.logger.info("Entrypoint: Done loading all tasks.")
 
             # Await and check for other task to finish before closing it out.
             while True:
-                self.logger.debug(f"End of Entrypoint. Current Tasks > {current_task()}")
-                __all__ = all_tasks()
-                print(__all__)
-                self.logger.debug(f"# of Tasks: {len(__all__)}")
-                await asyncio_sleep(1)
-                self.logger.debug(f"Unfinished Tasks > {all_tasks()}")
-                self.logger.debug(type(__all__))
-            # await self.close()
+                if len(all_tasks()) <= 1:
+                    self.logger.info("No other tasks were detected aside from Main Event Loop. Closing...")
+                    self.logger.info("Closing Sessions (1 of 2) | discord.Client -> Awaiting.")
+                    await self.close()
+                    self.logger.info("Closing Sessions (1 of 2) | discord.Client -> Done.")
+
+                    self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Awating.")
+                    await self.request_session.close()
+                    self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
+
+                    break
+
+                else:
+                    self.logger.info(f"EOL. Waiting for other {len(all_tasks())} tasks to finish... | Current Task -> {current_task()}")
+                    await asyncio_sleep(0.5)
 
 
         def __await__(self) -> Generator:
@@ -171,14 +178,10 @@ else:
                 file_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
                 self.logger.addHandler(file_handler)
 
-                await asyncio_sleep(0.2)
-
             if out_to_console:
                 console_handler = logging.StreamHandler(stdout)
                 console_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
                 self.logger.addHandler(console_handler)
-
-                await asyncio_sleep(0.2)
 
             if not level_coverage in __levels__:
                 self.logger.warning(
@@ -230,12 +233,5 @@ else:
             pass
             # logging.shutdown()  # todo: Refer to handler.
 
-    if __name__ == "__main__":
-        loop_instance: AbstractEventLoop = get_event_loop()
-        entry_instance = loop_instance.run_until_complete(ActivityBadgeServices())
-        # loop_instance.run_forever()
-
-        # if entry_instance.current_state:
-        #     exit(0)
-        # else:
-        #     pass # Raise the error and exit it under that error code.
+    loop_instance: AbstractEventLoop = get_event_loop()
+    entry_instance: AbstractEventLoop = loop_instance.run_until_complete(ActivityBadgeServices())
