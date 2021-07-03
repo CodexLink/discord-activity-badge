@@ -14,80 +14,48 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from typing import Coroutine
+
+
 if __name__ == "__main__":
     from elements.exceptions import IsolatedExecNotAllowed
 
     raise IsolatedExecNotAllowed
 
 else:
-    from typing import Any, Union
     from argparse import ArgumentParser
     from elements.constants import (
         ARG_CONSTANTS,
         ARG_PLAIN_CONTAINER_NAME,
-        ARG_PLAIN_DOC_INFO,
     )
-    from asyncio import ensure_future, sleep as asyncio_sleep, Task
+    from asyncio import ensure_future
 
-    class ArgumentResolver(object):
+    class ArgumentResolver:
         """
-        An over-detailed async class that helps entrypoint class to manage arguments and deliver them at any subclasses, either specific or all of it.
+        A class designed to wrap argparse for better accessibility for other subclasses.
         """
 
-        async def __init__(self, **kwargs: dict[Any, Any]) -> None:
+        async def __ainit__(self) -> None:
             """
-            Contains State and Task Containers. Initialized when called via await from fellow async (super)class.
+            An async version of __init__ to be accessed by async-based classes.
 
-            Enumerations:
-				Class State Containers
-					- self.__is_args_evaluated
-					- self.__task_container
-
-            Task Containers
-				- self.__task_container_create 	|  A task that creates a hidden class container for the evaluated args to reside after operation.
-				- self.__task_parser_loader		| A task that initializes loading and evaluation of arguments. Created for future use. (ie. do not load until env is good)
+            Note:
+                (1) This blocking super() instantiates next subclass, which in our case, the class DiscordClientHandler.
+                (2) This await is probably fast, but await is still invoked just to make sure, maybe we can miss about ~300ms of time without it being loaded.
             """
 
-            self.__is_args_evaluated: bool = False
-            self.__task_container: object = None
-
-            # * Task Containers
-            self.__task_container_create: Task = ensure_future(
-                self.__preload_container()
-            )
-            self.__task_parser_loader: Task = ensure_future(self.__load_args())
-
-            await self.__task_container_create
-            self.logger.debug(f"Awaited Task (1): {self.__task_container_create=}")
-
-            await self.__task_parser_loader  # This is temporary.
-            self.logger.debug(f"Awaited Task: {self.__task_parser_loader=}")
-            self.logger.info(
-                f"Instance of {ArgumentResolver.__name__} was done doing tasks asynchronously."
+            super().__init__()  # * (1)
+            self.logger.debug(
+                f"Instantiated Class DiscordClientHandler to prepare for long load."
             )
 
-            super().__init__()  # todo: Annotate this one.
-
-        def __repr__(self) -> str:
-            """
-            Represents the Class State when called or referred.
-
-            Returns:
-                            str: Containing Class Container, combined in str.
-            """
-            return f"<Argument Handler, Parent: {self.__class__.__name__}, Evaluated? {self.__is_args_evaluated}>"
-
-        async def __preload_container(self) -> None:
-            """
-            Creates a container for the class to forward evaluated args. Accessible under variable named "self.__task_container"
-            """
-
-            self.__task_container = type(
-                ARG_PLAIN_CONTAINER_NAME, (object,), {"__info__": ARG_PLAIN_DOC_INFO}
+            await ensure_future(self.__load_args())
+            self.logger.debug(
+                f"Awaited inlined (ensure_future) on self.__load_args() | Assumes done."
             )
 
             self.logger.info(
-                f"The container {self.__task_container} was instantiated on runtime successfully."
+                f"ArgumentResolver has done evaluating arguments. Check self.args_container to see evaluated arguments."
             )
 
         async def __load_args(self) -> None:
@@ -100,7 +68,7 @@ else:
                 epilog=str(ARG_CONSTANTS["ENTRY_PARSER_EPILOG"]),
             )
 
-            self.logger.info("ArgumentParser: Instantiated.")
+            self.logger.debug(f"ArgumentParser: Instantiated. | {self.__parser}")
 
             self.__parser.add_argument(
                 "-dr",
@@ -151,61 +119,18 @@ else:
 
             self.logger.debug(f"ArgumentParser: Argument -vc added.")
 
-            # We wait for the container to finish (from another task) and push those data to the container.
-            await self.__task_container_create
-            self.logger.debug(f"Awaited Task (2): {self.__task_container_create=}")
-
-            # I would rather catch this than subclassing ArgumentParser to override exit methods
-            # to compensate with the use of asyncio for all use case.
             try:
-                self.__parser.parse_args(namespace=self.__task_container)
+                # We create an object for use later by other subclasses right after self.__parser.parse_args().
+                self.args_container: object = type(
+                    ARG_PLAIN_CONTAINER_NAME, (object,), {}
+                )
+                self.__parser.parse_args(namespace=self.args_container)
+
                 self.logger.debug(
-                    f"ArgumentParser <self.__parser> has arguments parsed."
+                    f"ArgumentParser has its arguments evaluated and sent to {self.args_container}."
                 )
 
+            # This exception is invoked by ArgumentParser by default. Invoking this exception will ensure that there will be no exceptions shown upon exit.
             except SystemExit:
                 self.logger.info(f"ArgumentParser raised SystemExit, exiting now...")
                 exit(0)
-
-            # Once done, let other function checkers that the args is available for use.
-            self.__is_args_evaluated: bool = True
-
-        async def get_parameter_value(
-            self, arg_key: str
-        ) -> Union[bool, dict[str, bool], None]:
-            """
-            Allows other class who inherits the superclass to access the arguments by requesting them.
-
-            Args:
-                    arg_key (str): Invoke "*" if the class wants to receive the whole arguments forwarded, invoked or not (True or False).
-                            : Invoke "attribute | property" to get a singleton result.
-
-            Returns:
-                    Union[bool, dict[str, bool], None]: Returns either True or False if property was invoked. Or a dictionary containing `str` as key and `bool` as value if "*" is invoked.
-
-            todos: Maybe implement, exception_on_not_found?
-            """
-
-            await self.__task_parser_loader  # If we start too early, await.
-
-            __valid_properties: Union[dict[str, bool], None] = None
-
-            if arg_key == "*":
-                __valid_properties = {}
-                for key, data in vars(self.__task_container).items():
-
-                    if not key.startswith("__"):
-                        __valid_properties[key] = data
-            else:
-                __valid_properties = vars(self.__task_container).get(arg_key, None)
-
-            return __valid_properties
-
-        # These properties are for debugging purposes only. Might subject to remove if still not used in unit-testing.
-        @property  # self-check
-        def is_loaded(self) -> bool:
-            return self.__is_args_evaluated
-
-        @property
-        def loaded_by_who(self) -> str:
-            return self.__class__.__name__

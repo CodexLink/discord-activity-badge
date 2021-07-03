@@ -51,11 +51,8 @@ else:
         "HELP_DESC_VERBOSE_CLIENT": "Allows Discord Client API to log. This is useful to check if Discord.py is doing something while the log is silent.",
     }
 
-    # # Class Container Metadata
+    # # Argument Class Container Metadata
     ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgsContainer"
-    ARG_PLAIN_DOC_INFO: Final[
-        str
-    ] = "This is a plain class to where the args has been living after being evaluated."
 
     # # Discord Client Container Metadata
     DISCORD_DATA_CONTAINER: Final[str] = "StatusContainer"

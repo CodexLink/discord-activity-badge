@@ -37,7 +37,7 @@ else:
     from asyncio import all_tasks, sleep as asyncio_sleep, current_task, ensure_future
     from sys import stdout
 
-    from typing import Any, Generator, Optional, Tuple
+    from typing import Any, Generator, Optional, Tuple, Set
     from dotenv import find_dotenv, load_dotenv
 
     from args import ArgumentResolver
@@ -73,6 +73,28 @@ else:
             except IOError:
                 raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
 
+        async def __end_point__(self) -> None:
+            """
+            An end-part of the entrypoint functionality. This contains handler for when to end the script and display logs when it can't.
+            It should wait 0.5 sec for every changes. Anything below 0.5 will cause the log to be unreadable.
+            """
+            while True:
+                if len(all_tasks()) <= 1:
+                    self.logger.info("No other tasks were detected aside from Main Event Loop. Closing some sessions.")
+
+                    self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Awating.")
+                    await self.request_session.close()
+                    self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
+
+                    break
+
+                else:
+                    __tasks : Set[Task] = all_tasks()
+                    self.logger.info(f"EOL. Waiting for other {len(__tasks)} tasks to finish...")
+                    self.logger.debug(f"Other Tasks Context -> {__tasks}")
+                    await asyncio_sleep(0.5)
+
+
         async def __load_tasks(self) -> Any:
             """
             Step 0.2 | Instantiates all subclasses to prepare the module for the process.
@@ -80,7 +102,7 @@ else:
             Notes:
                 (1.a) Let's load the logger first to enable backtracking incase if there's anything happened wrong. [If explicitly stated to run based on arguments.]
                 (1.b) We migh want to shield this async function to avoid corruption. We don't want a malformed output.
-                (2) Await the first super().__init__() which instantiates ArgumentResolver, this is required before we do tasking since we need to evaluate the given arguments.
+                (2) Await the first super().__ainit__() which instantiates ArgumentResolver, this is required before we do tasking since we need to evaluate the given arguments.
                 (3.a) Instantiate the super().__init__(intents) which belongs to DiscordClientHandler. This is required to load other properties that is required by its methods.
                 (3.b) We cannot await this one because discord.__init__ is not a coroutine. And it shouldn't be, which is right.
                 (4) And once we load the properties, we can now asynchronously load discord in task. Do not await this task!
@@ -90,14 +112,15 @@ else:
                 (1) https://stackoverflow.com/questions/33128325/how-to-set-class-attribute-with-await-in-init.
                 (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
             """
+
             await shield(
                 self.__load_logger(
                     level_coverage=logging.DEBUG, log_to_file=False, out_to_console=True, # verbose_client=True
                 )
             )  # * (1) [a,b]
 
-            await super().__init__()  # * (2)
-            ensure_future(self.init_badge_services())  # * ?? [a, b]
+            await super().__ainit__()  # * (2)
+            ensure_future(self.init_badge_services())  # * ?? [a, b], Subject to change later.
 
             self.discord_client_task: Task = ensure_future(
                 super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN"))
@@ -107,28 +130,10 @@ else:
                 self.__requirement_validation(), self.__param_eval()
             )  # * (5)
 
-            # await self.constraint_checkers
+            # await self.constraint_checkers # Not sure of this one.
 
-            self.logger.info("Entrypoint: Done loading all tasks.")
-
-            # Await and check for other task to finish before closing it out.
-            while True:
-                if len(all_tasks()) <= 1:
-                    self.logger.info("No other tasks were detected aside from Main Event Loop. Closing...")
-                    self.logger.info("Closing Sessions (1 of 2) | discord.Client -> Awaiting.")
-                    await self.close()
-                    self.logger.info("Closing Sessions (1 of 2) | discord.Client -> Done.")
-
-                    self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Awating.")
-                    await self.request_session.close()
-                    self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
-
-                    break
-
-                else:
-                    self.logger.info(f"EOL. Waiting for other {len(all_tasks())} tasks to finish... | Current Task -> {current_task()}")
-                    await asyncio_sleep(0.5)
-
+            self.logger.info("Entrypoint: Done loading all tasks. Reaching Endpoint...")
+            await self.__end_point__()
 
         def __await__(self) -> Generator:
             return self.__load_tasks().__await__()
@@ -147,7 +152,7 @@ else:
                 level_coverage (Optional[int], optional): Sets the level (and above) to cover it in the logs or in stream. Defaults to logging.DEBUG.
                 log_to_file (Optional[bool], optional): Creates a file and logs the data if set to True, or otherwise. Defaults to False.
                 out_to_console (Optional[bool], optional): Output the log reports in the console, if enabled. Defaults to False.
-
+                verbose_client (Optional[bool], optional): Bind discord to the logger to log other events that is out of scope of entrypoint.
             Summary: todo.
             """
 
@@ -228,10 +233,6 @@ else:
 
         def __repr__(self) -> str:
             return f"<Activity Badge Service, State: n/a | Discord User: n/a | Curr. Process: n/a>"
-
-        def __del__(self) -> None:
-            pass
-            # logging.shutdown()  # todo: Refer to handler.
 
     loop_instance: AbstractEventLoop = get_event_loop()
     entry_instance: AbstractEventLoop = loop_instance.run_until_complete(ActivityBadgeServices())

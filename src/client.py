@@ -22,7 +22,7 @@ if __name__ == "__main__":
 else:
 
 	import os
-	from asyncio import create_task, ensure_future
+	from asyncio import ensure_future
 	from typing import List
 
 	from discord import Activity, ActivityType
@@ -56,7 +56,8 @@ else:
 			"""
 			A constructor that initializes another constructor, which is directly referring to DiscordClient (known as discord.Client) to instantiate resources.
 			"""
-			super(DiscordClientHandler, self).__init__(intents=DISCORD_CLIENT_INTENTS)
+			super().__init__(intents=DISCORD_CLIENT_INTENTS)
+			self.logger.debug(f"Instantiatied Class discord.Client with intents={DISCORD_DATA_CONTAINER}")
 
 		async def on_ready(self) -> None:
 			"""
@@ -78,6 +79,7 @@ else:
 			self.__client_container: object = type(
 				DISCORD_DATA_CONTAINER, (object,), DISCORD_DATA_CONTAINER_ATTRS
 			)  # * (1) [a, b]
+			self.logger.debug(f"Created Container Object: {self.__client_container}")
 
 			ensure_future(
 				(
@@ -89,17 +91,15 @@ else:
 					)
 				)
 			)  # * (2)
+			self.logger.info(f"Pushed self.change_presence under asyncio.ensure_future over time to load Bot's Rich Presence.")
 
-			self.logger.info(
-				f"Instance of {DiscordClientHandler.__name__} has finished setting tasks asynchronously. Access to ... (property) is now allowed."
-			)
-
-			# Get the user first, then get the guild context.
+			self.logger.info(f"Initiating User Data Fetching.")
 			await self._get_activities_via_guild(await self.__get_user())  # * 3 [a, b]
+			self.logger.info("Discord Client is finished fetching data and is saved under self._client_container for badge processing.")
 
-			self.logger.info("Discord Client is finished fetching data and is saved under self._client_container for badge processing. Closing connection to Discord API.")
+			self.logger.info("Closing Sessions (1 of 2) | discord.Client -> Awaiting.")
 			await self.close()
-			self.logger.info("Discord Client API Connection is successfully closed.")
+			self.logger.info("Closing Sessions (1 of 2) | discord.Client -> Done.")
 
 		async def __get_user(self) -> User:
 			"""
@@ -133,7 +133,7 @@ else:
 				] = __user_info__.discriminator
 
 				self.logger.info(
-					"Finished fetching user information. (id, name, and discriminator)"
+					"Step 1 of 2 | Finished fetching user information. (id, name, and discriminator)"
 				)
 
 				return __user_info__
@@ -198,12 +198,16 @@ else:
 				)
 
 			else:
+				self.logger.info(f"__fetched_member contains {len(__fetched_member.activities)} activity/ies.")
 
 				__activity_picked__: List[str] = []
 
 				# * (3)
-				for each_activities in __fetched_member.activities:
-					if not each_activities in __activity_picked__:
+				for idx, each_activities in enumerate(__fetched_member.activities):
+					self.logger.debug(f"Activities Iteration {idx + 1} of {len(__fetched_member.activities)} | {each_activities}")
+
+					if not each_activities.__class__.__name__ in __activity_picked__:
+						self.logger.debug(f"{each_activities.__class__.__name__} was not in __activity_picked__. (Contains {__activity_picked__})")
 						__activity__ = each_activities.to_dict()
 						__cls_name__ = each_activities.__class__.__name__
 
@@ -217,10 +221,20 @@ else:
 							else DISCORD_DATA_FIELD_UNSPECIFIED
 						)
 
+						self.logger.debug(f"Pushing context '{__resolved_activity_name__}' to self.__client_container.user -> in key 'presence'...")
+
 						self.__client_container.user["presence"][
 							__resolved_activity_name__
 						] = __activity__
+
+						self.logger.debug(f"Pushed to self.__client_container.user in key 'presence' as '{__resolved_activity_name__}.'")
+
+
 						__activity_picked__.append(__cls_name__)
+						self.logger.debug(f"Appended {__resolved_activity_name__} to __activity_picked__. (Now contains: {__activity_picked__})")
+
+					else:
+						self.logger.debug(f"Ignored {each_activities} since one data of same type was appended in __activity_picked__ (Contains: {__activity_picked__})")
 
 				# * (4)
 				self.__client_container.user["status"][
