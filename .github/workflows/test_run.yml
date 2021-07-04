@@ -30,7 +30,10 @@ jobs:
 
       - name: Step 2 | Update README Discord Badge to Latest Upstream
         uses: CodexLink/discord-rich-presence-activity-badge@WORKFLOW_INTEGRATION
+        with:
+          DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          WORKFLOW_INSTANCE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Step n | Check Output Debug
-        run: |
-          ls
+          SHOULD_DRY_RUN: false
+          OVERRIDE_COMMIT_MESSAGE: 'Discord Activity Reading Finished.'
