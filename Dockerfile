@@ -5,9 +5,9 @@ LABEL version="dev.4.07042021"
 LABEL description="To be done later."
 LABEL maintainer="Janrey 'CodexLink' Licas <self.codexlink@gmail.com>"
 
-RUN ls
 RUN pip install poetry
-WORKDIR /src
+ADD . /app
+WORKDIR /app/src
 RUN ls
 RUN poetry install
 # RUN poetry shell
