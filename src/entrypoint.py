@@ -102,11 +102,9 @@ else:
             )  # * ?? [a, b], Subject to change later.
 
 
-            print(os.environ)
-
             self.discord_client_task: Task = ensure_future(
                 super(DiscordClientHandler, self).start(
-                    os.environ.get("DISCORD_BOT_TOKEN")
+                    os.environ.get("INPUT_DISCORD_BOT_TOKEN")
                 )
             )  # * (4), start while we check something else.
 
@@ -161,7 +159,7 @@ else:
 
                         # todo: TRY TO CREATE A FUNCTION DOES THIS IN ENTRYPOINT OR SOMEWHERE ELSE. SEE CLIENT HANDLING OF ERROR WHICH IS THE SAME AS THIS.
                         except AttributeError as Err:
-                            self.logger.critical(f"This is probably a developer's fault, please submit a PR if you saw the problem. | {Err}")
+                            self.logger.critical(f"The referred Env Variable is missing which results to NoneType. This is a developer's fault, please issue this problem to the author's repository. | Info: {Err}")
                             os._exit(-1)
 
                         except LoginFailure:

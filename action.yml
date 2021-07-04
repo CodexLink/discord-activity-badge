@@ -21,7 +21,7 @@ inputs:
     required: True
   CONTACTABLE_ON_CLICK:
     description: "The user's discord unique tag. Required for user's unique identity."
-    default: "false"
+    default: false
     required: false
   OVERRIDE_DEFAULT_COLOR:
     description: "Overrides default color of the badge. Ignores the status of user when declared. (Online, AFK, DND, Offline)"

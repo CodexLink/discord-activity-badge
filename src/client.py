@@ -127,7 +127,7 @@ else:
 
 			try:
 				__user_info__ = await self.fetch_user(
-					os.environ.get("DISCORD_USER_ID")
+					os.environ.get("INPUT_DISCORD_USER_ID")
 				)
 
 				# * (1) and similar.
@@ -150,7 +150,7 @@ else:
 
 			except HTTPException as Err:
 				await self.__exit_client_on_error(
-					f"Failed to make request due to malformed data given under DISCORD_USER_ID key. Which results to: {Err}"
+					f"Failed to make request due to malformed data given under DISCORD_USER_ID key. Which results to: {Err} | This can be a developer's fault upon assigning non-existent Env Key, please make an issue about this problem."
 				)
 
 		async def _get_activities_via_guild(self, _fetched_user: User) -> None:
