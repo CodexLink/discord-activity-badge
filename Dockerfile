@@ -7,7 +7,8 @@ LABEL maintainer="Janrey 'CodexLink' Licas <self.codexlink@gmail.com>"
 
 RUN ls
 RUN pip install poetry
-WORKDIR /../src
+WORKDIR /src
+RUN ls
 RUN poetry install
 # RUN poetry shell
 
