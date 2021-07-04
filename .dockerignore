@@ -5,10 +5,10 @@
 *.json
 *.lock
 *.md
-*.toml
 *.yml
 docs/*
 assets/*
 .github/*
 .vscode/*
 LICENSE
+Dockerfile

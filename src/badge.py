@@ -32,8 +32,8 @@ else:
 
 		"""
 
-    	# By this point, there are a variety of Activities. We need to select one and avail to resolve from what the user wants.
-    	# First let's evaluate what user wants to display in their badge.
+		# By this point, there are a variety of Activities. We need to select one and avail to resolve from what the user wants.
+		# First let's evaluate what user wants to display in their badge.
 		# todo: We need a parameter that PREFER_CUSTOM_ACTIVITY_OVER_PRESENCE.
 
 		# First we have to understand that, the way how discord displays the status of user by order.
@@ -63,7 +63,7 @@ else:
 
 			self.logger.info(f"Testing Connection to Service {BADGE_BASE_URL}...")
 
-   			__conn_test = ensure_future(self.__test_service_conn())
+			__conn_test = ensure_future(self.__test_service_conn())
 			await __conn_test
 
 

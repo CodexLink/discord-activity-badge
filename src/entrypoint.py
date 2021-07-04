@@ -1,4 +1,3 @@
-#
 """
 Copyright 2021 Janrey "CodexLink" Licas
 
@@ -73,29 +72,7 @@ else:
             except IOError:
                 raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
 
-        async def __end_point__(self) -> None:
-            """
-            An end-part of the entrypoint functionality. This contains handler for when to end the script and display logs when it can't.
-            It should wait 0.5 sec for every changes. Anything below 0.5 will cause the log to be unreadable.
-            """
-            while True:
-                if len(all_tasks()) <= 1:
-                    self.logger.info("No other tasks were detected aside from Main Event Loop. Closing some sessions.")
-
-                    self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Awating.")
-                    await self.request_session.close()
-                    self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
-
-                    break
-
-                else:
-                    __tasks : Set[Task] = all_tasks()
-                    self.logger.info(f"EOL. Waiting for other {len(__tasks)} tasks to finish...")
-                    self.logger.debug(f"Other Tasks Context -> {__tasks}")
-                    await asyncio_sleep(0.5)
-
-
-        async def __load_tasks(self) -> Any:
+        async def __ainit__(self) -> Any:
             """
             Step 0.2 | Instantiates all subclasses to prepare the module for the process.
 
@@ -121,7 +98,7 @@ else:
 
             await super().__ainit__()  # * (2)
 
-            ensure_future(super(BadgeConstructor, self).__ainit__())  # * ?? [a, b], Subject to change later.
+            ensure_future(super(DiscordClientHandler, self).__ainit__())  # * ?? [a, b], Subject to change later.
 
             self.discord_client_task: Task = ensure_future(
                 super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN"))
@@ -137,7 +114,28 @@ else:
             await self.__end_point__()
 
         def __await__(self) -> Generator:
-            return self.__load_tasks().__await__()
+            return self.__ainit__().__await__()
+
+        async def __end_point__(self) -> None:
+            """
+            An end-part of the entrypoint functionality. This contains handler for when to end the script and display logs when it can't.
+            It should wait 0.5 sec for every changes. Anything below 0.5 will cause the log to be unreadable.
+            """
+            while True:
+                if len(all_tasks()) <= 1:
+                    self.logger.info("No other tasks were detected aside from Main Event Loop. Closing some sessions.")
+
+                    self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Awating.")
+                    await self.request_session.close()
+                    self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
+
+                    break
+
+                else:
+                    __tasks : Set[Task] = all_tasks()
+                    self.logger.info(f"EOL. Waiting for other {len(__tasks)} tasks to finish...")
+                    self.logger.debug(f"Other Tasks Context -> {__tasks}")
+                    await asyncio_sleep(0.5)
 
         async def __load_logger(
             self,
