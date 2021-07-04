@@ -56,25 +56,9 @@ else:
     ):
         """The start of everything. This is the core from initializing the workflow to generating the badge."""
 
-        def __init__(self, **kwargs: dict[Any, Any]) -> None:
-            """
-            Step 0.1 | Prepare non-async functions to load other assets that will be needed later.
-            If function "find_dotenv" raise an error, the script won't run.
-            Or else, run Step 0.2.
-            """
-            try:
-                load_dotenv(
-                    find_dotenv(
-                        filename=ROOT_LOCATION + ENV_FILENAME,
-                        raise_error_if_not_found=True,
-                    )
-                )
-            except IOError:
-                raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
-
         async def __ainit__(self) -> Any:
             """
-            Step 0.2 | Instantiates all subclasses to prepare the module for the process.
+            Step 0.1 | Instantiates all subclasses to prepare the module for the process.
 
             Notes:
                 (1.a) Let's load the logger first to enable backtracking incase if there's anything happened wrong. [If explicitly stated to run based on arguments.]
@@ -91,14 +75,19 @@ else:
             """
 
             await shield(
-                self.__load_logger(
-                    level_coverage=logging.DEBUG, log_to_file=False, out_to_console=True, # verbose_client=True
+                self.__log_init__(
+                    level_coverage=logging.DEBUG,
+                    log_to_file=False,
+                    out_to_console=True,  # verbose_client=True
                 )
             )  # * (1) [a,b]
-
+            print("Can proceed here")
             await super().__ainit__()  # * (2)
+            await self.__check_dotenv()
 
-            ensure_future(super(DiscordClientHandler, self).__ainit__())  # * ?? [a, b], Subject to change later.
+            ensure_future(
+                super(DiscordClientHandler, self).__ainit__()
+            )  # * ?? [a, b], Subject to change later.
 
             self.discord_client_task: Task = ensure_future(
                 super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN"))
@@ -123,7 +112,9 @@ else:
             """
             while True:
                 if len(all_tasks()) <= 1:
-                    self.logger.info("No other tasks were detected aside from Main Event Loop. Closing some sessions.")
+                    self.logger.info(
+                        "No other tasks were detected aside from Main Event Loop. Closing some sessions."
+                    )
 
                     self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Awating.")
                     await self.request_session.close()
@@ -132,12 +123,14 @@ else:
                     break
 
                 else:
-                    __tasks : Set[Task] = all_tasks()
-                    self.logger.info(f"EOL. Waiting for other {len(__tasks)} tasks to finish...")
+                    __tasks: Set[Task] = all_tasks()
+                    self.logger.info(
+                        f"EOL. Waiting for other {len(__tasks)} tasks to finish..."
+                    )
                     self.logger.debug(f"Other Tasks Context -> {__tasks}")
                     await asyncio_sleep(0.5)
 
-        async def __load_logger(
+        async def __log_init__(
             self,
             level_coverage: Optional[int] = logging.DEBUG,
             log_to_file: Optional[bool] = False,
@@ -171,8 +164,9 @@ else:
                 level_coverage if level_coverage in __levels__ else logging.DEBUG
             )
 
-
-            self.logger = logging.getLogger(__name__ if not verbose_client else "discord")
+            self.logger = logging.getLogger(
+                __name__ if not verbose_client else "discord"
+            )
             self.logger.setLevel(__LOGGER_LEVEL_COVERAGE)
 
             if log_to_file:
@@ -198,6 +192,39 @@ else:
                 )  # todo: Make it enumerated to show the name.
 
             self.logger.info("The logger has been loaded.")
+
+        async def __check_dotenv(self) -> None:
+            """
+            Step 0.2 | Prepare the .env file to load in this script.
+            If function "find_dotenv" raise an error, the script won't run.
+            Or else, run Step 0.2.
+
+            Pre-req: Argument -rl or --run-locally. Or otherwise, will not run this function.
+            """
+            if self.args_container.running_on_local:
+
+                self.logger.info(
+                    "Argument -rl / --running-on-local is invoked. Checking for '.env' file."
+                )
+
+                try:
+                    load_dotenv(
+                        find_dotenv(
+                            filename=ROOT_LOCATION + ENV_FILENAME,
+                            raise_error_if_not_found=True,
+                        )
+                    )
+                    self.logger.info("File exists and is indeed valid. Loaded in the script.")
+                except IOError:
+
+                    self.logger.critical(
+                        "File '.env' is either malformed or does not exists!"
+                    )
+                    raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
+            else:
+                self.logger.info(
+                    "Argument -rl / --running-on-local is not invoked. Skipping '.env' checking... (at self.__check_dotenv)"
+                )
 
         async def __requirement_validation(self) -> Any:
             # Step 0.4a | Checking of parameters before doing anything.
@@ -234,4 +261,6 @@ else:
             return f"<Activity Badge Service, State: n/a | Discord User: n/a | Curr. Process: n/a>"
 
     loop_instance: AbstractEventLoop = get_event_loop()
-    entry_instance: AbstractEventLoop = loop_instance.run_until_complete(ActivityBadgeServices())
+    entry_instance: AbstractEventLoop = loop_instance.run_until_complete(
+        ActivityBadgeServices()
+    )

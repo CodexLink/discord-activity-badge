@@ -57,7 +57,6 @@ else:
 			A constructor that initializes another constructor, which is directly referring to DiscordClient (known as discord.Client) to instantiate resources.
 			"""
 			super().__init__(intents=DISCORD_CLIENT_INTENTS)
-			self.logger.debug(f"Instantiatied Class discord.Client with intents={DISCORD_DATA_CONTAINER}")
 
 		async def on_ready(self) -> None:
 			"""
