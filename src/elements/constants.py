@@ -28,6 +28,7 @@ else:
     from typing import Any, Final, List
     from time import strftime
     from discord import Intents
+    from enum import Enum
 
     # # Badge Generator Constants
 
@@ -88,7 +89,6 @@ else:
     DISCORD_CLIENT_INTENTS.guilds = True
     DISCORD_CLIENT_INTENTS.members = True
     DISCORD_CLIENT_INTENTS.presences = True
-
 
     # # Identification of Return Codes
     RET_DOTENV_NOT_FOUND: Final[int] = -1

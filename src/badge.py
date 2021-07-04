@@ -23,6 +23,9 @@ else:
 	import aiohttp
 	from elements.constants import BADGE_BASE_URL
 	from socket import error as SocketError, gaierror
+	from typing import Any
+	from asyncio import ensure_future
+	import os
 	class BadgeConstructor:
 		"""
 		An async-class module that generate badge over-time.
@@ -54,16 +57,17 @@ else:
 		# 	self.logger.error("The supplied value of PREFERRED_ACTIVITY_TO_DISPLAY is invalid. Please check the documentation, check your workflow secret/input and try again.")
 		# 	os._exit(-7)
 
-		async def __init__(self) -> None: # todo: Remove this later if still unused.
-			pass
-
-		async def init_badge_services(self) -> None:
-
+		async def __ainit__(self) -> None:
 			self.request_session = aiohttp.ClientSession() # todo: Check if we should enable raise_for_status
-			# Before instantiate, we need to make
+			self.logger.debug(f"Instantiated aiohttp.ClientSession in {BadgeConstructor.__name__} | {self.request_session=}")
 
-			self.logger.debug(f"Instantiation of ClientSession is finished. Info:{self.request_session=}")
+			self.logger.info(f"Testing Connection to Service {BADGE_BASE_URL}...")
 
+   			__conn_test = ensure_future(self.__test_service_conn())
+			await __conn_test
+
+
+		async def __test_service_conn(self) -> None:
 			__host_request_validation = await self.request_session.get(BADGE_BASE_URL)
 
 			if __host_request_validation.status == 200:
@@ -72,11 +76,14 @@ else:
 			else:
 				self.logger.critical(f"Cannot connect to service {BADGE_BASE_URL}. Please check the whole URL and try again. Info: {ConnErr=}")
 				self.close()
+				os._exit(-8)
 
 		async def __validate(self) -> None:
+			# To be done on other branch.
 			pass
 
-		async def eval_data(self) -> None:
+		async def __construct(self) -> None:
+			# I need to fiugre out something first.
 			pass
 
 		async def service_status(self) -> None:
@@ -86,5 +93,5 @@ else:
 			pass
 
 		@property
-		async def is_provider_up(self) -> None:
-			pass
+		def session_status(self) -> Any:
+			raise NotImplementedError

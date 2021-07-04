@@ -130,7 +130,7 @@ else:
                     f"ArgumentParser has its arguments evaluated and sent to {self.args_container}."
                 )
 
-            # This exception is invoked by ArgumentParser by default. Invoking this exception will ensure that there will be no exceptions shown upon exit.
+            #  ArgumentParser invoke raising SystemExit by default. Catching this exception will ensure that there will be no exceptions shown upon exit.
             except SystemExit:
                 self.logger.info(f"ArgumentParser raised SystemExit, exiting now...")
                 exit(0)

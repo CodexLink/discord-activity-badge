@@ -120,7 +120,8 @@ else:
             )  # * (1) [a,b]
 
             await super().__ainit__()  # * (2)
-            ensure_future(self.init_badge_services())  # * ?? [a, b], Subject to change later.
+
+            ensure_future(super(BadgeConstructor, self).__ainit__())  # * ?? [a, b], Subject to change later.
 
             self.discord_client_task: Task = ensure_future(
                 super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN"))
