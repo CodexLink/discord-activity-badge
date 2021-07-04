@@ -28,16 +28,22 @@ else:
         AbstractEventLoop,
         Future,
         Task,
+        all_tasks,
         create_task,
+        current_task,
+        ensure_future,
         gather,
         get_event_loop,
         shield,
+        sleep as asyncio_sleep,
     )
-    from asyncio import all_tasks, sleep as asyncio_sleep, current_task, ensure_future, gather
+
     from sys import stdout
+    from time import time as curr_exec_time
 
     from typing import Any, Generator, Optional, Tuple, Set
     from dotenv import find_dotenv, load_dotenv
+    from discord.errors import HTTPException, LoginFailure
 
     from args import ArgumentResolver
     from badge import BadgeConstructor
@@ -48,6 +54,7 @@ else:
         LOGGER_OUTPUT_FORMAT,
         RET_DOTENV_NOT_FOUND,
         ROOT_LOCATION,
+        MAXIMUM_RUNTIME_SECONDS,
     )
     from elements.exceptions import DotEnvFileNotFound
 
@@ -74,14 +81,17 @@ else:
                 (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
             """
 
+            self.time_on_hit = curr_exec_time()  # * ???
+            self.__last_n_task : int = 0 # todo: Annotate these later.
+
             await shield(
                 self.__log_init__(
                     level_coverage=logging.DEBUG,
                     log_to_file=False,
-                    out_to_console=True,  # verbose_client=True
+                    out_to_console=True,
+                    # verbose_client=True
                 )
             )  # * (1) [a,b]
-            print("Can proceed here")
             await super().__ainit__()  # * (2)
             await self.__check_dotenv()
 
@@ -90,9 +100,13 @@ else:
             )  # * ?? [a, b], Subject to change later.
 
 
+
             self.discord_client_task: Task = ensure_future(
-                super(DiscordClientHandler, self).start(os.environ.get("DISCORD_BOT_TOKEN"))
+                super(DiscordClientHandler, self).start(
+                    os.environ.get("DISCORD_BOT_TOKEN")
+                )
             )  # * (4), start while we check something else.
+
 
             self.constraint_checkers: Future[Tuple[Any, None]] = gather(
                 self.__requirement_validation(), self.__param_eval()
@@ -112,6 +126,18 @@ else:
             It should wait 0.5 sec for every changes. Anything below 0.5 will cause the log to be unreadable.
             """
             while True:
+                __this_time = curr_exec_time() - self.time_on_hit
+
+                if __this_time >= MAXIMUM_RUNTIME_SECONDS:
+                    self.logger.critical(
+                        "Time's up! We are taking too much time. Somethign is wrong... Terminating the script..."
+                    )
+                    os._exit(-1)
+
+                self.logger.debug(
+                    f"Current Time Execution: {__this_time} | Constraint Set: {MAXIMUM_RUNTIME_SECONDS} seconds."
+                )
+
                 if len(all_tasks()) <= 1:
                     self.logger.info(
                         "No other tasks were detected aside from Main Event Loop. Closing some sessions."
@@ -121,17 +147,41 @@ else:
                     await self.request_session.close()
                     self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
 
-                    self.logger.info("Double Checking (To Potentially Catch Exceptions) | Discord -> Awaiting.")
-                    await self.discord_client_task
-                    self.logger.info("Double Checking (To Potentially Catch Exceptions) | Discord -> Done.")
+
+                    if not self.is_closed():
+                        self.logger.info(
+                            "Discord Client WebSocket is still open. Re-issuing Closing Session -> Awaiting."
+                        )
+
+                        try:
+                            await self.discord_client_task
+
+                        # todo: TRY TO CREATE A FUNCTION DOES THIS IN ENTRYPOINT OR SOMEWHERE ELSE. SEE CLIENT HANDLING OF ERROR WHICH IS THE SAME AS THIS.
+                        except AttributeError:
+                            self.logger.critical("This is probably a developer's fault, please submit a PR if you saw the problem.")
+                            os._exit(-1)
+
+                        except LoginFailure:
+                            self.logger.critical("The provided DISCORD_BOT_TOKEN is malformed. Please copy and replace your secret token and try again.")
+                            os._exit(-1)
+
+                        self.logger.info(
+                            "Discord Client WebSocket is still open. Re-issuing Closing Session -> Done."
+                        )
+
                     break
 
                 else:
                     __tasks: Set[Task] = all_tasks()
-                    self.logger.info(
-                        f"EOL. Waiting for other {len(__tasks)} tasks to finish..."
-                    )
-                    self.logger.debug(f"Other Tasks Context -> {__tasks}")
+
+                    if self.__last_n_task != len(__tasks):
+                        self.__last_n_task = len(__tasks)
+
+                        self.logger.info(
+                            f"Waiting for other {self.__last_n_task} tasks to finish."
+                        )
+                        self.logger.debug(f"Tasks -> {__tasks}")
+
                     await asyncio_sleep(0.5)
 
         async def __log_init__(
@@ -218,7 +268,9 @@ else:
                             raise_error_if_not_found=True,
                         )
                     )
-                    self.logger.info("File exists and is indeed valid. Loaded in the script.")
+                    self.logger.info(
+                        "File exists and is indeed valid. Loaded in the script."
+                    )
                 except IOError:
 
                     self.logger.critical(
@@ -264,15 +316,8 @@ else:
         def __repr__(self) -> str:
             return f"<Activity Badge Service, State: n/a | Discord User: n/a | Curr. Process: n/a>"
 
-    try:
-        loop_instance: AbstractEventLoop = get_event_loop()
-        entry_instance: AbstractEventLoop = loop_instance.run_until_complete(
-            ActivityBadgeServices()
-        )
-
-    except BaseException:
-
-        # We masks other errors and blame DiscordClientHandler.Client.start() in this case.
-        # Because, we never get down to 2 or less tasks in a second.
-        print("Error: DiscordClientHandler.Client.start() cannot start because of invalid DISCORD_BOT_TOKEN value. Please check your secrets and try again.")
-        os._exit(1)
+    loop_instance: AbstractEventLoop = get_event_loop()
+    entry_instance: AbstractEventLoop = loop_instance.run_until_complete(
+        ActivityBadgeServices()
+    )
+    loop_instance.stop()

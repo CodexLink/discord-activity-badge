@@ -28,7 +28,6 @@ else:
     from typing import Any, Final, List
     from time import strftime
     from discord import Intents
-    from enum import Enum
 
     # # Badge Generator Constants
 
@@ -56,8 +55,11 @@ else:
     # # Argument Class Container Metadata
     ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgsContainer"
 
+    # # Constraints
+    MAXIMUM_RUNTIME_SECONDS = 10
+
     # # Discord Client Container Metadata
-    DISCORD_DATA_CONTAINER: Final[str] = "StatusContainer"
+    DISCORD_DATA_CONTAINER: Final[str] = "UserStatusContainer"
     DISCORD_DATA_CONTAINER_ATTRS: Final[
         dict[str, Any]
     ] = {  # todo: Fill it up later. +  Ref: https://stackoverflow.com/questions/3603502/prevent-creating-new-attributes-outside-init
