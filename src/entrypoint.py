@@ -89,15 +89,14 @@ else:
                 super(DiscordClientHandler, self).__ainit__()
             )  # * ?? [a, b], Subject to change later.
 
-            self.gathered_tasks = gather(super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN")), self.__requirement_validation(), self.__param_eval())
 
-            # self.discord_client_task: Task = ensure_future(
-            #     super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN"))
-            # )  # * (4), start while we check something else.
+            self.discord_client_task: Task = ensure_future(
+                super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN"))
+            )  # * (4), start while we check something else.
 
-            # self.constraint_checkers: Future[Tuple[Any, None]] = gather(
-            #     self.__requirement_validation(), self.__param_eval()
-            # )  # * (5)
+            self.constraint_checkers: Future[Tuple[Any, None]] = gather(
+                self.__requirement_validation(), self.__param_eval()
+            )  # * (5)
 
             # await self.constraint_checkers # Not sure of this one.
 
@@ -122,6 +121,9 @@ else:
                     await self.request_session.close()
                     self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
 
+                    self.logger.info("Double Checking (To Potentially Catch Exceptions) | Discord -> Awaiting.")
+                    await self.discord_client_task
+                    self.logger.info("Double Checking (To Potentially Catch Exceptions) | Discord -> Done.")
                     break
 
                 else:
@@ -262,7 +264,15 @@ else:
         def __repr__(self) -> str:
             return f"<Activity Badge Service, State: n/a | Discord User: n/a | Curr. Process: n/a>"
 
-    loop_instance: AbstractEventLoop = get_event_loop()
-    entry_instance: AbstractEventLoop = loop_instance.run_until_complete(
-        ActivityBadgeServices()
-    )
+    try:
+        loop_instance: AbstractEventLoop = get_event_loop()
+        entry_instance: AbstractEventLoop = loop_instance.run_until_complete(
+            ActivityBadgeServices()
+        )
+
+    except BaseException:
+
+        # We masks other errors and blame DiscordClientHandler.Client.start() in this case.
+        # Because, we never get down to 2 or less tasks in a second.
+        print("Error: DiscordClientHandler.Client.start() cannot start because of invalid DISCORD_BOT_TOKEN value. Please check your secrets and try again.")
+        os._exit(1)
