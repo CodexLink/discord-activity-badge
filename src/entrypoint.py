@@ -84,9 +84,7 @@ else:
             self.time_on_hit = curr_exec_time()  # * ???
             self.__last_n_task : int = 0 # todo: Annotate these later.
 
-            print(f"The output args: {args}")
-            print(f"The output kwargs: {kwargs}")
-            print(f"The dir: {dir(self)}")
+
 
             await shield(
                 self.__log_init__(
@@ -104,6 +102,7 @@ else:
             )  # * ?? [a, b], Subject to change later.
 
 
+            print(os.environ)
 
             self.discord_client_task: Task = ensure_future(
                 super(DiscordClientHandler, self).start(
@@ -296,7 +295,7 @@ else:
             # Step 0.4b | Evaluation of Parameters from Discord to Args.
             pass
 
-        # Wrapper of other steps.
+        # Wripper of other steps.
         async def __process(self) -> None:
             pass
 
