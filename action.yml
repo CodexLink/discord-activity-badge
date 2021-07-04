@@ -6,15 +6,16 @@ inputs:
     description: "The token of the Github Workflow Instance. To be used in authentication for changes of the repository."
     required: true
     default: ${{ github.token }}
-  DISCORD_TOKEN_ID:
+  SHOULD_DRY_RUN:
+    description: "... To be annotated later."
+    required: false
+
+  DISCORD_BOT_TOKEN:
     description: "the token of the Discord Bot. For use to access the user's rich presence."
     required: true
-  DISCORD_USERNAME:
-    description: "The user's discord username. Required as a target for the rich presence status lookup."
-    required: true
-  DISCORD_USERNAME_TAG:
-    description: "The user's discord unique tag. Required for user's unique identity."
-    required: true
+  DISCORD_USER_ID:
+    description: "The Integer ID of Discord's User."
+    required: True
   CONTACTABLE_ON_CLICK:
     description: "The user's discord unique tag. Required for user's unique identity."
     default: "false"
