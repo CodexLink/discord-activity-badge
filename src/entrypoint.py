@@ -33,7 +33,7 @@ else:
         get_event_loop,
         shield,
     )
-    from asyncio import all_tasks, sleep as asyncio_sleep, current_task, ensure_future
+    from asyncio import all_tasks, sleep as asyncio_sleep, current_task, ensure_future, gather
     from sys import stdout
 
     from typing import Any, Generator, Optional, Tuple, Set
@@ -89,13 +89,15 @@ else:
                 super(DiscordClientHandler, self).__ainit__()
             )  # * ?? [a, b], Subject to change later.
 
-            self.discord_client_task: Task = ensure_future(
-                super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN"))
-            )  # * (4), start while we check something else.
+            self.gathered_tasks = gather(super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN")), self.__requirement_validation(), self.__param_eval())
 
-            self.constraint_checkers: Future[Tuple[Any, None]] = gather(
-                self.__requirement_validation(), self.__param_eval()
-            )  # * (5)
+            # self.discord_client_task: Task = ensure_future(
+            #     super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN"))
+            # )  # * (4), start while we check something else.
+
+            # self.constraint_checkers: Future[Tuple[Any, None]] = gather(
+            #     self.__requirement_validation(), self.__param_eval()
+            # )  # * (5)
 
             # await self.constraint_checkers # Not sure of this one.
 
