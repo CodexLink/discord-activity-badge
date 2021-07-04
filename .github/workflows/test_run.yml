@@ -25,22 +25,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Step 1 | Repository Checkout
-      - uses: actions/checkout@main
+        uses: actions/checkout@main
 
       - name: Step 2 | Update README Discord Badge to Latest Upstream
-      - uses: CodexLink/discord-rich-presence-activity-badge@main
+        uses: CodexLink/discord-rich-presence-activity-badge@main
 
-      #   with:
-      #     DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
-      #     DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-      #     WORKFLOW_INSTANCE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      #     SHOULD_DRY_RUN: false
-
-      #     OVERRIDE_COMMIT_MESSAGE: 'Discord Activity Reading Finished.'
-
-      - name: Step 2 | Check Output Debug
-      - run: |
+      - name: Step n | Check Output Debug
+        run: |
           ls
