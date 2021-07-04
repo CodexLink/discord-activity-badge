@@ -157,8 +157,8 @@ else:
                             await self.discord_client_task
 
                         # todo: TRY TO CREATE A FUNCTION DOES THIS IN ENTRYPOINT OR SOMEWHERE ELSE. SEE CLIENT HANDLING OF ERROR WHICH IS THE SAME AS THIS.
-                        except AttributeError:
-                            self.logger.critical("This is probably a developer's fault, please submit a PR if you saw the problem.")
+                        except AttributeError as Err:
+                            self.logger.critical(f"This is probably a developer's fault, please submit a PR if you saw the problem. | {Err}")
                             os._exit(-1)
 
                         except LoginFailure:
