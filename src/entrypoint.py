@@ -63,7 +63,7 @@ else:
     ):
         """The start of everything. This is the core from initializing the workflow to generating the badge."""
 
-        async def __ainit__(self) -> Any:
+        async def __ainit__(self, *args: list[Any], **kwargs: dict[Any, Any]) -> Any:
             """
             Step 0.1 | Instantiates all subclasses to prepare the module for the process.
 
@@ -83,6 +83,10 @@ else:
 
             self.time_on_hit = curr_exec_time()  # * ???
             self.__last_n_task : int = 0 # todo: Annotate these later.
+
+            print(f"The output args: {args}")
+            print(f"The output kwargs: {kwargs}")
+            print(f"The dir: {dir(self)}")
 
             await shield(
                 self.__log_init__(

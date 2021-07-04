@@ -16,6 +16,8 @@ limitations under the License.
 
 from typing import Coroutine
 
+from elements.constants import DISCORD_CLIENT_INTENTS
+
 
 if __name__ == "__main__":
     from elements.exceptions import IsolatedExecNotAllowed
@@ -27,7 +29,7 @@ else:
     from elements.constants import (
         ARG_CONSTANTS,
         ARG_PLAIN_CONTAINER_NAME,
-        DISCORD_DATA_CONTAINER
+        DISCORD_CLIENT_INTENTS
     )
     from asyncio import ensure_future
 
@@ -45,7 +47,7 @@ else:
                 (2) This await is probably fast, but await is still invoked just to make sure, maybe we can miss about ~300ms of time without it being loaded.
             """
             super().__init__()  # * (1)
-            self.logger.debug(f"Instantiatied Class discord.Client with intents={DISCORD_DATA_CONTAINER}")
+            self.logger.debug(f"Instantiatied Class discord.Client with intents={DISCORD_CLIENT_INTENTS=}")
 
             await ensure_future(self.__load_args())
             self.logger.debug(

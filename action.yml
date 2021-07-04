@@ -9,6 +9,9 @@ inputs:
   SHOULD_DRY_RUN:
     description: "... To be annotated later."
     required: false
+  OVERRIDE_COMMIT_MESSAGE:
+    description: "... To be annotated later."
+    required: false
 
   DISCORD_BOT_TOKEN:
     description: "the token of the Discord Bot. For use to access the user's rich presence."
