@@ -13,13 +13,11 @@
 # limitations under the License.
 
 name: Discord Rich Presence Activity Badge
-on:
-  push
+on: push
   # schedule:
 
   #   - cron: "30 0-23 * * *" # Customizable 15 Minutes Less Not Allowed!, At minute 30 past every hour from 0 through 23.
 
-  workflow_dispatch:
 
 jobs:
   BadgeUpdater:
