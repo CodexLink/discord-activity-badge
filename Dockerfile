@@ -18,4 +18,5 @@ RUN poetry install --no-dev --no-interaction --no-root
 WORKDIR /app/src
 RUN chmod +x entrypoint.py
 
-CMD [ "python3", "entrypoint.py" ]
+# CMD [ "python3", "entrypoint.py" ]
+CMD [ "python3", "src/entrypoint.py" ]
