@@ -91,7 +91,7 @@ else:
 
 
             self.discord_client_task: Task = ensure_future(
-                super(DiscordClientHandler, self).start(os.environ.get("DISCORD_TOKEN"))
+                super(DiscordClientHandler, self).start(os.environ.get("DISCORD_BOT_TOKEN"))
             )  # * (4), start while we check something else.
 
             self.constraint_checkers: Future[Tuple[Any, None]] = gather(
