@@ -32,8 +32,8 @@ else:
 
 		"""
 
-    	# By this point, there are a variety of Activities. We need to select one and avail to resolve from what the user wants.
-    	# First let's evaluate what user wants to display in their badge.
+		# By this point, there are a variety of Activities. We need to select one and avail to resolve from what the user wants.
+		# First let's evaluate what user wants to display in their badge.
 		# todo: We need a parameter that PREFER_CUSTOM_ACTIVITY_OVER_PRESENCE.
 
 		# First we have to understand that, the way how discord displays the status of user by order.
@@ -51,7 +51,7 @@ else:
 		"""
 
 		# todo: Let's push this one on the BadgeGenerator instead.
-		# if os.environ.get("PREFERRED_ACTIVITY_TO_DISPLAY") in ["ALL_ACTIVITIES", "CUSTOM_ACTIVITY", "RICH_PRESENCE", "GAME_ACTIVITY"]:
+		# if os.environ.get("INPUT_PREFERRED_ACTIVITY_TO_DISPLAY") in ["ALL_ACTIVITIES", "CUSTOM_ACTIVITY", "RICH_PRESENCE", "GAME_ACTIVITY"]:
 		# pass
 		# else:
 		# 	self.logger.error("The supplied value of PREFERRED_ACTIVITY_TO_DISPLAY is invalid. Please check the documentation, check your workflow secret/input and try again.")
@@ -63,7 +63,7 @@ else:
 
 			self.logger.info(f"Testing Connection to Service {BADGE_BASE_URL}...")
 
-   			__conn_test = ensure_future(self.__test_service_conn())
+			__conn_test = ensure_future(self.__test_service_conn())
 			await __conn_test
 
 
@@ -72,6 +72,7 @@ else:
 
 			if __host_request_validation.status == 200:
 				self.logger.info(f"Connection to service {BADGE_BASE_URL} is successful.")
+				__host_request_validation.close() # Close the connection for a while but not the Session.
 
 			else:
 				self.logger.critical(f"Cannot connect to service {BADGE_BASE_URL}. Please check the whole URL and try again. Info: {ConnErr=}")

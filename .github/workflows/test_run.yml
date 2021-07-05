@@ -1,0 +1,39 @@
+# Copyright 2021 Janrey "CodexLink" Licas
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Discord Rich Presence Activity Badge
+on: push
+  # schedule:
+
+  #   - cron: "30 0-23 * * *" # Customizable 15 Minutes Less Not Allowed!, At minute 30 past every hour from 0 through 23.
+
+
+jobs:
+  BadgeUpdater:
+    name: Discord Activity Watcher
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Step 1 | Repository Checkout
+        uses: actions/checkout@main
+
+      - name: Step 2 | Update README Discord Badge to Latest Upstream
+        uses: CodexLink/discord-rich-presence-activity-badge@WORKFLOW_INTEGRATION
+        with:
+          DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          WORKFLOW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          SHOULD_DRY_RUN: false
+          OVERRIDE_COMMIT_MESSAGE: 'Discord Activity Reading Finished.'

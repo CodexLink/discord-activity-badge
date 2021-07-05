@@ -28,7 +28,6 @@ else:
     from typing import Any, Final, List
     from time import strftime
     from discord import Intents
-    from enum import Enum
 
     # # Badge Generator Constants
 
@@ -49,14 +48,18 @@ else:
         "HELP_DESC_LOG_TO_CONSOLE": "Prints the log output to the console, whenever the case.",
         "HELP_DESC_NO_ALERT_USR": "Does not alert the user / developer from the possible crashes through Direct Messages (this also invokes the do-not-send logs.)",
         "HELP_DESC_NO_LOG_TO_FILE": "Disables logging to file but does not surpress outputting logs to console, if specified.",
+        "HELP_DESC_RUNNING_LOCALLY": "Allows the script from loading .env. This can raise or terminate if '.env' cannot be found.",
         "HELP_DESC_VERBOSE_CLIENT": "Allows Discord Client API to log. This is useful to check if Discord.py is doing something while the log is silent.",
     }
 
     # # Argument Class Container Metadata
     ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgsContainer"
 
+    # # Constraints
+    MAXIMUM_RUNTIME_SECONDS = 10
+
     # # Discord Client Container Metadata
-    DISCORD_DATA_CONTAINER: Final[str] = "StatusContainer"
+    DISCORD_DATA_CONTAINER: Final[str] = "UserStatusContainer"
     DISCORD_DATA_CONTAINER_ATTRS: Final[
         dict[str, Any]
     ] = {  # todo: Fill it up later. +  Ref: https://stackoverflow.com/questions/3603502/prevent-creating-new-attributes-outside-init
