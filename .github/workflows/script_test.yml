@@ -18,8 +18,8 @@ on:
     paths:
       - "/src/**"
       # - "/tests/**"
-      - "/.github/workflow/*.yml"
-      - "/.github/workflow/*.yaml"
+      - "/.github/workflows/*.yml"
+      - "/.github/workflows/*.yaml"
       - "/Dockerfile"
       - "/*.toml"
       - "/*action.yml"
@@ -30,8 +30,8 @@ on:
     paths:
       - "/src/**"
       # - "/tests/**"
-      - "/.github/workflow/*.yml"
-      - "/.github/workflow/*.yaml"
+      - "/.github/workflows/*.yml"
+      - "/.github/workflows/*.yaml"
       - "/Dockerfile"
       - "/*.toml"
       - "/*action.yml"
