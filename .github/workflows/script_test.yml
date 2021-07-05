@@ -46,10 +46,6 @@ jobs:
       - name: Step 1 | Repository Checkout
         uses: actions/checkout@main
 
-      - name: Step n | Caching Docker Image
-        uses: satackey/action-docker-layer-caching@v0.0.11
-        continue-on-error: true
-
       - name: Step 2 | Dry Run of Discord Activity Badge Script
         uses: CodexLink/discord-rich-presence-activity-badge@DOCKER_OPTIMIZATION
         with:

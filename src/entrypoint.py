@@ -39,7 +39,6 @@ else:
     from time import time as curr_exec_time
 
     from typing import Any, Generator, Optional, Tuple, Set
-    from dotenv import find_dotenv, load_dotenv
     from discord.errors import LoginFailure
 
     from args import ArgumentResolver
@@ -246,6 +245,7 @@ else:
             Pre-req: Argument -rl or --run-locally. Or otherwise, will not run this function.
             """
             if self.args_container.running_on_local:
+                from dotenv import find_dotenv, load_dotenv
 
                 self.logger.info(
                     "Argument -rl / --running-on-local is invoked. Checking for '.env' file."
