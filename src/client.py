@@ -74,6 +74,10 @@ else:
 
 			self.logger.info(DISCORD_ON_READY_MSG % self.user)
 
+			ensure_future(
+				super().__ainit__()
+			)  # * ?? [a, b], Subject to change later.
+
 			self.__client_container: object = type(
 				DISCORD_DATA_CONTAINER, (object,), DISCORD_DATA_CONTAINER_ATTRS
 			)  # * (1) [a, b]

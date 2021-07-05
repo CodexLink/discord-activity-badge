@@ -72,6 +72,7 @@ else:
 
 			if __host_request_validation.status == 200:
 				self.logger.info(f"Connection to service {BADGE_BASE_URL} is successful.")
+				__host_request_validation.close() # Close the connection for a while but not the Session.
 
 			else:
 				self.logger.critical(f"Cannot connect to service {BADGE_BASE_URL}. Please check the whole URL and try again. Info: {ConnErr=}")

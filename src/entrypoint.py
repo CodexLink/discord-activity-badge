@@ -94,13 +94,9 @@ else:
                     # verbose_client=True
                 )
             )  # * (1) [a,b]
+
             await super().__ainit__()  # * (2)
             await self.__check_dotenv()
-
-            ensure_future(
-                super(DiscordClientHandler, self).__ainit__()
-            )  # * ?? [a, b], Subject to change later.
-
 
             self.discord_client_task: Task = ensure_future(
                 super(DiscordClientHandler, self).start(
