@@ -13,27 +13,43 @@
 # limitations under the License.
 
 name: Discord Rich Presence Activity Badge
-on: push
-  # schedule:
+on:
+  push:
+    paths:
+      - "/src/**"
+      # - "/tests/**"
+      - "/.github/workflow/*.yml"
+      - "/.github/workflow/*.yaml"
+      - "/Dockerfile"
+      - "/*.toml"
+      - "/*action.yml"
+      - "/*action.yaml"
 
-  #   - cron: "30 0-23 * * *" # Customizable 15 Minutes Less Not Allowed!, At minute 30 past every hour from 0 through 23.
 
+  pull_request:
+    paths:
+      - "/src/**"
+      # - "/tests/**"
+      - "/.github/workflow/*.yml"
+      - "/.github/workflow/*.yaml"
+      - "/Dockerfile"
+      - "/*.toml"
+      - "/*action.yml"
+      - "/*action.yaml"
 
 jobs:
   BadgeUpdater:
-    name: Discord Activity Watcher
+    name: Script Tester
     runs-on: ubuntu-latest
 
     steps:
       - name: Step 1 | Repository Checkout
         uses: actions/checkout@main
 
-      - name: Step 2 | Update README Discord Badge to Latest Upstream
+      - name: Step 2 | Dry Run of Discord Activity Badge Script
         uses: CodexLink/discord-rich-presence-activity-badge@WORKFLOW_INTEGRATION
         with:
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           WORKFLOW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          SHOULD_DRY_RUN: false
-          OVERRIDE_COMMIT_MESSAGE: 'Discord Activity Reading Finished.'
+          IS_DRY_RUN: true

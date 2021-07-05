@@ -6,7 +6,7 @@ inputs:
     description: "The token of the Github Workflow Instance. To be used in authentication for changes of the repository."
     required: true
     default: ${{ github.token }}
-  SHOULD_DRY_RUN:
+  IS_DRY_RUN:
     description: "... To be annotated later."
     required: false
   OVERRIDE_COMMIT_MESSAGE:
