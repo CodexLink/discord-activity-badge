@@ -22,7 +22,7 @@ if __name__ == "__main__":
 else:
 
 	import os
-	from asyncio import ensure_future, Task
+	from asyncio import ensure_future
 	from typing import List
 
 	from discord import Activity, ActivityType
@@ -71,14 +71,11 @@ else:
 					(3.b) The use of asyncio.gather() or Queue() won't work here because we need to wait for the inner scope function to finish first. Can't do asynchronously on this space.
 
 			"""
-
-			self.logger.info(DISCORD_ON_READY_MSG % self.user)
-
 			ensure_future(
 				super().__ainit__()
 			)  # * ?? [a, b], Subject to change later.
 
-
+			self.logger.info(DISCORD_ON_READY_MSG % self.user)
 
 			self.__client_container: object = type(
 				DISCORD_DATA_CONTAINER, (object,), DISCORD_DATA_CONTAINER_ATTRS

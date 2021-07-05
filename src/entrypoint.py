@@ -40,7 +40,7 @@ else:
 
     from typing import Any, Generator, Optional, Tuple, Set
     from dotenv import find_dotenv, load_dotenv
-    from discord.errors import HTTPException, LoginFailure
+    from discord.errors import LoginFailure
 
     from args import ArgumentResolver
     from badge import BadgeConstructor
