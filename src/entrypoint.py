@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,12 +29,9 @@ else:
         Future,
         Task,
         all_tasks,
-        create_task,
-        current_task,
         ensure_future,
         gather,
         get_event_loop,
-        shield,
         sleep as asyncio_sleep,
     )
 
@@ -68,42 +65,35 @@ else:
             Step 0.1 | Instantiates all subclasses to prepare the module for the process.
 
             Notes:
-                (1.a) Let's load the logger first to enable backtracking incase if there's anything happened wrong. [If explicitly stated to run based on arguments.]
-                (1.b) We migh want to shield this async function to avoid corruption. We don't want a malformed output.
-                (2) Await the first super().__ainit__() which instantiates ArgumentResolver, this is required before we do tasking since we need to evaluate the given arguments.
-                (3.a) Instantiate the super().__init__(intents) which belongs to DiscordClientHandler. This is required to load other properties that is required by its methods.
-                (3.b) We cannot await this one because discord.__init__ is not a coroutine. And it shouldn't be, which is right.
-                (4) And once we load the properties, we can now asynchronously load discord in task. Do not await this task!
-                (5) There will be another task that is gathered into one so that it is distinguishly different than other await functions. They are quite important under same context.
+                    (1.a) Let's load the logger first to enable backtracking incase if there's anything happened wrong. [If explicitly stated to run based on arguments.]
+                    (1.b) We migh want to shield this async function to avoid corruption. We don't want a malformed output.
+                    (2) Await the first super().__ainit__() which instantiates ArgumentResolver, this is required before we do tasking since we need to evaluate the given arguments.
+                    (3.a) Instantiate the super().__init__(intents) which belongs to DiscordClientHandler. This is required to load other properties that is required by its methods.
+                    (3.b) We cannot await this one because discord.__init__ is not a coroutine. And it shouldn't be, which is right.
+                    (4) And once we load the properties, we can now asynchronously load discord in task. Do not await this task!
+                    (5) There will be another task that is gathered into one so that it is distinguishly different than other await functions. They are quite important under same context.
 
             Credits:
-                (1) https://stackoverflow.com/questions/33128325/how-to-set-class-attribute-with-await-in-init.
-                (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
+                    (1) https://stackoverflow.com/questions/33128325/how-to-set-class-attribute-with-await-in-init.
+                    (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
             """
 
             self.time_on_hit = curr_exec_time()  # * ???
-            self.__last_n_task : int = 0 # todo: Annotate these later.
+            self.__last_n_task: int = 0  # todo: Annotate these later.
 
-
-
-            await shield(
-                self.__log_init__(
+            await self.__log_init__(
                     level_coverage=logging.DEBUG,
                     log_to_file=False,
                     out_to_console=True,
                     # verbose_client=True
-                )
-            )  # * (1) [a,b]
+                ) # * (1) [a,b]
 
             await super().__ainit__()  # * (2)
             await self.__check_dotenv()
 
             self.discord_client_task: Task = ensure_future(
-                super(DiscordClientHandler, self).start(
-                    os.environ.get("INPUT_DISCORD_BOT_TOKEN")
-                )
-            )  # * (4), start while we check something else.
-
+                self.start(os.environ.get("INPUT_DISCORD_BOT_TOKEN"))
+            )  # * (4), start while we check something else
 
             self.constraint_checkers: Future[Tuple[Any, None]] = gather(
                 self.__requirement_validation(), self.__param_eval()
@@ -144,7 +134,6 @@ else:
                     await self.request_session.close()
                     self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
 
-
                     if not self.is_closed():
                         self.logger.info(
                             "Discord Client WebSocket is still open. Re-issuing Closing Session -> Awaiting."
@@ -155,11 +144,15 @@ else:
 
                         # todo: TRY TO CREATE A FUNCTION DOES THIS IN ENTRYPOINT OR SOMEWHERE ELSE. SEE CLIENT HANDLING OF ERROR WHICH IS THE SAME AS THIS.
                         except AttributeError as Err:
-                            self.logger.critical(f"The referred Env Variable is missing which results to NoneType. This is a developer's fault, please issue this problem to the author's repository. | Info: {Err}")
+                            self.logger.critical(
+                                f"The referred Env Variable is missing which results to NoneType. This is a developer's fault, please issue this problem to the author's repository. | Info: {Err}"
+                            )
                             os._exit(-1)
 
                         except LoginFailure:
-                            self.logger.critical("The provided DISCORD_BOT_TOKEN is malformed. Please copy and replace your secret token and try again.")
+                            self.logger.critical(
+                                "The provided DISCORD_BOT_TOKEN is malformed. Please copy and replace your secret token and try again."
+                            )
                             os._exit(-1)
 
                         self.logger.info(
@@ -192,10 +185,10 @@ else:
             Step 0.3 | Loads the logger for all associated modules.
 
             Args:
-                level_coverage (Optional[int], optional): Sets the level (and above) to cover it in the logs or in stream. Defaults to logging.DEBUG.
-                log_to_file (Optional[bool], optional): Creates a file and logs the data if set to True, or otherwise. Defaults to False.
-                out_to_console (Optional[bool], optional): Output the log reports in the console, if enabled. Defaults to False.
-                verbose_client (Optional[bool], optional): Bind discord to the logger to log other events that is out of scope of entrypoint.
+                    level_coverage (Optional[int], optional): Sets the level (and above) to cover it in the logs or in stream. Defaults to logging.DEBUG.
+                    log_to_file (Optional[bool], optional): Creates a file and logs the data if set to True, or otherwise. Defaults to False.
+                    out_to_console (Optional[bool], optional): Output the log reports in the console, if enabled. Defaults to False.
+                    verbose_client (Optional[bool], optional): Bind discord to the logger to log other events that is out of scope of entrypoint.
             Summary: todo.
             """
 

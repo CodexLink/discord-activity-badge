@@ -22,7 +22,7 @@ if __name__ == "__main__":
 else:
 
 	import os
-	from asyncio import ensure_future
+	from asyncio import ensure_future, Task
 	from typing import List
 
 	from discord import Activity, ActivityType
@@ -77,6 +77,8 @@ else:
 			ensure_future(
 				super().__ainit__()
 			)  # * ?? [a, b], Subject to change later.
+
+
 
 			self.__client_container: object = type(
 				DISCORD_DATA_CONTAINER, (object,), DISCORD_DATA_CONTAINER_ATTRS
