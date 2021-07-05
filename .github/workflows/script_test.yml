@@ -46,8 +46,21 @@ jobs:
       - name: Step 1 | Repository Checkout
         uses: actions/checkout@main
 
-      - name: Step n | Caching Docker Image
-        uses: satackey/action-docker-layer-caching@v0.0.11
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+
+
+      # - name: Step n | Caching Docker Image
+      #   uses: satackey/action-docker-layer-caching@v0.0.11
 
       - name: Step 2 | Dry Run of Discord Activity Badge Script
         uses: CodexLink/discord-rich-presence-activity-badge@DOCKER_OPTIMIZATION
@@ -56,3 +69,8 @@ jobs:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           WORKFLOW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IS_DRY_RUN: true
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
