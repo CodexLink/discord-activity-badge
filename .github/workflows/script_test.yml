@@ -70,7 +70,9 @@ jobs:
           WORKFLOW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IS_DRY_RUN: true
 
-      - name: Move cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      - uses: docker/build-push-action@v2
+        with:
+          push: false
+          tags: thing
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
