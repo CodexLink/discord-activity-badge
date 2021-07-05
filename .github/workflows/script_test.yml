@@ -46,7 +46,6 @@ jobs:
       - name: Step 1 | Repository Checkout
         uses: actions/checkout@main
 
-      # May thank us later: https://stackoverflow.com/questions/66381035/docker-buildx-error-rpc-error-code-unknown-desc-server-message-insuffici
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
         with:
@@ -81,6 +80,7 @@ jobs:
         with:
           context: .
           push: true
+          # May thank us later: https://stackoverflow.com/questions/66381035/docker-buildx-error-rpc-error-code-unknown-desc-server-message-insuffici
           tags: codexlink/discord-rich-presence-activity-badge:latest
           # cache-from: type=local,src=/tmp/.buildx-cache
           # cache-to: type=local,dest=/tmp/.buildx-cache
