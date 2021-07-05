@@ -304,7 +304,7 @@ else:
         #     pass
 
         def __repr__(self) -> str:
-            return f"<Activity Badge Service, State: n/a | Discord User: n/a | Curr. Process: n/a>"
+            return f"<Activity Badge Service, (Further Context Unknown)>"
 
     loop_instance: AbstractEventLoop = get_event_loop()
     entry_instance: AbstractEventLoop = loop_instance.run_until_complete(
