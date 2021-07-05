@@ -51,7 +51,7 @@ jobs:
         continue-on-error: true
 
       - name: Step 2 | Dry Run of Discord Activity Badge Script
-        uses: CodexLink/discord-rich-presence-activity-badge@DOCKER_OPTMIZATION
+        uses: CodexLink/discord-rich-presence-activity-badge@DOCKER_OPTIMIZATION
         with:
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
