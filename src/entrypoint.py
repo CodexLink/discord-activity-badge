@@ -245,7 +245,11 @@ else:
             Pre-req: Argument -rl or --run-locally. Or otherwise, will not run this function.
             """
             if self.args_container.running_on_local:
-                from dotenv import find_dotenv, load_dotenv
+                try:
+                    from dotenv import find_dotenv, load_dotenv
+
+                except ModuleNotFoundError:
+                    self.logger.critical("Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies.")
 
                 self.logger.info(
                     "Argument -rl / --running-on-local is invoked. Checking for '.env' file."
