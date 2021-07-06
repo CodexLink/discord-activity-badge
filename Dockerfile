@@ -9,7 +9,7 @@ COPY ./ /app
 WORKDIR /app
 
 RUN poetry config virtualenvs.create false
-RUN poetry install --no-dev --no-interaction --no-root
+RUN poetry install --no-dev --no-interaction --no-root -vvv
 WORKDIR /app/src
 RUN chmod +x entrypoint.py
 

@@ -60,7 +60,7 @@ jobs:
         with:
           path: |
             /tmp/.buildx-cache
-            ~/.cache/pypoetry
+            ~/.cache/**
             /app/src/**
 
           key: ${{ runner.os }}-buildx-${{ hashFiles('poetry.lock', 'src/**/*.py') }}
