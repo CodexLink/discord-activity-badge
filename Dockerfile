@@ -16,4 +16,4 @@ RUN ls
 RUN chmod +x entrypoint.py
 
 # CMD [ "python3", "entrypoint.py", "--running-on-local" ] # Uncomment this line if deploying / testing locally.
-# CMD [ "python3", "entrypoint.py" ] # Uncomment this line if deploying to Github Actions.
+CMD [ "python3", "entrypoint.py" ] # Uncomment this line if deploying to Github Actions.
