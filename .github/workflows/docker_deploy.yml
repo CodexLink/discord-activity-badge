@@ -51,12 +51,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: ls on this
+      - name: Debug | Show More
         run: |
-          ls -a
           ls
-          echo ls
-          pwd
 
       - name: Step 3 | Load and Save Container Layer Cache
         uses: actions/cache@v2
@@ -66,7 +63,7 @@ jobs:
             ~/.cache/**
 
           key: ${{ runner.os }}-buildx-${{ github.sha }}
-          # key: ${{ runner.os }}-buildx-${{ hashFiles('poetry.lock', 'src/**/*.py') }}
+          # key: ${{ runner.os }}-buildx-${{ hashFiles('poetry.lock', 'src/**/*.py') }} # todo: Do something about this one?
           restore-keys: |
             ${{ runner.os }}-buildx-
 
@@ -78,12 +75,9 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
-      - name: ls on this
+      - name: Debug | Show More
         run: |
-          ls -a
           ls
-          echo ls
-          pwd
 
       - name: Step 5 (Post) | Move Cache to Avoid Storage Overflow
         run: |

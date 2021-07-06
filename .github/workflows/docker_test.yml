@@ -44,8 +44,6 @@ jobs:
 
     steps:
 
-      - run: ls -a
-
       - name: Container Dry Run
         uses: CodexLink/discord-rich-presence-activity-badge@DOCKER_OPTIMIZATION
         with:
@@ -53,5 +51,3 @@ jobs:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           WORKFLOW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IS_DRY_RUN: true
-
-      - run: ls -a
