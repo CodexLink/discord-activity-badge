@@ -66,7 +66,7 @@ jobs:
       - uses: docker/build-push-action@v2
         with:
           context: .
-          push: true
+          push: false
           # May thank us later: https://stackoverflow.com/questions/66381035/docker-buildx-error-rpc-error-code-unknown-desc-server-message-insuffici
           tags: codexlink/discord-rich-presence-activity-badge:latest
           cache-from: type=local,src=/tmp/.buildx-cache
