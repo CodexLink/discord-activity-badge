@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Discord Rich Presence Activity Badge
+name: Containerization -> Discord Rich Presence Activity Badge
+
 on:
   push:
     paths:
@@ -40,13 +41,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Step 1 | Repository Checkout
+      - name: Step 1 (Pre) | Repository Checkout
         uses: actions/checkout@main
 
-      - name: Set up Docker Buildx
+      - name: Step 2 | Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Cache Docker layers
+      - name: Step 3 | Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Step 4 | Load Docker Layer Cache
         uses: actions/cache@v2
         with:
           path: |
@@ -57,20 +64,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Step n | Login to DockerHub
-        uses: docker/login-action@v1
+      - name: Step 5 | Build and Push + Cache Generated Container
+        uses: docker/build-push-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - uses: docker/build-push-action@v2
-        with:
+          context: .
           push: true
-          tags: codexlink/discord-rich-presence-activity-badge:latest
+          tags: codexlink/discord-rich-presence-activity-badge:latest_workflow_container
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
-      - name: Move cache
+      - name: Step 6 (Post) | Move Cache to Avoid Storage Overflow
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
