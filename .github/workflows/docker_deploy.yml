@@ -42,7 +42,7 @@ jobs:
 
     steps:
 
-      - name: Step 1 | Set up Docker Buildx
+      - name: Step 1 (Pre) | Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
       - name: Step 2 | Login to DockerHub
@@ -51,7 +51,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Step 3 | Load Docker Layer Cache
+      - name: Step 3 | Load and Save Container Layer Cache
         uses: actions/cache@v2
         with:
           path: |
