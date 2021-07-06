@@ -59,7 +59,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-buildx-${{ hashFiles('poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-buildx-
 
