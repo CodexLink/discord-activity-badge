@@ -43,6 +43,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Repository Checkout
+        uses: actions/checkout@main
+
+      - name: Display FS
+        run: |
+          ls
+          echo ls
+
       - name: Attempt to Run
         uses: CodexLink/discord-rich-presence-activity-badge@DOCKER_OPTIMIZATION
         with:
