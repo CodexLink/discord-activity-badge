@@ -23,7 +23,6 @@ on:
       - "Dockerfile"
       - "*.toml"
       - "action.yml"
-      - "action.yaml"
 
 
   pull_request:
@@ -35,7 +34,6 @@ on:
       - "Dockerfile"
       - "*.toml"
       - "action.yml"
-      - "action.yaml"
 
 jobs:
   BadgeUpdater:
@@ -71,21 +69,5 @@ jobs:
           push: true
           # Reference: https://stackoverflow.com/questions/66381035/docker-buildx-error-rpc-error-code-unknown-desc-server-message-insuffici
           tags: codexlink/discord-rich-presence-activity-badge:latest
-          # cache-from: type=local,src=/tmp/.buildx-cache
-          # cache-to: type=local,dest=/tmp/.buildx-cache-new
-
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-
-      # - name: Move cache
-      #   run: |
-      #     rm -rf /tmp/.buildx-cache
-      #     mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-      # - name: Step 2 | Dry Run of Discord Activity Badge Script
-      #   uses: CodexLink/discord-rich-presence-activity-badge@DOCKER_OPTIMIZATION
-      #   with:
-      #     DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
-      #     DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-      #     WORKFLOW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     IS_DRY_RUN: true
