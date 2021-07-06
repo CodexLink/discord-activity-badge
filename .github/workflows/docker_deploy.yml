@@ -59,7 +59,6 @@ jobs:
             ~/.cache/**
 
           key: ${{ runner.os }}-buildx-${{ github.sha }}
-          # key: ${{ runner.os }}-buildx-${{ hashFiles('poetry.lock', 'src/**/*.py') }}
           restore-keys: |
             ${{ runner.os }}-buildx-
 

@@ -10,9 +10,11 @@ WORKDIR /app
 RUN ls
 RUN poetry config virtualenvs.create false
 RUN poetry install --no-dev --no-interaction --no-root
-RUN ls
+RUN ls -a
+RUN pwd
 WORKDIR /app/src
-RUN ls
+RUN ls -a
+RUN pwd
 RUN chmod +x entrypoint.py
 
 # CMD [ "python3", "entrypoint.py", "--running-on-local" ] # Uncomment this line if deploying / testing locally.
