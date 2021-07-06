@@ -43,6 +43,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug | Show More
+        run: |
+          ls -a
+          pwd
 
       - name: Container Dry Run
         uses: CodexLink/discord-rich-presence-activity-badge@DOCKER_OPTIMIZATION
@@ -51,3 +55,8 @@ jobs:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           WORKFLOW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IS_DRY_RUN: true
+
+      - name: Debug | Show More
+        run: |
+          ls -a
+          pwd

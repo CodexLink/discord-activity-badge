@@ -53,7 +53,8 @@ jobs:
 
       - name: Debug | Show More
         run: |
-          ls
+          ls -a
+          pwd
 
       - name: Step 3 | Load and Save Container Layer Cache
         uses: actions/cache@v2
@@ -77,7 +78,8 @@ jobs:
 
       - name: Debug | Show More
         run: |
-          ls
+          ls -a
+          pwd
 
       - name: Step 5 (Post) | Move Cache to Avoid Storage Overflow
         run: |
