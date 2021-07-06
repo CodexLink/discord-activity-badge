@@ -51,6 +51,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: ls on this
+        run: |
+          ls -a
+          ls
+          echo ls
+          echo "say less."
+
       - name: Step 3 | Load and Save Container Layer Cache
         uses: actions/cache@v2
         with:
@@ -59,6 +66,8 @@ jobs:
             ~/.cache/**
 
           key: ${{ runner.os }}-buildx-${{ github.sha }}
+          # key: ${{ runner.os }}-buildx-${{ github.sha }}
+          # key: ${{ runner.os }}-buildx-${{ hashFiles('poetry.lock', 'src/**/*.py') }}
           restore-keys: |
             ${{ runner.os }}-buildx-
 
