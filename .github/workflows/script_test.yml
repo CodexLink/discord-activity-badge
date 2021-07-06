@@ -58,7 +58,10 @@ jobs:
       - name: Cache Docker layers
         uses: actions/cache@v2
         with:
-          path: /tmp/.buildx-cache
+          path: |
+            /tmp/.buildx-cache
+            ~/.cache/pypoetry
+
           key: ${{ runner.os }}-buildx-${{ hashFiles('poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-buildx-
