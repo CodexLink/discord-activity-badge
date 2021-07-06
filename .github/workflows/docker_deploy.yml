@@ -53,6 +53,7 @@ jobs:
 
       - name: Debug | Show More
         run: |
+          cd /app/src
           ls -a
           pwd
 
@@ -78,6 +79,7 @@ jobs:
 
       - name: Debug | Show More
         run: |
+          cd /app/src
           ls -a
           pwd
 
