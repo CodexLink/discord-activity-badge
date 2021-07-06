@@ -71,12 +71,6 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
-      - name: Debug | Show More
-        run: |
-          cd /app/src
-          ls -a
-          pwd
-
       - name: Step 5 (Post) | Move Cache to Avoid Storage Overflow
         run: |
           rm -rf /tmp/.buildx-cache
