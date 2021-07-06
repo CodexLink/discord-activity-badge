@@ -63,6 +63,7 @@ jobs:
             ~/.cache/**
             /app/**
             /app/src**
+            /src/**
             .
 
           key: ${{ runner.os }}-buildx-${{ hashFiles('poetry.lock', 'src/**/*.py') }}
