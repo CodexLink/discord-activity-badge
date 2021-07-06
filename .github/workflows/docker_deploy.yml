@@ -14,16 +14,15 @@
 
 name: Discord Rich Presence Activity Badge
 on:
-  push:
-    paths:
-      - "src/**"
-      # - "tests/**"
-      - ".github/workflows/*.yml"
-      - ".github/workflows/*.yaml"
-      - "Dockerfile"
-      - "*.toml"
-      - "action.yml"
-
+  # push:
+  #   paths:
+  #     - "src/**"
+  #     # - "tests/**"
+  #     - ".github/workflows/*.yml"
+  #     - ".github/workflows/*.yaml"
+  #     - "Dockerfile"
+  #     - "*.toml"
+  #     - "action.yml"
 
   pull_request:
     paths:
@@ -58,15 +57,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      # - name: Step n | Login to DockerHub
-      #   uses: docker/login-action@v1
-      #   with:
-      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Step n | Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - uses: docker/build-push-action@v2
         with:
-          push: false
+          push: true
           # Reference: https://stackoverflow.com/questions/66381035/docker-buildx-error-rpc-error-code-unknown-desc-server-message-insuffici
           tags: codexlink/discord-rich-presence-activity-badge:latest
           cache-from: type=local,src=/tmp/.buildx-cache
