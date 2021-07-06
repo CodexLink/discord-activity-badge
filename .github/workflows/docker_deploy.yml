@@ -56,7 +56,7 @@ jobs:
           ls -a
           ls
           echo ls
-          echo "say less."
+          pwd
 
       - name: Step 3 | Load and Save Container Layer Cache
         uses: actions/cache@v2
@@ -78,6 +78,13 @@ jobs:
           tags: codexlink/discord-rich-presence-activity-badge:latest_workflow_container
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+      - name: ls on this
+        run: |
+          ls -a
+          ls
+          echo ls
+          pwd
 
       - name: Step 5 (Post) | Move Cache to Avoid Storage Overflow
         run: |
