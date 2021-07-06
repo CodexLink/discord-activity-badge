@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Docker Test~
+name: Container Tester
 on:
   push:
     paths:
@@ -39,7 +39,7 @@ on:
 
 jobs:
   DockerTester:
-    name: Docker as Workflow Alt Testing
+    name: Dry Test | Pull Container and Run
     runs-on: ubuntu-latest
 
     steps:
