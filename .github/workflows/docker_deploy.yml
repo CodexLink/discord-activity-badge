@@ -59,7 +59,7 @@ jobs:
           path: |
             /tmp/.buildx-cache
             ~/.cache/**
-            /src/**
+            /app/**
 
           key: ${{ runner.os }}-buildx-${{ hashFiles('poetry.lock', 'src/**/*.py') }}
           restore-keys: |
@@ -67,6 +67,7 @@ jobs:
 
       - uses: docker/build-push-action@v2
         with:
+          context: .
           push: false
           # Reference: https://stackoverflow.com/questions/66381035/docker-buildx-error-rpc-error-code-unknown-desc-server-message-insuffici
           tags: codexlink/discord-rich-presence-activity-badge:latest
