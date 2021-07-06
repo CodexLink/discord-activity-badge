@@ -9,7 +9,7 @@ COPY ./ ./app
 WORKDIR /app
 RUN poetry config virtualenvs.create false
 RUN poetry install --no-dev --no-interaction --no-root
-RUN chmod +x /src/entrypoint.py
+RUN chmod +x /app/src/entrypoint.py
 
 # Uncomment this line if deploying to Github Actions..
-CMD [ "python3", "/src/entrypoint.py" ]
+CMD [ "python3", "/app/src/entrypoint.py" ]
