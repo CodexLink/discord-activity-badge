@@ -51,12 +51,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Debug | Show More
-        run: |
-          cd /app/src
-          ls -a
-          pwd
-
       - name: Step 3 | Load and Save Container Layer Cache
         uses: actions/cache@v2
         with:
