@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 
-COPY /src /app
+COPY /src poetry.lock pyproject.toml /app/
 WORKDIR /app
 RUN chmod +x /app/entrypoint.py \
 && pip install poetry==1.1.7 --no-cache-dir --disable-pip-version-check \
