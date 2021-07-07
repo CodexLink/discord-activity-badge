@@ -107,13 +107,20 @@ class ActivityBadgeServices(
 
     # # User Space Functions
     async def prereq(self) -> Any:
-        __abs_path : str = os.path.abspath(os.getcwd())
-        print(os.path.isfile(__abs_path + "/README.md"))
-        __list_dir : Any = os.listdir(__abs_path)
-        print(__list_dir) # Print either way if that's the case.
+
+        # __abs_path : str = os.path.abspath(os.getcwd())
+        # print(os.path.isfile(__abs_path + "/README.md"))
+        # __list_dir : Any = os.listdir(__abs_path)
+        # print(__list_dir) # Print either way if that's the case.
 
         a = Github(os.environ.get("INPUT_WORKFLOW_TOKEN"))
         repo = a.get_repo(os.environ.get("INPUT_PROFILE_REPOSITORY"))
+
+
+        content_1 = repo.get_contents("README.md")
+        content_2 = repo.get_contents("READMasdE.md")
+
+        print(content_1, content_2)
 
         # Step 0.4a | Checking of parameters before doing anything.
         # 1.1 | Parameter Key Validatation.
