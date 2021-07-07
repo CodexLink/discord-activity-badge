@@ -58,8 +58,7 @@ jobs:
             /tmp/.buildx-cache
             ~/.cache/**
 
-          # key: ${{ runner.os }}-buildx-${{ github.sha }}
-          key: ${{ runner.os }}-buildx-${{ hashFiles('**/poetry.lock', '**/src/**/*.py') }} # todo: Do something about this one?
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
 
