@@ -8,6 +8,8 @@ authors = ["Janrey Licas <self.codexlink@gmail.com>"]
 python = "^3.9"
 "discord.py" = "^1.7.3"
 aiohttp = "^3.7.4"
+PyGithub = "^1.55"
+urllib3 = "^1.26.6"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

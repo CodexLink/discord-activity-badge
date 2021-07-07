@@ -39,6 +39,7 @@ from time import time as curr_exec_time
 
 from typing import Any, Generator, Optional, Tuple, Set
 from discord.errors import LoginFailure
+from github import Github
 
 from args import ArgumentResolver
 from badge import BadgeConstructor
@@ -52,7 +53,6 @@ from elements.constants import (
     MAXIMUM_RUNTIME_SECONDS,
 )
 from elements.exceptions import DotEnvFileNotFound
-
 class ActivityBadgeServices(
     ArgumentResolver, DiscordClientHandler, BadgeConstructor
 ):
@@ -82,14 +82,14 @@ class ActivityBadgeServices(
                 (1) https://stackoverflow.com/questions/33128325/how-to-set-class-attribute-with-await-in-init.
                 (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
         """
-
+        await self.prepare()
         await self.prereq()
 
-        # await self._init_logger(
-        #     level_coverage=logging.DEBUG,
-        #     log_to_file=False,
-        #     out_to_console=True,
-        # )  # * (1) [a,b]
+        await self._init_logger(
+            level_coverage=logging.DEBUG,
+            log_to_file=False,
+            out_to_console=True,
+        )  # * (1) [a,b]
 
         # await super().__ainit__()  # * (2)
         # await self._check_dotenv()
@@ -102,8 +102,8 @@ class ActivityBadgeServices(
 
         # await self.constraint_checkers # Not sure of this one.
 
-        self.logger.info("Entrypoint: Done loading all tasks. Reaching Endpoint...")
-        await self.__end__()
+        # self.logger.info("Entrypoint: Done loading all tasks. Reaching Endpoint...")
+        # await self.__end__()
 
     # # User Space Functions
     async def prereq(self) -> Any:
@@ -111,6 +111,9 @@ class ActivityBadgeServices(
         print(os.path.isfile(__abs_path + "/README.md"))
         __list_dir : Any = os.listdir(__abs_path)
         print(__list_dir) # Print either way if that's the case.
+
+        a = Github(os.environ.get("INPUT_WORKFLOW_TOKEN"))
+        repo = a.get_repo(os.environ.get("INPUT_PROFILE_REPOSITORY"))
 
         # Step 0.4a | Checking of parameters before doing anything.
         # 1.1 | Parameter Key Validatation.
