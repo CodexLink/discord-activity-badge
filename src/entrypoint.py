@@ -119,6 +119,8 @@ class ActivityBadgeServices(
 
             _target_file = _repo.get_contents("README.md")
 
+            print(_target_file)
+
         except AssertionError:
             print("The token or the supplied vlaue of PROFILE_REPOSITORY is invalid. Please check and try again.")
             os._exit(-1)
@@ -131,7 +133,6 @@ class ActivityBadgeServices(
         # 1.1 | Parameter Key Validatation.
         # 1.2 | README Checking Indicators.
         # Step 0.4b | Evaluation of Parameters from Discord to Args.
-        pass
 
     async def postreq(self) -> Any:
         # Step 0.4a | Checking of parameters before doing anything.
