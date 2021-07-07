@@ -65,9 +65,11 @@ else:
 
 			__conn_test = ensure_future(self.__test_service_conn())
 			await __conn_test
-
+			self.logger.debug("Badge Constructor is ready to receive Discord Data, please call self.construct_badge()")
 
 		async def __test_service_conn(self) -> None:
+			self.logger.info(f"Connecting to service {BADGE_BASE_URL} before proceeding.")
+
 			__host_request_validation = await self.request_session.get(BADGE_BASE_URL)
 
 			if __host_request_validation.status == 200:
@@ -77,22 +79,19 @@ else:
 			else:
 				self.logger.critical(f"Cannot connect to service {BADGE_BASE_URL}. Please check the whole URL and try again. Info: {ConnErr=}")
 				self.close()
-				os._exit(-8)
+				os._exit(-1)
 
 		async def __validate(self) -> None:
 			# To be done on other branch.
 			pass
 
-		async def __construct(self) -> None:
+		async def construct_badge(self, ctx: object) -> None:
 			# I need to fiugre out something first.
-			pass
-
-		async def service_status(self) -> None:
 			pass
 
 		async def return_payload(self) -> None:
 			pass
 
 		@property
-		def session_status(self) -> Any:
+		def is_service_online(self) -> Any:
 			raise NotImplementedError

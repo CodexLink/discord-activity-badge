@@ -1,5 +1,5 @@
 <h1 align="center">Discord Rich Presence Activity Badge Action</h1>
-<h4 align="center">A containerized action that bridges the Discord User's Rich Presence to a Presentable Badge on their Special Repository (Github Profile). Powered by **Python + Asnycio + discord.py** </h4>
+<h4 align="center">A containerized action that bridges the Discord User's Rich Presence to a Presentable Badge on their Special Repository (Github Profile). Powered by <b>Python + Asnycio + discord.py</b></h4>
 
 <div align="center">
 
