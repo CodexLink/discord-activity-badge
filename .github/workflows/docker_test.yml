@@ -44,11 +44,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Repository Checkout (My Profile Repository)
-        uses: actions/checkout@v2
-        with:
-          repository: 'CodexLink/CodexLink'
-
       - name: Container Dry Run
         uses: CodexLink/discord-rich-presence-activity-badge@dev
         with:
