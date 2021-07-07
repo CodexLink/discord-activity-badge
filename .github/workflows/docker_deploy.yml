@@ -18,9 +18,7 @@ on:
   push:
     paths:
       - "src/**"
-      # - "tests/**"
       - ".github/workflows/*.yml"
-      - ".github/workflows/*.yaml"
       - "Dockerfile"
       - "*.toml"
       - "action.yml"
@@ -28,9 +26,7 @@ on:
   pull_request:
     paths:
       - "src/**"
-      # - "tests/**"
       - ".github/workflows/*.yml"
-      - ".github/workflows/*.yaml"
       - "Dockerfile"
       - "*.toml"
       - "action.yml"
@@ -41,7 +37,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Step 1 (Pre) | Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
@@ -66,7 +61,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: codexlink/discord-rich-presence-activity-badge:latest_workflow_container
+          tags: codexlink/discord-rich-presence-activity-badge:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
@@ -74,3 +69,10 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Step 6 (Extra) | Update Repository Description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: codexlink/discord-rich-presence-activity-badge

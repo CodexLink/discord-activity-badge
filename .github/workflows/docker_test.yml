@@ -13,29 +13,29 @@
 # limitations under the License.
 
 name: Container Tester
+
 on:
+  workflow_run:
+    workflows: ["Containerization | Discord Rich Presence Activity Badge"]
+    types:
+      - completed
+
   push:
     paths:
       - "src/**"
-      # - "tests/**"
       - ".github/workflows/*.yml"
-      - ".github/workflows/*.yaml"
       - "Dockerfile"
       - "*.toml"
       - "action.yml"
-      - "action.yaml"
 
 
   pull_request:
     paths:
       - "src/**"
-      # - "tests/**"
       - ".github/workflows/*.yml"
-      - ".github/workflows/*.yaml"
       - "Dockerfile"
       - "*.toml"
       - "action.yml"
-      - "action.yaml"
 
 jobs:
   DockerTester:
@@ -44,7 +44,7 @@ jobs:
 
     steps:
       - name: Container Dry Run
-        uses: CodexLink/discord-rich-presence-activity-badge@DOCKER_OPTIMIZATION
+        uses: CodexLink/discord-rich-presence-activity-badge@main
         with:
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}

@@ -3,7 +3,6 @@ FROM python:3.9.6-slim-buster
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-
 COPY /src poetry.lock pyproject.toml /app/
 WORKDIR /app
 RUN chmod +x /app/entrypoint.py \
@@ -11,5 +10,4 @@ RUN chmod +x /app/entrypoint.py \
 && poetry config virtualenvs.create false
 RUN poetry install --no-dev --no-interaction --no-root
 
-# Uncomment this line if deploying to Github Actions..
 CMD [ "python3", "/app/entrypoint.py" ]
