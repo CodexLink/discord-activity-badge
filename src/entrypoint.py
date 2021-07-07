@@ -40,7 +40,7 @@ from time import time as curr_exec_time
 from typing import Any, Generator, Optional, Tuple, Set
 from discord.errors import LoginFailure
 from github import Github
-
+from github.GithubException import UnknownObjectException
 from args import ArgumentResolver
 from badge import BadgeConstructor
 from client import DiscordClientHandler
@@ -113,14 +113,19 @@ class ActivityBadgeServices(
         # __list_dir : Any = os.listdir(__abs_path)
         # print(__list_dir) # Print either way if that's the case.
 
-        a = Github(os.environ.get("INPUT_WORKFLOW_TOKENasd"))
-        repo = a.get_repo(os.environ.get("INPUT_PROFILE_REPOSITORYasd"))
+        try:
+            _a = Github(os.environ.get("INPUT_WORKFLOW_TOKEN"))
+            _repo = _a.get_repo(os.environ.get("INPUT_PROFILE_REPOSITORY"))
 
+            _target_file = _repo.get_contents("README.md")
 
-        content_1 = repo.get_contents("README.md")
-        content_2 = repo.get_contents("READMasdE.md")
+        except AssertionError:
+            print("The token or the supplied vlaue of PROFILE_REPOSITORY is invalid. Please check and try again.")
+            os._exit(-1)
 
-        print(content_1, content_2)
+        except UnknownObjectException:
+            print(f"README.md does not exist or supplied custom name does not exist from the repository {_a.name}")
+            os._exit(-1)
 
         # Step 0.4a | Checking of parameters before doing anything.
         # 1.1 | Parameter Key Validatation.
