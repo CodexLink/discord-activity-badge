@@ -23,13 +23,13 @@ on:
       - "*.toml"
       - "action.yml"
 
-  pull_request:
-    paths:
-      - "src/**"
-      - ".github/workflows/*.yml"
-      - "Dockerfile"
-      - "*.toml"
-      - "action.yml"
+  # pull_request:
+  #   paths:
+  #     - "src/**"
+  #     - ".github/workflows/*.yml"
+  #     - "Dockerfile"
+  #     - "*.toml"
+  #     - "action.yml"
 
 jobs:
   BadgeUpdater:
