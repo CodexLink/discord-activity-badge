@@ -113,7 +113,7 @@ class ActivityBadgeServices(
         # __list_dir : Any = os.listdir(__abs_path)
         # print(__list_dir) # Print either way if that's the case.
 
-        a = Github(os.environ.get("INPUT_WORKFLOW_TOKEN"))
+        a = Github(os.environ.get("INPUT_WORKFLOW_TOKENasd"))
         repo = a.get_repo(os.environ.get("INPUT_PROFILE_REPOSITORYasd"))
 
 
