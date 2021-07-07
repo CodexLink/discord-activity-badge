@@ -83,24 +83,22 @@ class ActivityBadgeServices(
                 (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
         """
 
-        self.time_on_hit = curr_exec_time()  # * ???
-        self.__last_n_task: int = 0  # todo: Annotate these later.
+        await self.prereq()
 
-        await self._init_logger(
-            level_coverage=logging.DEBUG,
-            log_to_file=False,
-            out_to_console=True,
-            # verbose_client=True
-        )  # * (1) [a,b]
+        # await self._init_logger(
+        #     level_coverage=logging.DEBUG,
+        #     log_to_file=False,
+        #     out_to_console=True,
+        # )  # * (1) [a,b]
 
-        await super().__ainit__()  # * (2)
-        await self._check_dotenv()
+        # await super().__ainit__()  # * (2)
+        # await self._check_dotenv()
 
-        self.discord_client_task: Task = ensure_future(
-            self.start(os.environ.get("INPUT_DISCORD_BOT_TOKEN"))
-        )  # * (4), start while we check something else
+        # self.discord_client_task: Task = ensure_future(
+        #     self.start(os.environ.get("INPUT_DISCORD_BOT_TOKEN"))
+        # )  # * (4), start while we check something else
 
-        self.constraint_checkers: Task = self.prereq()  # * (5)
+        # self.constraint_checkers: Task = self.prereq()  # * (5)
 
         # await self.constraint_checkers # Not sure of this one.
 
@@ -109,11 +107,27 @@ class ActivityBadgeServices(
 
     # # User Space Functions
     async def prereq(self) -> Any:
+        __abs_path : str = os.path.abspath(os.getcwd())
+        print(os.path.isfile(__abs_path + "/README.md"))
+        __list_dir : Any = os.listdir(__abs_path)
+        print(__list_dir) # Print either way if that's the case.
+
         # Step 0.4a | Checking of parameters before doing anything.
         # 1.1 | Parameter Key Validatation.
         # 1.2 | README Checking Indicators.
         # Step 0.4b | Evaluation of Parameters from Discord to Args.
         pass
+
+    async def postreq(self) -> Any:
+        # Step 0.4a | Checking of parameters before doing anything.
+        # 1.1 | Parameter Key Validatation.
+        # 1.2 | README Checking Indicators.
+        # Step 0.4b | Evaluation of Parameters from Discord to Args.
+        pass
+
+    async def prepare(self) -> Any:
+        self.time_on_hit = curr_exec_time()  # * ???
+        self.__last_n_task: int = 0  # todo: Annotate these later.
 
     # Wrapper of other steps.
     async def process(self) -> None:
@@ -299,6 +313,7 @@ class ActivityBadgeServices(
                 "Argument -rl / --running-on-local is not invoked. Skipping '.env' checking... (at self.__check_dotenv)"
             )
 
+# # Entrypoint Code
 loop_instance: AbstractEventLoop = get_event_loop()
 entry_instance: AbstractEventLoop = loop_instance.run_until_complete(
     ActivityBadgeServices()
