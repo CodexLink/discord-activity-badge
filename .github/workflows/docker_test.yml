@@ -15,10 +15,6 @@
 name: Container Tester
 
 on:
-  workflow_run:
-    workflows: ["Containerization | Discord Rich Presence Activity Badge"]
-    types:
-      - completed
 
   push:
     paths:
@@ -36,6 +32,11 @@ on:
       - "Dockerfile"
       - "*.toml"
       - "action.yml"
+
+  workflow_run:
+    workflows: ["Containerization | Discord Rich Presence Activity Badge"]
+    types:
+      - completed
 
 jobs:
   DockerTester:
