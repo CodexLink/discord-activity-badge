@@ -114,7 +114,7 @@ class ActivityBadgeServices(
         # print(__list_dir) # Print either way if that's the case.
 
         a = Github(os.environ.get("INPUT_WORKFLOW_TOKEN"))
-        repo = a.get_repo(os.environ.get("INPUT_PROFILE_REPOSITORY"))
+        repo = a.get_repo(os.environ.get("INPUT_PROFILE_REPOSITORYasd"))
 
 
         content_1 = repo.get_contents("README.md")
