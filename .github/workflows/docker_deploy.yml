@@ -70,7 +70,10 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-      - name: Step 6 (Extra) | Update Repository Description
+      - name: Step 6 (Pre-Extra) | Repository Checkout
+        uses: actions/checkout@v2
+
+      - name: Step 7 (Post-Extra) | Update Repository Description from Checkout
         uses: peter-evans/dockerhub-description@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
