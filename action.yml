@@ -94,4 +94,4 @@ inputs:
 
 runs:
   using: "docker"
-  image: "Dockerfile"
+  image: "docker://codexlink/discord-rich-presence-activity-badge:latest_workflow_container"

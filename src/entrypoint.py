@@ -39,7 +39,6 @@ else:
     from time import time as curr_exec_time
 
     from typing import Any, Generator, Optional, Tuple, Set
-    from dotenv import find_dotenv, load_dotenv
     from discord.errors import LoginFailure
 
     from args import ArgumentResolver
@@ -246,6 +245,11 @@ else:
             Pre-req: Argument -rl or --run-locally. Or otherwise, will not run this function.
             """
             if self.args_container.running_on_local:
+                try:
+                    from dotenv import find_dotenv, load_dotenv
+
+                except ModuleNotFoundError:
+                    self.logger.critical("Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies.")
 
                 self.logger.info(
                     "Argument -rl / --running-on-local is invoked. Checking for '.env' file."
@@ -304,7 +308,7 @@ else:
         #     pass
 
         def __repr__(self) -> str:
-            return f"<Activity Badge Service, State: n/a | Discord User: n/a | Curr. Process: n/a>"
+            return f"<Activity Badge Service, ???>"
 
     loop_instance: AbstractEventLoop = get_event_loop()
     entry_instance: AbstractEventLoop = loop_instance.run_until_complete(

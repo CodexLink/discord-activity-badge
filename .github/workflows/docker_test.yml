@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Discord Rich Presence Activity Badge
+name: Container Tester
 on:
   push:
     paths:
@@ -38,16 +38,13 @@ on:
       - "action.yaml"
 
 jobs:
-  BadgeUpdater:
-    name: Script Tester
+  DockerTester:
+    name: Dry Test | Pull Container and Run
     runs-on: ubuntu-latest
 
     steps:
-      - name: Step 1 | Repository Checkout
-        uses: actions/checkout@main
-
-      - name: Step 2 | Dry Run of Discord Activity Badge Script
-        uses: CodexLink/discord-rich-presence-activity-badge@WORKFLOW_INTEGRATION
+      - name: Container Dry Run
+        uses: CodexLink/discord-rich-presence-activity-badge@DOCKER_OPTIMIZATION
         with:
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}

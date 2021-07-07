@@ -7,7 +7,6 @@ authors = ["Janrey Licas <self.codexlink@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 "discord.py" = "^1.7.3"
-python-dotenv = "^0.18.0"
 aiohttp = "^3.7.4"
 
 [tool.poetry.dev-dependencies]
@@ -17,6 +16,7 @@ flake8 = "^3.9.2"
 black = "^21.6b0"
 PyYAML = "^5.4.1"
 mypy = "^0.910"
+python-dotenv = "^0.18.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
