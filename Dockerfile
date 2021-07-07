@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED 1
 COPY ./ ./app
 WORKDIR /app
 RUN chmod +x /app/src/entrypoint.py \
-&& pip install poetry --no-cache-dir --disable-pip-version-check \
+&& pip install poetry==1.1.7 --no-cache-dir --disable-pip-version-check \
 && poetry config virtualenvs.create false \
 && poetry install --no-dev --no-interaction --no-root
 
