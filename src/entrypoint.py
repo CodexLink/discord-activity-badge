@@ -68,6 +68,7 @@ class ActivityBadgeServices(
     async def __start__(self, *args: list[Any], **kwargs: dict[Any, Any]) -> Any:
         """
         Step 0.1 | Instantiates all subclasses to prepare the module for the process.
+        Step 0.1 | Prepare other modules / classes that may need to record until runtime.
 
         Notes:
                 (1.a) Let's load the logger first to enable backtracking incase if there's anything happened wrong. [If explicitly stated to run based on arguments.]
@@ -82,17 +83,16 @@ class ActivityBadgeServices(
                 (1) https://stackoverflow.com/questions/33128325/how-to-set-class-attribute-with-await-in-init.
                 (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
         """
-        await self.prepare()
-        await self.prereq()
-
         await self._init_logger(
-            level_coverage=logging.DEBUG,
+            level_coverage=logging.INFO,
             log_to_file=False,
             out_to_console=True,
         )  # * (1) [a,b]
 
-        # await super().__ainit__()  # * (2)
-        # await self._check_dotenv()
+        await super().__ainit__()  # * (2) # Note here that we also have to instantiate other classes such as the Discord.Client Handler.
+
+        await self.prereq_checking() # * (3)
+
 
         # self.discord_client_task: Task = ensure_future(
         #     self.start(os.environ.get("INPUT_DISCORD_BOT_TOKEN"))
@@ -106,42 +106,41 @@ class ActivityBadgeServices(
         # await self.__end__()
 
     # # User Space Functions
-    async def prereq(self) -> Any:
+    async def prereq_checking(self) -> None:
+        """
+        A function that loads everything that is considered a pre-requisite.
 
-        # __abs_path : str = os.path.abspath(os.getcwd())
-        # print(os.path.isfile(__abs_path + "/README.md"))
-        # __list_dir : Any = os.listdir(__abs_path)
-        # print(__list_dir) # Print either way if that's the case.
+        Basically, it checks for parameter values, indicator of a file existing (ie. README.md) right after being able to fetch the repository.
+        This function has to run without any exceptions before being able to instantiate other functions that may start the proess of whatever this is.
 
-        try:
-            _a = Github(os.environ.get("INPUT_WORKFLOW_TOKEN"))
-            _repo = _a.get_repo(os.environ.get("INPUT_PROFILE_REPOSITORY"))
+        Note:
+            (n) Validate the arguments given in the secrets. If they aren'
+            (n) Fetch the repository first. Error whenever there's a process that can't be done via Exception.
+        """
 
+        await self._check_dotenv()
+
+        try: # * (1)
+            self._git_instance = Github(os.environ.get("INPUT_WORKFLOW_TOKEN"))
+
+            _repo = self._git_instance.get_repo(os.environ.get("INPUT_PROFILE_REPOSITORY"))
             _target_file = _repo.get_contents("README.md")
 
-            print(_target_file)
+            self.logger.debug(f"File {_target_file} exists.")
 
         except AssertionError:
-            print("The token or the supplied vlaue of PROFILE_REPOSITORY is invalid. Please check and try again.")
+            self.logger.error("The token or the supplied value of PROFILE_REPOSITORY is invalid. Please check your secrets and try again.")
             os._exit(-1)
 
         except UnknownObjectException:
-            print(f"README.md does not exist or supplied custom name does not exist from the repository {_a.name}")
+            self.logger.error(f"README.md does not exist from the repository {self._git_instance.name}")
             os._exit(-1)
 
         # Step 0.4a | Checking of parameters before doing anything.
         # 1.1 | Parameter Key Validatation.
-        # 1.2 | README Checking Indicators.
         # Step 0.4b | Evaluation of Parameters from Discord to Args.
 
-    async def postreq(self) -> Any:
-        # Step 0.4a | Checking of parameters before doing anything.
-        # 1.1 | Parameter Key Validatation.
-        # 1.2 | README Checking Indicators.
-        # Step 0.4b | Evaluation of Parameters from Discord to Args.
-        pass
-
-    async def prepare(self) -> Any:
+    async def prepare(self) -> None:
         self.time_on_hit = curr_exec_time()  # * ???
         self.__last_n_task: int = 0  # todo: Annotate these later.
 
@@ -280,11 +279,11 @@ class ActivityBadgeServices(
             )
 
         else:
-            self.logger.info(
+            self.logger.debug(
                 f"Logger Coverage Level was set to {level_coverage}."
             )  # todo: Make it enumerated to show the name.
 
-        self.logger.info("The logger has been loaded.")
+        self.logger.debug("The logger has been loaded.")
 
     async def _check_dotenv(self) -> None:
         """

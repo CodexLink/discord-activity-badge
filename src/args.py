@@ -142,5 +142,5 @@ else:
 
             #  ArgumentParser invoke raising SystemExit by default. Catching this exception will ensure that there will be no exceptions shown upon exit.
             except SystemExit:
-                self.logger.info(f"ArgumentParser raised SystemExit, exiting now...")
+                self.logger.debug(f"ArgumentParser raised SystemExit, exiting now...")
                 exit(0)
