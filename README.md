@@ -53,7 +53,6 @@ jobs:
         with:
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          WORKFLOW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 ```
 
@@ -71,12 +70,14 @@ The following sub-sections contain a set of possible inputs that you can integra
 
 These inputs are required in order to run the Docker Container.
 
-| Inputs                                               | Description                                   |
-|------------------------------------------------------|-----------------------------------------------|
-| `WORKFLOW_TOKEN` | An auto-generated token for authentication use in order to make changes to the user's profile `README.md` .    |
-| `DISCORD_USERNAME` | The user's discord username. Required as a target for the rich presence status lookup.    |
+| Inputs                                               | Required? | Description                            |
+|------------------------------------------------------|----|-----------------------------------------------|
+| `DISCORD_BOT_TOKEN` | `Yes` | The token of your bot from the Discord's Developer Page. It was used to allow usage of Discord API. |
+| `DISCORD_USER_ID` | `Yes` | A long integer ID used to indicate who you are in a certain mutual guild. |
+| `PROFILE_REPOSITORY` | `No` | The repository from where the commits will be pushed. Fill this when you are indirectly deploying the script under different repository. |
+| `WORKFLOW_TOKEN` | `No` | The token of the Github Workflow Instance used to authenticate commits deployed by the script. Fill this when you are indirectly deploying the script under different repository. |
 
-> Having of one them not included in your secrets will result in an error. If possible, the bot will send you a message about it in Discord.
+> Having of one the requirements left outwill result in an error. If possible, the bot will send you a message about it in Discord.
 
 ### Optional
 
@@ -91,7 +92,8 @@ These parameters are extensible that may help you customize the base output of t
 | Input       | Type        | Default     | Description | Result                 |
 | ----------- | ----------- | ----------- | ----------- | ---------------------- |
 | `ALLOW_PM_ON_CLICK` | `bool` | `False` | Allows viewers to click on the badge to PM the user. Be careful if enabled. This exposes your Discord ID. (**not token!**) | [![Discord Me](https://badgen.net/badge/Discord/CodexLink%205848/7289DA?logo=discord&scale=3)](https://discord.com/channels/@me/799166063753035776) |
-| `APPEND_DETAIL_PRESENCE` | `bool` | `False` | Appends `Detail` field to the Badge. | Unavailable. |
+| `APPEND_DETAIL_PRESENCE` | `bool` | `False` | Appends `detail` field to the Badge. | Unavailable. |
+| `COMMIT_MESSAGE` | `str` | User's Discord Rich Presence Updated, Badge Status Changed. | The commit message that the user wants to invoke whenever there's changes. | None, will include later. |
 | `SHOW_HOURS_MINUTES_ELAPSED` | `bool` | `False` | Allows to display hours and minutes, instead of hours only. | Unavailable. |
 | `SHOW_OTHER_STATUS` | `bool` | `False` | Allows other activities (such as game, stream, custom, etc) to display if Rich Presence is not present. | Unavailable. |
 | `SHOW_TIME_DURATION` | `bool` |`False` | Enables `SHOW_OTHER_STATUS` and Rich Presence to be shown in the badge aside from User State. | Unavailable. |
@@ -102,8 +104,8 @@ Sometimes, you might wanna do some customizaion on different cases of your statu
 
 | Input       | Type        | Description | Result                 |
 | ----------- | ----------- | ----------- | ---------------------- |
-| `NO_ACTIVITY_[ONLINE/DND/AFK/OFFLINE]_STATUS` | `str` | Overrides the status badge whenever there's no activity is present. | Unavailable. |
-| `STATE_[ONLINE/DND/AFK/OFFLINE]_COLOR` | `str` | Overrides the color of the status (right) badge for whatever the state of user is. **This will take effect if there's no rich presence | Unavaialble. |
+| `NO_ACTIVITY_[ONLINE/IDLE/DND/OFFLINE]_STATUS` | `str` | Overrides the status badge description when the user is in ***online / idle / dnd / offline*** mode** state and no activity is present. | Unavailable. |
+| `STATE_[ONLINE/IDLE/DND/OFFLINE]_COLOR` | `str` | Overrides the color of the status badge when the user is in ***online / idle / dnd / offline*** mode. **This will take effect if there's no rich presence.** | Unavailable. |
 
 **You got some ideas? Please generate an issue or PR, and we will talk about it.**
 

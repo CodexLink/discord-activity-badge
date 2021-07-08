@@ -31,5 +31,4 @@ jobs:
         with:
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          WORKFLOW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IS_DRY_RUN: true
