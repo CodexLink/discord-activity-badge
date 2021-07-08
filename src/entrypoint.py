@@ -37,7 +37,7 @@ from asyncio import (
 from sys import stdout
 from time import time as curr_exec_time
 
-from typing import Any, Generator, Optional, Tuple, Set
+from typing import Any, Generator, Optional, Set
 from discord.errors import LoginFailure
 from github import Github
 from github.GithubException import UnknownObjectException
@@ -46,11 +46,12 @@ from badge import BadgeConstructor
 from client import DiscordClientHandler
 from elements.constants import (
     ENV_FILENAME,
+    ENV_STRUCT_CONSTRAINTS,
     LOGGER_FILENAME,
     LOGGER_OUTPUT_FORMAT,
+    MAXIMUM_RUNTIME_SECONDS,
     RET_DOTENV_NOT_FOUND,
     ROOT_LOCATION,
-    MAXIMUM_RUNTIME_SECONDS,
 )
 from elements.exceptions import DotEnvFileNotFound
 class ActivityBadgeServices(
@@ -84,14 +85,14 @@ class ActivityBadgeServices(
                 (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
         """
         await self._init_logger(
-            level_coverage=logging.INFO,
+            level_coverage=logging.DEBUG,
             log_to_file=False,
             out_to_console=True,
         )  # * (1) [a,b]
 
         await super().__ainit__()  # * (2) # Note here that we also have to instantiate other classes such as the Discord.Client Handler.
 
-        await self.prereq_checking() # * (3)
+        await self.init_prereq() # * (3)
 
 
         # self.discord_client_task: Task = ensure_future(
@@ -106,7 +107,7 @@ class ActivityBadgeServices(
         # await self.__end__()
 
     # # User Space Functions
-    async def prereq_checking(self) -> None:
+    async def init_prereq(self) -> None:
         """
         A function that loads everything that is considered a pre-requisite.
 
@@ -118,7 +119,8 @@ class ActivityBadgeServices(
             (n) Fetch the repository first. Error whenever there's a process that can't be done via Exception.
         """
 
-        await self._check_dotenv()
+        if self.args_container.running_on_local:
+            await self._check_dotenv()
 
         try: # * (1)
             self._git_instance = Github(os.environ.get("INPUT_WORKFLOW_TOKEN"))
@@ -136,7 +138,39 @@ class ActivityBadgeServices(
             self.logger.error(f"README.md does not exist from the repository {self._git_instance.name}")
             os._exit(-1)
 
-        # Step 0.4a | Checking of parameters before doing anything.
+
+        if isinstance(self.constraint_struct_envs, dict): # * (3)
+            self.logger.critical("Constraints for the evaluation of Env is invalid! Please contact the developer if you think this is a bug!")
+            os._exit(-1)
+
+        # * (2)
+        _env_var_names : list[str] = [each_envs for each_envs, _ in os.environ.items() if each_envs.startswith("INPUT_")] # To be used as a temporary.
+        self.cleaned_envs : list[str] = []
+
+        self.logger.debug(_env_var_names)
+
+        # * (3)
+        for each_env in _env_var_names:
+            self.logger.debug(f"Got into each_env now. | {each_env}")
+            __dict_key_env = each_env.removeprefix("INPUT_")
+
+            # Check for the value's type.
+            if ENV_STRUCT_CONSTRAINTS[__dict_key_env]["expected_type"] == str:
+                if isinstance(each_env, str):
+                    self.cleaned_envs.append(os.environ.get(each_env))
+
+            elif ENV_STRUCT_CONSTRAINTS[__dict_key_env]["expected_type"] == bool:
+                # Serialize this as possible.
+                self.logger.critical(f"The type of {os.environ.get(each_env)} is {type(os.environ.get(each_env)}.")
+
+            elif ENV_STRUCT_CONSTRAINTS[__dict_key_env]["expected_type"] == int:
+                self.logger.critical(f"The type of {os.environ.get(each_env)} is {type(os.environ.get(each_env)}.")
+            else:
+                self.logger.critical(f"Environment Name '{os.environ.get(each_env)}' cannot be resolved / serialized due to its expected_type not a candidate for serialization. Please contact the developer about this for more information.")
+
+        os._exit(-1)
+
+#  0.4a | Checking of parameters before doing anything.
         # 1.1 | Parameter Key Validatation.
         # Step 0.4b | Evaluation of Parameters from Discord to Args.
 
@@ -314,7 +348,7 @@ class ActivityBadgeServices(
                     )
                 )
                 self.logger.info(
-                    "File exists and is indeed valid. Loaded in the script."
+                    "Env File exists and is valid. Loaded in the script."
                 )
 
             except IOError:

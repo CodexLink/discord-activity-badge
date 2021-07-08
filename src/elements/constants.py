@@ -24,16 +24,15 @@ if __name__ == "__main__":
     raise IsolatedExecNotAllowed
 
 else:
-    from datetime import timedelta as timeConstraint
     from typing import Any, Final, List
     from time import strftime
     from discord import Intents
-
+    from datetime import datetime
     # # Badge Generator Constants
 
     BADGE_BASE_URL: Final[str] = "https://badgen.net"
     BADGE_URI: Final[str] = BADGE_BASE_URL + "/badge/%s/%s/%s"
-    BADGE_DEFAULT_SUBJECT: Final[str] = "Rich Presence"
+    BADGE_DEFAULT_SUBJECT: Final[str] = "Rich Presence" # todo: Add this as one of the variables that can be overriden.
     BADGE_DEFAULT_SUBJECT_BG_COLOR: Final[str] = "black"
     BADGE_DEFAULT_STATUS: Final[str] = "%s %s"
     BADGE_DEFAULT_STATUS_BG_COLOR: Final[str] = "red"
@@ -54,9 +53,123 @@ else:
 
     # # Argument Class Container Metadata
     ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgsContainer"
-
     # # Constraints
+
+    __date_on_exec : datetime = datetime.now()
+    __eval_date_on_exec : str = __date_on_exec.strftime("%m/%d/%y — %I:%M:%S %p")
     MAXIMUM_RUNTIME_SECONDS = 10
+
+    """
+        The following constants is a mapped dictionary structure. It will be used to evaluate environment variable's values
+        and serialize as they respect the `expected_type` per fields. A `fallback_value` will be used if a cerrtain function fails
+        to serialize a certain value. Keep in mind that fallback is supported for optional inputs only!
+    """
+    ENV_STRUCT_CONSTRAINTS : Final[dict[str, Any]] = { # ! Check /action.yml for more information.
+        # # Required Inputs
+        "DISCORD_BOT_TOKEN": {
+            "expected_type": str,
+            "fallback_value": None,
+            "raise_on_failed_type": True
+        },
+        "DISCORD_USER_ID": {
+            "expected_type": int,
+            "fallback_value": None,
+            "raise_on_failed_type": True
+        },
+        "PROFILE_REPOSITORY": {
+            "expected_type": str,
+            "fallback_value": None,
+            "raise_on_failed_type": True
+        },
+        "WORKFLOW_TOKEN": {
+            "expected_type": str,
+            "fallback_value": None,
+            "raise_on_failed_type": True
+        },
+        # # Optional Inputs — Extensibility and Customization
+        "ALLOW_PM_ON_CLICK": {
+            "expected_type": bool,
+            "fallback_value": False,
+            "raise_on_failed_type": False
+        },
+        "APPEND_DETAIL_PRESENCE": {
+            "expected_type": bool,
+            "fallback_value": False,
+            "raise_on_failed_type": False
+        },
+        "COMMIT_MESSAGE": {
+            "expected_type": str,
+            "fallback_value": f"Discord Activity Badge Updated as of {__eval_date_on_exec}.",
+            "raise_on_failed_type": False
+        },
+        "SHOW_HOURS_MINUTES_ELAPSED": {
+            "expected_type": bool,
+            "fallback_value": False,
+            "raise_on_failed_type": False
+        },
+        "SHOW_OTHER_STATUS": {
+            "expected_type": bool,
+            "fallback_value": False,
+            "raise_on_failed_type": False
+        },
+        "SHOW_TIME_DURATION": {
+            "expected_type": bool,
+            "fallback_value": False,
+            "raise_on_failed_type": False
+        },
+        # # Optional Inputs — Badge Customizations
+        "NO_ACTIVITY_ONLINE_STATUS": {
+            "expected_type": str,
+            "fallback_value": "Online",
+            "raise_on_failed_type": False
+        },
+        "NO_ACTIVITY_IDLE_STATUS": {
+            "expected_type": str,
+            "fallback_value": "Idle",
+            "raise_on_failed_type": False
+        },
+        "NO_ACTIVITY_DND_STATUS": {
+            "expected_type": str,
+            "fallback_value": "Busy",
+            "raise_on_failed_type": False
+        },
+        "NO_ACTIVITY_OFFLINE_STATUS": {
+            "expected_type": str,
+            "fallback_value": "Offline",
+            "raise_on_failed_type": False
+        },
+        "STATE_ONLINE_COLOR": { # todo: Pick a color of this one and the other 3.
+            "expected_type": str,
+            "fallback_value": None,
+            "raise_on_failed_type": False
+        },
+        "STATE_IDLE_COLOR": {
+            "expected_type": str,
+            "fallback_value": None,
+            "raise_on_failed_type": False
+        },
+        "STATE_DND_COLOR": {
+            "expected_type": str,
+            "fallback_value": None,
+            "raise_on_failed_type": False
+        },
+        "STATE_OFFLINE_COLOR": {
+            "expected_type": str,
+            "fallback_value": None,
+            "raise_on_failed_type": False
+        },
+        # # Development Inputs
+        "IS_DRY_RUN": {
+            "expected_type": bool,
+            "fallback_value": False,
+            "raise_on_failed_type": False
+        },
+        "DO_NOT_SEND_ERR_REPORTS": {
+            "expected_type": bool,
+            "fallback_value": False,
+            "raise_on_failed_type": False
+        },
+    }
 
     # # Discord Client Container Metadata
     DISCORD_DATA_CONTAINER: Final[str] = "UserStatusContainer"

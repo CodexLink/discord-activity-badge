@@ -48,7 +48,7 @@ inputs:
     description: "Enables `SHOW_OTHER_STATUS` and Rich Presence to be shown in the badge aside from User State."
     required: false
 
-  # # Badge Customizations
+  # # Optional Inputs — Badge Customizations
   NO_ACTIVITY_ONLINE_STATUS:
     description: "Overrides the status badge description when the user is online state and no activity is present."
     required: false
