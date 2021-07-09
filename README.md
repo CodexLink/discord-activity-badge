@@ -3,6 +3,7 @@
 
 <div align="center">
 
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/CodexLink/discord-rich-presence-activity-badge/)
 [![Container Tester](https://github.com/CodexLink/discord-rich-presence-activity-badge/actions/workflows/docker_test.yml/badge.svg)](https://github.com/CodexLink/discord-rich-presence-activity-badge/actions/workflows/docker_test.yml)
 [![Containerization | Discord Rich Presence Activity Badge](https://github.com/CodexLink/discord-rich-presence-activity-badge/actions/workflows/docker_deploy.yml/badge.svg)](https://github.com/CodexLink/discord-rich-presence-activity-badge/actions/workflows/docker_deploy.yml)
 
@@ -77,7 +78,7 @@ These inputs are required in order to run the Docker Container.
 | `PROFILE_REPOSITORY` | `No` | The repository from where the commits will be pushed. Fill this when you are indirectly deploying the script under different repository. |
 | `WORKFLOW_TOKEN` | `No` | The token of the Github Workflow Instance used to authenticate commits deployed by the script. Fill this when you are indirectly deploying the script under different repository. |
 
-> Having of one the requirements left outwill result in an error. If possible, the bot will send you a message about it in Discord.
+> Having of one the requirements left out will result in an error. If possible, the bot will send you a message about it in Discord.
 
 ### Optional
 

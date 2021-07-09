@@ -61,113 +61,114 @@ else:
 
     """
         The following constants is a mapped dictionary structure. It will be used to evaluate environment variable's values
-        and serialize as they respect the `expected_type` per fields. A `fallback_value` will be used if a cerrtain function fails
-        to serialize a certain value. Keep in mind that fallback is supported for optional inputs only!
+        and serialize as they respect the `expected_type` per fields. A `fallback_value` will be used if a certain function fails
+        to serialize a certain value. Keep in mind that fallback is supported for optional inputs only! Required inputs will error
+        if they fail to meet the expected type.
     """
     ENV_STRUCT_CONSTRAINTS : Final[dict[str, Any]] = { # ! Check /action.yml for more information.
         # # Required Inputs
-        "DISCORD_BOT_TOKEN": {
+        "INPUT_DISCORD_BOT_TOKEN": {
             "expected_type": str,
             "fallback_value": None,
-            "raise_on_failed_type": True
+            "is_required": True
         },
-        "DISCORD_USER_ID": {
+        "INPUT_DISCORD_USER_ID": {
             "expected_type": int,
             "fallback_value": None,
-            "raise_on_failed_type": True
+            "is_required": True
         },
-        "PROFILE_REPOSITORY": {
+        "INPUT_PROFILE_REPOSITORY": {
             "expected_type": str,
             "fallback_value": None,
-            "raise_on_failed_type": True
+            "is_required": True
         },
-        "WORKFLOW_TOKEN": {
+        "INPUT_WORKFLOW_TOKEN": {
             "expected_type": str,
             "fallback_value": None,
-            "raise_on_failed_type": True
+            "is_required": True
         },
         # # Optional Inputs — Extensibility and Customization
-        "ALLOW_PM_ON_CLICK": {
+        "INPUT_ALLOW_PM_ON_CLICK": {
             "expected_type": bool,
             "fallback_value": False,
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "APPEND_DETAIL_PRESENCE": {
+        "INPUT_APPEND_DETAIL_PRESENCE": {
             "expected_type": bool,
             "fallback_value": False,
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "COMMIT_MESSAGE": {
+        "INPUT_COMMIT_MESSAGE": {
             "expected_type": str,
             "fallback_value": f"Discord Activity Badge Updated as of {__eval_date_on_exec}.",
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "SHOW_HOURS_MINUTES_ELAPSED": {
+        "INPUT_SHOW_HOURS_MINUTES_ELAPSED": {
             "expected_type": bool,
             "fallback_value": False,
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "SHOW_OTHER_STATUS": {
+        "INPUT_SHOW_OTHER_STATUS": {
             "expected_type": bool,
             "fallback_value": False,
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "SHOW_TIME_DURATION": {
+        "INPUT_SHOW_TIME_DURATION": {
             "expected_type": bool,
             "fallback_value": False,
-            "raise_on_failed_type": False
+            "is_required": False
         },
         # # Optional Inputs — Badge Customizations
-        "NO_ACTIVITY_ONLINE_STATUS": {
+        "INPUT_NO_ACTIVITY_ONLINE_STATUS": {
             "expected_type": str,
             "fallback_value": "Online",
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "NO_ACTIVITY_IDLE_STATUS": {
+        "INPUT_NO_ACTIVITY_IDLE_STATUS": {
             "expected_type": str,
             "fallback_value": "Idle",
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "NO_ACTIVITY_DND_STATUS": {
+        "INPUT_NO_ACTIVITY_DND_STATUS": {
             "expected_type": str,
             "fallback_value": "Busy",
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "NO_ACTIVITY_OFFLINE_STATUS": {
+        "INPUT_NO_ACTIVITY_OFFLINE_STATUS": {
             "expected_type": str,
             "fallback_value": "Offline",
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "STATE_ONLINE_COLOR": { # todo: Pick a color of this one and the other 3.
+        "INPUT_STATE_ONLINE_COLOR": { # todo: Pick a color of this one and the other 3.
             "expected_type": str,
             "fallback_value": None,
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "STATE_IDLE_COLOR": {
+        "INPUT_STATE_IDLE_COLOR": {
             "expected_type": str,
             "fallback_value": None,
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "STATE_DND_COLOR": {
+        "INPUT_STATE_DND_COLOR": {
             "expected_type": str,
             "fallback_value": None,
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "STATE_OFFLINE_COLOR": {
+        "INPUT_STATE_OFFLINE_COLOR": {
             "expected_type": str,
             "fallback_value": None,
-            "raise_on_failed_type": False
+            "is_required": False
         },
         # # Development Inputs
-        "IS_DRY_RUN": {
+        "INPUT_IS_DRY_RUN": {
             "expected_type": bool,
             "fallback_value": False,
-            "raise_on_failed_type": False
+            "is_required": False
         },
-        "DO_NOT_SEND_ERR_REPORTS": {
+        "INPUT_DO_NOT_SEND_ERR_REPORTS": {
             "expected_type": bool,
             "fallback_value": False,
-            "raise_on_failed_type": False
+            "is_required": False
         },
     }
 
@@ -223,8 +224,3 @@ else:
 
     # # Required Parameters @ ENV
     REQUIRED_PARAMS_IN_ENV: List[str] = [""]  # todo...
-
-    # # Pre-Condition Constraints
-    ALLOWABLE_TIME_TO_COMMIT: Final[object] = timeConstraint(
-        minutes=30
-    )  # todo: Clarify this. This is connected from the workflow recommended refresh rate. Also rate-limits.
