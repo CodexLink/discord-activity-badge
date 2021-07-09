@@ -147,9 +147,9 @@ class ActivityBadgeServices(ArgumentResolver, DiscordClientHandler, BadgeConstru
 
 			_env_literal_val : str = os.environ.get(env_key)
 			# # For Github Actions.
-			self.logger.debug("Environment Variable %s = %s has type [env] (%s) | [literal] (%s)" % (env_key, ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"], type(_env_literal_val), type(ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])))
+			self.logger.debug("Environment Variable %s = %s has type [env] (%s) | [expected_type] (%s)" % (env_key, ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"], type(_env_literal_val), type(ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])))
 
-			if isinstance(_env_literal_val, type(None)): # Are they optional environments?
+			if not len(_env_literal_val): # Are they optional environments? Length should be 0 when performed in Github Action Runner.
 
 				# todo: check if optional with no default values has a true type of `str` or just NoneType.
 
@@ -163,7 +163,6 @@ class ActivityBadgeServices(ArgumentResolver, DiscordClientHandler, BadgeConstru
 
 			if ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] in [bool, int, str]:
 				self.resolved_envs[env_key] = ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"](_env_literal_val)
-				self.logger.debug(f"Key {env_key} has {type(self.resolved_envs[env_key])}")
 
 			else:
 				self.logger.critical(f"Environment Name '{_env_literal_val}' cannot be resolved / serialized due to its expected_type not a candidate for serialization. Please contact the developer about this for more information.")
