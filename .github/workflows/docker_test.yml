@@ -15,6 +15,10 @@
 name: Container Tester
 
 on:
+
+  workflow_dispatch:
+
+
   workflow_run:
     workflows: ["Script Containerization"]
     branches: [dev]
