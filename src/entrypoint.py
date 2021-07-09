@@ -60,11 +60,16 @@ class ActivityBadgeServices(ArgumentResolver, DiscordClientHandler, BadgeConstru
 	"""The start of everything. This is the core from initializing the workflow to generating the badge."""
 
 	# # Special Methods.
+	def __await__(self) -> Generator:
+		return self.__start__().__await__()
+
+	def __init__(self) -> None:
+		self.time_on_hit = curr_exec_time()  # * ???
+		self.__last_n_task: int = 0  # todo: Annotate these later.
+
 	def __repr__(self) -> str:
 		return f"<Activity Badge Service, ???>"
 
-	def __await__(self) -> Generator:
-		return self.__start__().__await__()
 
 	async def __start__(self, *args: list[Any], **kwargs: dict[Any, Any]) -> Any:
 		"""
@@ -72,18 +77,19 @@ class ActivityBadgeServices(ArgumentResolver, DiscordClientHandler, BadgeConstru
 		Step 0.1 | Prepare other modules / classes that may need to record until runtime.
 
 		Notes:
-				(1.a) Let's load the logger first to enable backtracking incase if there's anything happened wrong. [If explicitly stated to run based on arguments.]
-				(1.b) We migh want to shield this async function to avoid corruption. We don't want a malformed output.
-				(2) Await the first super().__ainit__() which instantiates ArgumentResolver, this is required before we do tasking since we need to evaluate the given arguments.
-				(3.a) Instantiate the super().__init__(intents) which belongs to DiscordClientHandler. This is required to load other properties that is required by its methods.
-				(3.b) We cannot await this one because discord.__init__ is not a coroutine. And it shouldn't be, which is right.
-				(4) And once we load the properties, we can now asynchronously load discord in task. Do not await this task!
-				(5) There will be another task that is gathered into one so that it is distinguishly different than other await functions. They are quite important under same context.
+			(1.a) Let's load the logger first to enable backtracking incase if there's anything happened wrong. [If explicitly stated to run based on arguments.]
+			(1.b) We migh want to shield this async function to avoid corruption. We don't want a malformed output.
+			(2) Await the first super().__ainit__() which instantiates ArgumentResolver, this is required before we do tasking since we need to evaluate the given arguments.
+			(3.a) Instantiate the super().__init__(intents) which belongs to DiscordClientHandler. This is required to load other properties that is required by its methods.
+			(3.b) We cannot await this one because discord.__init__ is not a coroutine. And it shouldn't be, which is right.
+			(4) And once we load the properties, we can now asynchronously load discord in task. Do not await this task!
+			(5) There will be another task that is gathered into one so that it is distinguishly different than other await functions. They are quite important under same context.
 
 		Credits:
-				(1) https://stackoverflow.com/questions/33128325/how-to-set-class-attribute-with-await-in-init.
-				(2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
+			(1) https://stackoverflow.com/questions/33128325/how-to-set-class-attribute-with-await-in-init.
+			(2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
 		"""
+
 		await self._init_logger(
 			level_coverage=logging.DEBUG,
 			log_to_file=False,
@@ -92,23 +98,13 @@ class ActivityBadgeServices(ArgumentResolver, DiscordClientHandler, BadgeConstru
 
 		await super().__ainit__()  # * (2) # Note here that we also have to instantiate other classes such as the Discord.Client Handler.
 
-		await self.init_prereq()  # * (3)
-
-		# self.discord_client_task: Task = ensure_future(
-		#     self.start(os.environ.get("INPUT_DISCORD_BOT_TOKEN"))
-		# )  # * (4), start while we check something else
-
-		# self.constraint_checkers: Task = self.prereq()  # * (5)
-
-		# await self.constraint_checkers # Not sure of this one.
-
-		# self.logger.info("Entrypoint: Done loading all tasks. Reaching Endpoint...")
-		# await self.__end__()
+		await self.prepare()	# * (3)
+		await self.process()	# * (4)
 
 	# # User Space Functions
-	async def init_prereq(self) -> None:
+	async def prepare(self) -> None:
 		"""
-		A function that loads everything that is considered a pre-requisite.
+		A function that prepares any modules and functions to load before the process.
 
 		Basically, it (1) checks for parameter values, (2) checks for a file that should be existing under script directory (ie. README.md) right after being able to fetch the repository.
 		This function has to run without any exceptions before being able to instantiate other functions that may start the proess of whatever this is.
@@ -116,23 +112,6 @@ class ActivityBadgeServices(ArgumentResolver, DiscordClientHandler, BadgeConstru
 		Note:
 			(n) Validate the arguments given in the secrets. If they aren'
 			(n) Fetch the repository first. Error whenever there's a process that can't be done via Exception.
-		"""
-
-		if self.args_container.running_on_local:
-			await self._check_dotenv()
-
-		if not isinstance(ENV_STRUCT_CONSTRAINTS, dict): # * (1)
-			self.logger.critical(f"Constraints ({type(ENV_STRUCT_CONSTRAINTS)}) for the evaluation of Env is invalid! (expects to be {type(dict)}) Please contact the developer if you think this is a bug!")
-			os._exit(-1)
-
-		# * (1)
-		self.resolved_envs: dict[str, Any] = {}
-
-		# if not len(self.resolved_envs): # * (1.a)
-		#     self.logger.error("There are no candidate environments that is valid and existing under Environment Space! This is an bug, please contact the developer to fix this issue.")
-
-		"""
-		Steps:
 			(1) Check if the key from ENV_STRUCT_CONSTRAINTS is valid by checking them in os.environ.
 			(2) If they dont have a value or does not exist, are they optional?
 			(3) If optional, assigned value (with respect to the type) and push those to self.resolved_envs.
@@ -143,42 +122,79 @@ class ActivityBadgeServices(ArgumentResolver, DiscordClientHandler, BadgeConstru
 			This does not resolve the value to the point that it will be valid from other functions that needs it. I just want to make them less of a burden
 			without explicitly convering and calling them during run time. I want it prepared before proceeding anything.
 		"""
-		for env_key, _ in ENV_STRUCT_CONSTRAINTS.items(): # * (3)
 
-			_env_literal_val : str = os.environ.get(env_key)
+		if self.args_container.running_on_local:
+			await self._check_dotenv()
+
+		if not isinstance(ENV_STRUCT_CONSTRAINTS, dict):  # * (1)
+			self.logger.critical(
+				f"Constraints ({type(ENV_STRUCT_CONSTRAINTS)}) for the evaluation of Env is invalid! (expects to be {type(dict)}) Please contact the developer if you think this is a bug!"
+			)
+			os._exit(-1)
+
+		self.resolved_envs: dict[str, Any] = {} # * (1)
+
+		for env_key, _ in ENV_STRUCT_CONSTRAINTS.items():  # * (3)
+
+			_env_literal_val: str = os.environ.get(env_key)
+			_env_cleaned_name: str = env_key.removeprefix("INPUT_")
 			# # For Github Actions.
-			self.logger.debug("Environment Variable %s = %s has type [env] (%s) | [expected_type] (%s)" % (env_key, ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"], type(_env_literal_val), type(ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])))
+			self.logger.debug(
+				"Environment Variable %s = %s has type [env] (%s) | [expected_type] (%s)"
+				% (
+					env_key,
+					ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],
+					type(_env_literal_val),
+					type(ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]),
+				)
+			)
 
-			if not len(_env_literal_val): # Are they optional environments? Length should be 0 when performed in Github Action Runner.
+			if not len(
+				_env_literal_val
+			):  # Are they optional environments? Length should be 0 when performed in Github Action Runner.
 
 				# todo: check if optional with no default values has a true type of `str` or just NoneType.
 
 				if not ENV_STRUCT_CONSTRAINTS[env_key]["is_required"]:
-					self.resolved_envs[env_key] = ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"](ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])
+					self.resolved_envs[_env_cleaned_name] = ENV_STRUCT_CONSTRAINTS[
+						env_key
+					]["expected_type"](
+						ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]
+					)
 					continue
 
 				else:
-					self.logger.critical(f"Environment Variable {env_key} does not exist or does not have a supplied value! Please fill up the required fields to able to use this script.")
+					self.logger.critical(
+						f"Environment Variable {env_key} does not exist or does not have a supplied value! Please fill up the required fields to able to use this script."
+					)
 					os._exit(-1)
 
 			if ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] in [bool, int, str]:
-				self.resolved_envs[env_key] = ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"](_env_literal_val)
+				self.resolved_envs[_env_cleaned_name] = ENV_STRUCT_CONSTRAINTS[env_key][
+					"expected_type"
+				](_env_literal_val)
 
 			else:
-				self.logger.critical(f"Environment Name '{_env_literal_val}' cannot be resolved / serialized due to its expected_type not a candidate for serialization. Please contact the developer about this for more information.")
+				self.logger.critical(
+					f"Environment Name '{_env_literal_val}' cannot be resolved / serialized due to its expected_type not a candidate for serialization. Please contact the developer about this for more information."
+				)
 
-		self.logger.debug(f"Done. Resolved Envs Result > {self.resolved_envs}")
 
-		try:  # * (2)
-			self._git_instance = Github(os.environ.get("INPUT_WORKFLOW_TOKEN"))
-			self.logger.debug(f"Token > {self._git_instance}")
+		self.logger.debug(
+			f"Evaluation Done. Resolved Envs Result > {self.resolved_envs}"
+		)
+
+		try:  # ! (2)
+			self._git_instance = Github(self.resolved_envs["WORKFLOW_TOKEN"])
+			self.logger.info(f"Github Instance to API Connection Established.")
 
 			_repo = self._git_instance.get_repo(
-				os.environ.get("INPUT_PROFILE_REPOSITORY")
+				self.resolved_envs["PROFILE_REPOSITORY"]
 			)
-			_target_file = _repo.get_contents("README.md")
+			self.logger.info("Repository %s has been fetched." % self.resolved_envs["PROFILE_REPOSITORY"])
 
-			self.logger.debug(f"File {_target_file} exists.")
+			_target_file = _repo.get_contents("README.md")
+			self.logger.info(f"File {_target_file.name} exists.")
 
 		except AssertionError:
 			self.logger.error(
@@ -191,15 +207,6 @@ class ActivityBadgeServices(ArgumentResolver, DiscordClientHandler, BadgeConstru
 				f"README.md does not exist from the repository {self._git_instance.name}"
 			)
 			os._exit(-1)
-		os._exit(-1)
-
-	#  0.4a | Checking of parameters before doing anything.
-	# 1.1 | Parameter Key Validatation.
-	# Step 0.4b | Evaluation of Parameters from Discord to Args.
-
-	async def prepare(self) -> None:
-		self.time_on_hit = curr_exec_time()  # * ???
-		self.__last_n_task: int = 0  # todo: Annotate these later.
 
 	# Wrapper of other steps.
 	async def process(self) -> None:
@@ -209,7 +216,13 @@ class ActivityBadgeServices(ArgumentResolver, DiscordClientHandler, BadgeConstru
 		# ! If we can invoke the workflow credentials here. Then we can push this functionality.
 		# * Or else, we have to make the steps in the workflow (yaml) to push the changes.
 
-		pass
+		self.discord_client_task: Task = ensure_future(
+		    self.start(self.resolved_envs["DISCORD_BOT_TOKEN"])
+		)  # * (4), start while we check something else
+
+
+		self.logger.info("Entrypoint: Done loading all tasks. Reaching Endpoint...")
+		await self.__end__()
 
 	async def __end__(self) -> None:
 		"""
@@ -290,10 +303,10 @@ class ActivityBadgeServices(ArgumentResolver, DiscordClientHandler, BadgeConstru
 		Step 0.3 | Loads the logger for all associated modules.
 
 		Args:
-				level_coverage (Optional[int], optional): Sets the level (and above) to cover it in the logs or in stream. Defaults to logging.DEBUG.
-				log_to_file (Optional[bool], optional): Creates a file and logs the data if set to True, or otherwise. Defaults to False.
-				out_to_console (Optional[bool], optional): Output the log reports in the console, if enabled. Defaults to False.
-				verbose_client (Optional[bool], optional): Bind discord to the logger to log other events that is out of scope of entrypoint.
+			level_coverage (Optional[int], optional): Sets the level (and above) to cover it in the logs or in stream. Defaults to logging.DEBUG.
+			log_to_file (Optional[bool], optional): Creates a file and logs the data if set to True, or otherwise. Defaults to False.
+			out_to_console (Optional[bool], optional): Output the log reports in the console, if enabled. Defaults to False.
+			verbose_client (Optional[bool], optional): Bind discord to the logger to log other events that is out of scope of entrypoint.
 		Summary: todo.
 		"""
 
@@ -338,7 +351,7 @@ class ActivityBadgeServices(ArgumentResolver, DiscordClientHandler, BadgeConstru
 				f"Logger Coverage Level was set to {level_coverage}."
 			)  # todo: Make it enumerated to show the name.
 
-		self.logger.debug("The logger has been loaded.")
+		self.logger.info("The logger has been loaded.")
 
 	async def _check_dotenv(self) -> None:
 		"""
