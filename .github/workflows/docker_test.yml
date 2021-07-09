@@ -17,6 +17,7 @@ name: Container Tester
 on:
   workflow_run:
     workflows: ["Script Containerization"]
+    branches: [dev]
     types:
       - completed
       - requested
