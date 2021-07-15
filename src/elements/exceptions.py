@@ -57,3 +57,12 @@ class DotEnvFileNotFound(Exception):
         ] = f"Error Code: {args[0]=} | Dotenv File cannot be found. Please check your specified path or the name of the file and try again."
 
         super().__init__(messages)
+
+class GithubRateLimitedError(Exception):
+    pass
+
+class SessionStatusNotOkay(Exception):
+    pass
+
+class SessionRequestHTTPError(Exception):
+    pass

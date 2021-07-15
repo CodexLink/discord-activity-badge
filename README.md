@@ -146,7 +146,8 @@ Here contains a list of resources that I have used in any forms that contributed
 - https://pythonspeed.com/articles/base-image-python-docker-images/
 - https://stackoverflow.com/questions/36342899/asyncio-ensure-future-vs-baseeventloop-create-task-vs-simple-coroutine
 - https://stackoverflow.com/questions/66381035/docker-buildx-error-rpc-error-code-unknown-desc-server-message-insuffici
-
+- https://stackoverflow.com/a/41766306/5353223
+- https://stackoverflow.com/questions/41351346/python-asyncio-task-list-generation-without-executing-the-function (Helped me understand more of the use of as_completed.)
 > This section is still incomplete, I will put more and format it later.
 
 ## License

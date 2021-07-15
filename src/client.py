@@ -80,7 +80,7 @@ else:
 			self.__client_container: object = type(
 				DISCORD_DATA_CONTAINER, (object,), DISCORD_DATA_CONTAINER_ATTRS
 			)  # * (1) [a, b]
-			self.logger.debug(f"Created Container Object: {self.__client_container}")
+			self.logger.debug(f"Container (object) Created: {self.__client_container}")
 
 			ensure_future(
 				(
@@ -93,17 +93,16 @@ else:
 				)
 			)  # * (2)
 			self.logger.info(
-				f"Pushed self.change_presence under asyncio.ensure_future over time to load Bot's Rich Presence."
+				f"Pushed {self.user}'s Rich Presence to Discord API."
 			)
 
-			self.logger.info(f"Initiating User Data Fetching.")
+			self.logger.info(f"Fetching Discord User's Data.")
 
 			await self._get_activities_via_guild(await self.__get_user())  # * 3 [a, b]
 			self.logger.info(
 				"Discord Client is finished fetching data and is saved under self._client_container for badge processing."
 			)
 
-			self.logger.info("Closing Sessions (1 of 2) | discord.Client -> Awaiting.")
 			await self.close()
 			self.logger.info("Closing Sessions (1 of 2) | discord.Client -> Done.")
 
