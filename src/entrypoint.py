@@ -32,6 +32,7 @@ from asyncio import (
 	gather,
 	get_event_loop,
 	sleep as asyncio_sleep,
+	wait
 )
 
 from sys import stdout
@@ -39,7 +40,6 @@ from time import time as curr_exec_time
 
 from typing import Any, Generator, Optional, Set
 from discord.errors import LoginFailure
-from github import Github
 from github.GithubException import UnknownObjectException
 from api import AsyncRequestAPI
 from args import ArgumentResolver
@@ -48,6 +48,7 @@ from client import DiscordClientHandler
 from elements.constants import (
 	ENV_FILENAME,
 	ENV_STRUCT_CONSTRAINTS,
+	GithubRunnerActions,
 	LOGGER_FILENAME,
 	LOGGER_OUTPUT_FORMAT,
 	MAXIMUM_RUNTIME_SECONDS,
@@ -91,10 +92,8 @@ class ActivityBadgeServices(ArgumentResolver, AsyncRequestAPI, DiscordClientHand
 		"""
 		self._init_logger(level_coverage=logging.DEBUG, log_to_file=False, out_to_console=True) # * (1) [a,b]
 
-		await super().__ainit__() # * (2) # Note here that we also have to instantiate other classes such as the Discord.Client Handler.
-		await self.prepare()
+		await gather(self.prepare(), super().__ainit__())
 
-		# await self.prepare()  # * (3)
 		await self.process()  # * (4)
 
 	# # User Space Functions
@@ -119,14 +118,22 @@ class ActivityBadgeServices(ArgumentResolver, AsyncRequestAPI, DiscordClientHand
 				without explicitly convering and calling them during run time. I want it prepared before proceeding anything.
 		"""
 
-		if self.args_container.running_on_local:
-			self._check_dotenv() # ! This cannot be awaited.
-
 		if not isinstance(ENV_STRUCT_CONSTRAINTS, dict):  # * (1)
 			self.logger.critical(
 				f"Constraints ({type(ENV_STRUCT_CONSTRAINTS)}) for the evaluation of Env is invalid! (expects to be {type(dict)}) Please contact the developer if you think this is a bug!"
 			)
 			os._exit(-1)
+
+
+		await asyncio_sleep(0.001)
+
+		if self.args_container.running_on_local:
+			self._check_dotenv() # ! This cannot be awaited.
+
+		else:
+			self.logger.info(
+				"Argument -rl / --running-on-local is not invoked. Skipping '.env' checking... (at self.__check_dotenv)"
+			)
 
 		self.resolved_envs: dict[str, Any] = {}  # * (1)
 
@@ -180,27 +187,18 @@ class ActivityBadgeServices(ArgumentResolver, AsyncRequestAPI, DiscordClientHand
 				self.logger.critical("Certain environment variables cannot be found. Are you running on local? Invoke --running-on-local if that would be the case. If this was deployed, please report this issue to the developer.")
 				os._exit(-1)
 
-		self.logger.debug(
-			f"Evaluation Done. Resolved Envs Result > {self.resolved_envs}"
-		)
+		self.logger.info(
+			f"Environment Variables stored in-memory and resolved!"
+   		)
+		await asyncio_sleep(0.001)
+		self.logger.debug(f"Result of Env. Serialization |> {self.resolved_envs}")
 
 		try:  # ! (2)
-			# self._git_instance = Github(self.resolved_envs["WORKFLOW_TOKEN"])
-			# self.logger.info(f"Github Instance to API Connection Established.")
 
-			await self.github_api_connect()
+			self.logger.info("Waiting for the API Connection Tester to finish...")
+			await wait([self._test_api_task])
 
-			_repo = self._git_instance.get_repo(
-				self.resolved_envs["PROFILE_REPOSITORY"]
-			)
-			self.logger.info(
-				"Repository %s has been fetched."
-				% self.resolved_envs["PROFILE_REPOSITORY"]
-			)
-
-			_target_file = _repo.get_contents("README.md")
-			await self.validate_identifier()
-			self.logger.info(f"File {_target_file.name} exists.")
+			gather(self.github_api_connect(), self.github_action_repo(GithubRunnerActions.FETCH_README))
 
 		except AssertionError:
 			self.logger.error(
@@ -281,10 +279,10 @@ class ActivityBadgeServices(ArgumentResolver, AsyncRequestAPI, DiscordClientHand
 
 
 			self.logger.info(
-				f"Waiting for other {len(__tasks)} tasks to finish. | Current Time Execution: {__this_time}/{MAXIMUM_RUNTIME_SECONDS} seconds."
+				f"Waiting for other {len(__tasks)} tasks to finish. | Time Execution: {__this_time:.2f}/{MAXIMUM_RUNTIME_SECONDS} seconds."
 			)
 
-			await asyncio_sleep(0.8)
+			await asyncio_sleep(0.4)
 
 	# # Utility Functions
 	def _init_logger(
@@ -356,38 +354,32 @@ class ActivityBadgeServices(ArgumentResolver, AsyncRequestAPI, DiscordClientHand
 
 		Pre-req: Argument -rl or --run-locally. Or otherwise, will not run this function.
 		"""
-		if self.args_container.running_on_local:
-			try:
-				from dotenv import find_dotenv, load_dotenv
+		try:
+			from dotenv import find_dotenv, load_dotenv
 
-			except ModuleNotFoundError:
-				self.logger.critical(
-					"Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies."
-				)
-
-			self.logger.info(
-				"Argument -rl / --running-on-local is invoked. Checking for '.env' file."
+		except ModuleNotFoundError:
+			self.logger.critical(
+				"Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies."
 			)
 
-			try:
-				load_dotenv(
-					find_dotenv(
-						filename=ROOT_LOCATION + ENV_FILENAME,
-						raise_error_if_not_found=True,
-					)
-				)
-				self.logger.info("Env File exists and is valid. Loaded in the script.")
+		self.logger.info(
+			"Argument -rl / --running-on-local is invoked. Checking for '.env' file."
+		)
 
-			except IOError:
-				self.logger.critical(
-					"File '.env' is either malformed or does not exists!"
+		try:
+			load_dotenv(
+				find_dotenv(
+					filename=ROOT_LOCATION + ENV_FILENAME,
+					raise_error_if_not_found=True,
 				)
-				raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
-
-		else:
-			self.logger.info(
-				"Argument -rl / --running-on-local is not invoked. Skipping '.env' checking... (at self.__check_dotenv)"
 			)
+			self.logger.info("Env File exists and is valid. Loaded in the script.")
+
+		except IOError:
+			self.logger.critical(
+				"File '.env' is either malformed or does not exists!"
+			)
+			raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
 
 # # Entrypoint Code
 loop_instance: AbstractEventLoop = get_event_loop()

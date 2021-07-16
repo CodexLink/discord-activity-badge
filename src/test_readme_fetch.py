@@ -34,8 +34,6 @@ async def main():
 	data_decoded = literal_eval(readme_file.decode("utf-8"))
 	data_sterilized = data_decoded["content"].replace("\n", "")
 
-	print(data_sterilized)
-
 	# For local testing only.
 	# with open("base64_output.md", "w", errors="ignore") as f:
 	# 	a = b64decode(data_sterilized)

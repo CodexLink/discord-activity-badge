@@ -17,3 +17,4 @@ limitations under the License.
 from typing import NewType as _N
 
 HttpsURL = _N("HttpsURL", str)
+Base64 = _N("Base64", str) # Subject to change.

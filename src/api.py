@@ -20,16 +20,27 @@ limitations under the License.
 # For Commiting the Changes: https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
 # For Fetching the File:
 
-from asyncio import ensure_future, Future, sleep as asyncio_sleep, as_completed
+from asyncio import (
+	as_completed,
+	ensure_future,
+	Future,
+	sleep as asyncio_sleep,
+)
 from aiohttp import ClientSession
 from typing import Any, Literal, Union, Optional
 from json import load as JSON_SERIALIZE
 from ast import literal_eval
 from base64 import b64decode, b64encode
 from elements.exceptions import SessionRequestHTTPError
-from elements.constants import ResponseTypes, RESTResponse, DISCORD_CLIENT_INTENTS
-from elements.typing import HttpsURL
+from elements.constants import (
+	GithubRunnerActions,
+	ResponseTypes,
+	RESTResponse,
+	DISCORD_CLIENT_INTENTS,
+)
+from elements.typing import HttpsURL, Base64
 import os
+
 
 class AsyncRequestAPI:
 	"""
@@ -41,42 +52,93 @@ class AsyncRequestAPI:
 
 	async def __ainit__(self) -> None:
 		super().__init__()  # Required?
+		self.logger.debug(
+			f"Instantiatied Class discord.Client with intents={DISCORD_CLIENT_INTENTS=}"
+		)
 
-		self._api_session = ClientSession()
-		self.logger.debug(f"Instantiatied Class discord.Client with intents={DISCORD_CLIENT_INTENTS=}")
+		self._api_session: ClientSession = ClientSession()
+		self._github_fetched_data : Any = None
 
-		await self.test_api_conn()
+		await asyncio_sleep(0.001)
+		self._test_api_task: Future = ensure_future(self.test_api_conn())
 
 		self.logger.info(
 			f"{AsyncRequestAPI.__name__} is ready for handling requests from Github API and Badgen API."
 		)
 
 	async def test_api_conn(self) -> None:
-		__endpoints: list[str] = [os.environ["GITHUB_API_URL"], "https://badgen.net"]
+		__endpoints: list[HttpsURL] = [
+			self.resolved_envs["GITHUB_API_URL"],
+			"https://badgen.net",
+		]
 		__responses: list[Future] = []
 
 		for idx, each_endpoint in enumerate(__endpoints):
 			self.logger.info(
 				f"Attempting to Test Connection ({idx + 1}/{len(__endpoints)}) | {each_endpoint}..."
 			)
-			__responses.append(self._request(each_endpoint))
+			__responses.append(
+				self._request(
+					each_endpoint, should_return=ResponseTypes.RESPONSE_STATUS
+				)
+			)
 
 		for response in as_completed(__responses):
 			_tasks = await response
 			if not _tasks:
 				raise SessionRequestHTTPError
 
-			self.logger.info(f"Connection Response from {_tasks[0]} returned STATUS {_tasks[1]}!")
+			self.logger.info(
+				f"Connection Response from {_tasks[0]} returned STATUS {_tasks[1]}!"
+			)
+
+		self.logger.info(
+			"Test API Connection as been completed! Ready to use those API!"
+		)
 
 	async def github_api_connect(self) -> None:
 		self.logger.info("Authenticating to Github API.")
-		__conn : Future = await self._request(os.environ["GITHUB_API_URL"], data={os.environ["GITHUB_ACTOR"]: os.environ["INPUT_WORKFLOW_TOKEN"]}, should_return=ResponseTypes.IS_OKAY)
+
+		__conn: Future = await self._request(
+			self.resolved_envs["GITHUB_API_URL"],
+			data={
+				self.resolved_envs["GITHUB_ACTOR"]: self.resolved_envs["WORKFLOW_TOKEN"]
+			},
+			should_return=ResponseTypes.IS_OKAY,
+		)
 
 		if __conn:
 			self.logger.info("Successfully Authenticated! (to Github API!)")
+			return
 
-		self.logger.error("Unable to authenticate. Please check your credentials in Secrets!!!")
+		self.logger.error(
+			"Unable to authenticate. Please check your credentials in Secrets!!!"
+		)
 		os._exit(-1)
+
+	async def github_action_repo(
+		self, actions: GithubRunnerActions, return_ctx: bool = False
+	) -> Any:
+
+		# TODO: Check what to try-catch here.
+		if actions is GithubRunnerActions.FETCH_README:
+			__user_repo = "{0}/{0}".format(self.resolved_envs["GITHUB_ACTOR"]) if not len(self.resolved_envs["PROFILE_REPO"]) else "{0}".format(self.resolved_envs["PROFILE_REPO"])
+			__repo_path = (
+				"{0}/repos/{1}/readme".format(self.resolved_envs["GITHUB_API_URL"], __user_repo)
+			)
+			__fetch_readme: Future = await self._request(__repo_path)
+
+			# * Give user an option whether we want to decode the b64 or not.
+
+			__read_resp: bytes = __fetch_readme.content.read_nowait()
+			__serialized_resp: dict = literal_eval(__read_resp.decode("utf-8"))
+			__sresp_content: Base64 = __serialized_resp["content"].replace("\n", "")
+
+			self._github_fetched_data = __serialized_resp
+			self.logger.info(f"Github Profile ({__user_repo}) README has been fetched.")
+
+
+
 
 	async def _request(
 		self,
@@ -99,7 +161,7 @@ class AsyncRequestAPI:
 		if should_return is ResponseTypes.IS_OKAY:
 			return [url, _http_request.ok]
 
-		elif should_return is ResponseTypes.RESP_STATUS:
+		elif should_return is ResponseTypes.RESPONSE_STATUS:
 			return [url, _http_request.status]
 
 		elif should_return is ResponseTypes.RESPONSE:

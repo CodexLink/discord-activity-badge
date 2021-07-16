@@ -24,7 +24,7 @@ from elements.constants import (
     ARG_CONSTANTS,
     ARG_PLAIN_CONTAINER_NAME,
 )
-from asyncio import ensure_future, sleep as asyncio_sleep
+from asyncio import gather
 
 class ArgumentResolver:
     """
@@ -39,14 +39,9 @@ class ArgumentResolver:
             (1) This blocking super() instantiates next subclass, which in our case, the class DiscordClientHandler.
             (2) This await is probably fast, but await is still invoked just to make sure, maybe we can miss about ~300ms of time without it being loaded.
         """
-        await super().__ainit__()  # * (1)
+
+        await gather(self.__load_args(), super().__ainit__())  # * (1)
         # !!! MRO is changed!
-
-        await self.__load_args()
-
-        self.logger.info(
-            f"ArgumentResolver has done evaluating arguments. Check self.args_container to see evaluated arguments."
-        )
 
     async def __load_args(self) -> None:
         """
@@ -126,10 +121,9 @@ class ArgumentResolver:
             )
             self.__parser.parse_args(namespace=self.args_container)
 
-            self.logger.debug(
-                f"ArgumentParser has its arguments evaluated and sent to {self.args_container}."
+            self.logger.info(
+                f"Arguments passed has been validated."
             )
-            await asyncio_sleep(0)
 
         #  ArgumentParser invoke raising SystemExit by default. Catching this exception will ensure that there will be no exceptions shown upon exit.
         except SystemExit:

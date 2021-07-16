@@ -8,15 +8,12 @@ authors = ["Janrey Licas <self.codexlink@gmail.com>"]
 python = "^3.9"
 "discord.py" = "^1.7.3"
 aiohttp = "^3.7.4"
-PyGithub = "^1.55"
 urllib3 = "^1.26.6"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
 coveralls = "^3.1.0"
 flake8 = "^3.9.2"
 black = "^21.6b0"
-PyYAML = "^5.4.1"
 mypy = "^0.910"
 python-dotenv = "^0.18.0"
 

@@ -75,6 +75,22 @@ MAXIMUM_RUNTIME_SECONDS = 10
 ENV_STRUCT_CONSTRAINTS: Final[
     dict[str, Any]
 ] = {  # ! Check /action.yml for more information.
+    # # Github Actions Runner Provided Environmental Variable
+    "GITHUB_API_URL": {
+        "expected_type": str,
+        "fallback_value": None,
+        "is_required": True,
+    },
+    "GITHUB_ACTOR": {
+        "expected_type": str,
+        "fallback_value": None,
+        "is_required": True,
+    },
+    "INPUT_DISCORD_BOT_TOKEN": {
+        "expected_type": str,
+        "fallback_value": None,
+        "is_required": True,
+    },
     # # Required Inputs
     "INPUT_DISCORD_BOT_TOKEN": {
         "expected_type": str,
@@ -86,7 +102,7 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": None,
         "is_required": True,
     },
-    "INPUT_PROFILE_REPOSITORY": {
+    "INPUT_PROFILE_REPO": {
         "expected_type": str,
         "fallback_value": None,
         "is_required": True,
@@ -245,3 +261,9 @@ class ResponseTypes(IntEnum):
     RESPONSE = 0
     RESPONSE_STATUS = 1
     IS_OKAY = 2
+
+@unique
+class GithubRunnerActions(IntEnum):
+    FETCH_README = 0
+    UPDATE_README = 1
+    COMMIT_CHANGES = 2
