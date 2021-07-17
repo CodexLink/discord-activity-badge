@@ -23,12 +23,12 @@ if __name__ == "__main__":
 
     raise IsolatedExecNotAllowed
 
-from pickle import GET
-from typing import Any, Final, List
-from time import strftime
-from discord import Intents
 from datetime import datetime
-from enum import IntEnum, unique
+from enum import auto, IntEnum, unique
+from time import strftime
+from typing import Any, Final
+
+from discord import Intents
 
 # # Argument Class Container Metadata
 ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgsContainer"
@@ -249,21 +249,16 @@ LOGGER_OUTPUT_FORMAT: Final[
 
 # # REST Classifications in Enum
 @unique
-class RESTResponse(IntEnum):
-    GET = 0
-    POST = 1
-    PUT = 2
-    PATCH = 3
-    DELETE = 4
-
-@unique
 class ResponseTypes(IntEnum):
     RESPONSE = 0
     RESPONSE_STATUS = 1
     IS_OKAY = 2
 
+
 @unique
 class GithubRunnerActions(IntEnum):
-    FETCH_README = 0
-    UPDATE_README = 1
-    COMMIT_CHANGES = 2
+    TEST_CONN_APIS = auto()
+    AUTH_GITHUB_API = auto()
+    FETCH_README = auto()
+    UPDATE_README = auto()
+    COMMIT_CHANGES = auto()

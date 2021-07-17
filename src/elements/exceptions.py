@@ -16,53 +16,55 @@ limitations under the License.
 
 # todo: Whenever as possible, do DRY principles here.
 
-from typing import Any, Final
+if __name__ != "__main__":
+    from typing import Final
 
-# # Discord Exceptions
-class MutualGuildsNotFound(Exception):
-    """Cannot find a guild where the bot is residing with the user who requests for presence badge.
+    # # Discord Exceptions
+    class MutualGuildsNotFound(Exception):
+        """Cannot find a guild where the bot is residing with the user who requests for presence badge.
 
-    Args:
-            Exception (Subclass): Inherits Exception Class.
-    """
+        Args:
+                Exception (Subclass): Inherits Exception Class.
+        """
 
-    pass
+        pass
 
-class IsolatedExecNotAllowed(Exception):
-    """The use of modules under isolation is not allowed; hence, raising this error."""
+    class IsolatedExecNotAllowed(Exception):
+        """The use of modules under isolation is not allowed; hence, raising this error."""
 
-    def __init__(self) -> None:
-        messages: Final[
-            str
-        ] = "The use of modules without instantiating the entrypoint is not allowed."
-        super().__init__(messages)
+        def __init__(self) -> None:
+            messages: Final[
+                str
+            ] = "The use of modules without instantiating the entrypoint is not allowed."
+            super().__init__(messages)
 
+    class EntryImportNotAllowed(Exception):
+        """The use of entrypoint for other use is not allowed."""
 
-class EntryImportNotAllowed(Exception):
-    """The use of entrypoint for other use is not allowed."""
+        def __init__(self) -> None:
+            messages: Final[
+                str
+            ] = "The use of entrypoint for other use (importing to other package) is not allowed."
+            super().__init__(messages)
 
-    def __init__(self) -> None:
-        messages: Final[
-            str
-        ] = "The use of entrypoint for other use (importing to other package) is not allowed."
-        super().__init__(messages)
+    class DotEnvFileNotFound(Exception):
+        """An exception that expands the capabilities of exception SystemExit by adding message and the return code + name."""
 
+        def __init__(self, *args) -> None:
+            messages: Final[
+                str
+            ] = f"Error Code: {args[0]=} | Dotenv File cannot be found. Please check your specified path or the name of the file and try again."
 
-class DotEnvFileNotFound(Exception):
-    """An exception that expands the capabilities of exception SystemExit by adding message and the return code + name."""
+            super().__init__(messages)
 
-    def __init__(self, *args) -> None:
-        messages: Final[
-            str
-        ] = f"Error Code: {args[0]=} | Dotenv File cannot be found. Please check your specified path or the name of the file and try again."
+    class GithubRateLimitedError(Exception):
+        pass
 
-        super().__init__(messages)
+    class SessionStatusNotOkay(Exception):
+        pass
 
-class GithubRateLimitedError(Exception):
-    pass
+    class SessionRequestHTTPError(Exception):
+        pass
 
-class SessionStatusNotOkay(Exception):
-    pass
-
-class SessionRequestHTTPError(Exception):
-    pass
+    class SessionRequestStatusAssertFailed(Exception):
+        pass

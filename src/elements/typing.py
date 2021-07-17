@@ -14,7 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+
+if __name__ == "__main__":
+    from .exceptions import IsolatedExecNotAllowed
+
+    raise IsolatedExecNotAllowed
+
 from typing import NewType as _N
 
 HttpsURL = _N("HttpsURL", str)
-Base64 = _N("Base64", str) # Subject to change.
+Base64 = _N("Base64", str)  # Subject to change.
