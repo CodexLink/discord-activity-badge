@@ -43,7 +43,7 @@ from elements.exceptions import (
     SessionRequestHTTPError,
     SessionRequestStatusAssertFailed,
 )
-from elements.typing import Base64, HttpsURL
+from elements.typing import Base64, HttpsURL, ResolvedHTTPResponse
 
 
 class AsyncRequestAPI:
@@ -59,7 +59,6 @@ class AsyncRequestAPI:
         self._api_session: ClientSession = ClientSession()
         await asyncio_sleep(0.001)
         self.logger.info("Instantiated ClientSession for API Requests.")
-        self._github_fetched_data: Any = None
 
         super().__init__()  # Required?
         self.logger.info(
@@ -97,7 +96,7 @@ class AsyncRequestAPI:
 
             # todo: We can make something out of this better.
             if not _tasks[1]:
-                raise SessionRequestHTTPErroro
+                raise SessionRequestHTTPError
 
             self.logger.info(
                 "Connection Response from {0} is {1}!".format(
@@ -105,10 +104,10 @@ class AsyncRequestAPI:
                 )
             )
 
-        self.logger.info("Test API Connection as been completed! Ready tuse those API!")
+        self.logger.info("Test API Connection as been completed!")
 
     async def github_api_connect(self) -> None:
-        self.logger.info("Authenticating to Github API.")
+        self.logger.info("Authenticating to Github API...")
 
         __conn = await self._request(  # todo: To be annotated soon.
             self.envs["GITHUB_API_URL"],
@@ -132,7 +131,7 @@ class AsyncRequestAPI:
         )
         os._exit(-1)
 
-    async def github_action_repo(self, actions: GithubRunnerActions) -> Any:
+    async def exec_api_actions(self, actions: GithubRunnerActions) -> Union[Any, ResolvedHTTPResponse]:
 
         # TODO: Check what to try-catch here.
         if actions is GithubRunnerActions.FETCH_README:
@@ -149,6 +148,7 @@ class AsyncRequestAPI:
                 f"Fetching User's Github Profile Repository ({__user_repo})..."
             )
 
+            # todo: Annotate this later.
             while True:
                 try:
                     __fetch_readme: Future = await self._request(
@@ -163,11 +163,10 @@ class AsyncRequestAPI:
                     __sresp_content: Base64 = __serialized_resp["content"].replace(
                         "\n", ""
                     )
-                    self._github_fetched_data = __serialized_resp
                     self.logger.info(
                         f"Github Profile ({__user_repo}) README has been fetched."
                     )
-                    break
+                    return __sresp_content
 
                 except SyntaxError as RecvCtx:
                     self.logger.error(

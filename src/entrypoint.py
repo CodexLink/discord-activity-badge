@@ -129,7 +129,7 @@ class ActivityBadgeServices(
 
         await asyncio_sleep(0.001)
 
-        if self.args_container.running_on_local:
+        if self.args_container.local:
             self._check_dotenv()  # ! This cannot be awaited.
 
         else:
@@ -137,6 +137,183 @@ class ActivityBadgeServices(
                 "Argument -rl / --running-on-local is not invoked. Skipping '.env' checking... (at self.__check_dotenv)"
             )
 
+        self._resolve_envs()
+        await asyncio_sleep(0.001)
+
+        self.logger.info("Waiting for the API Connection Tester to finish...") # ! (2)
+        await wait([self._test_api_task])
+
+        await self.github_api_connect()  # Authenticate first before we do something.
+
+    # Wrapper of other steps.
+    async def process(self) -> None:
+        """
+        Step 3 | Discord Accessing and Caching of Data.
+        Step 4 | Badge Generation.
+        Step 5 | Submit changes.
+
+        Let these tasks have a referrable variable first, just for DRY implementation.
+
+        ! The _raw_readme_data has been able to asynchronously run along with github_api_connect()
+        ! I know there will be no problem so far in terms of rate getting limited. But if you think I should really wait
+        ! for github_api_connect(), please make an issue about this.
+
+        """
+
+        _raw_readme_data: Future = ensure_future(self.exec_api_actions(GithubRunnerActions.FETCH_README)) # todo: Create error when it was unable to connect or the README does not exist.
+
+        # Will resolve later in terms of variables.
+        # self.badge_task: list[Future] = gather(
+        #     self.validate_ext_badge(), self.prepare_badge_elements()
+        # ! I think I can put the prepare_badge_metadata() here. We cannot make this one gathered with check_badge_identifier
+        # * Because we have to wait for the API request of the README data, so we just have to do ensure_future() with it.
+        await asyncio_sleep(0.001)
+
+
+        self.logger.info("Instantiating Discord Client's WebSocket and Connection...")
+        self.discord_client_task: Task = ensure_future(
+            self.start(self.envs["DISCORD_BOT_TOKEN"])
+        )  # * (4)
+
+        await wait([_raw_readme_data]) # Checkpoint.
+        ensure_future(self.check_badge_identifier(_raw_readme_data.result()))
+
+        self.logger.info("Entrypoint: Done loading all tasks.")
+
+    async def __end__(self) -> None:
+        """
+        An end-part of the entrypoint functionality. This contains handler for when to end the script and display logs when it can't.
+        It should wait 0.5 sec for every changes. Anything below 0.5 will cause the log to be unreadable.
+        """
+
+        __timeout_start = curr_exec_time()
+
+        while True:
+            __this_time = curr_exec_time() - __timeout_start
+            __tasks: Set[Task] = all_tasks()
+
+            if __this_time >= MAXIMUM_RUNTIME_SECONDS:
+                self.logger.critical(
+                    "Time's up! We are taking too much time. Something is wrong... Terminating the script..."
+                )
+                os._exit(-1)
+
+            if len(all_tasks()) <= 1:
+                self.logger.info(
+                    "No other tasks were detected aside from Main Event Loop. Closing some sessions."
+                )
+
+                await self.close()
+                self.logger.info("Closing Sessions (1 of 2) ASSERT | discord -> Done.")
+                await self._api_session.close()
+                self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
+
+                break
+
+            self.logger.info(
+                f"Waiting for other {len(__tasks)} tasks to finish. | Time Execution: {__this_time:.2f}/{MAXIMUM_RUNTIME_SECONDS} seconds."
+            )
+
+            await asyncio_sleep(0.4)
+
+    # # Utility Functions
+    def _check_dotenv(self) -> None: # # Mandatory.
+        """
+        Step 0.2 | Prepare the .env file to load in this script.
+        If function "find_dotenv" raise an error, the script won't run.
+        Or else, run Step 0.2.
+
+
+        Pre-req: Argument -l or --local. Or otherwise, this function will not run.
+        """
+        try:
+            self.logger.info(f"Invoked -rl / --running-on-local, importing `dotenv` packages.")
+            from dotenv import find_dotenv, load_dotenv
+
+        except ModuleNotFoundError:
+            self.logger.critical(
+                "Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies."
+            )
+
+        try:
+            self.logger.info(f"Attempting to locate {ROOT_LOCATION}/{ENV_FILENAME}")
+            load_dotenv(
+                find_dotenv(
+                    filename=ROOT_LOCATION + ENV_FILENAME,
+                    raise_error_if_not_found=True,
+                )
+            )
+            self.logger.info(
+                f"Env File at {ROOT_LOCATION + ENV_FILENAME} was validated."
+            )
+
+        except IOError:
+            self.logger.critical(
+                f"File {ENV_FILENAME} at {ROOT_LOCATION} is malformed or does not exists!"
+            )
+            raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
+
+    def _init_logger( # # Mandatory.
+        self,
+        level_coverage: Optional[int] = logging.DEBUG,
+        log_to_file: Optional[bool] = False,
+        out_to_console: Optional[bool] = False,
+        verbose_client: Optional[bool] = False,
+    ) -> None:
+        """
+        Step 0.3 | Loads the logger for all associated modules.
+
+        Args:
+            level_coverage (Optional[int], optional): Sets the level (and above) to cover it in the logs or in stream. Defaults to logging.DEBUG.
+            log_to_file (Optional[bool], optional): Creates a file and logs the data if set to True, or otherwise. Defaults to False.
+            out_to_console (Optional[bool], optional): Output the log reports in the console, if enabled. Defaults to False.
+            verbose_client (Optional[bool], optional): Bind discord to the logger to log other events that is out of scope of entrypoint.
+        Summary: todo.
+        """
+        __levels__ = [
+            logging.DEBUG,
+            logging.INFO,
+            logging.WARNING,
+            logging.ERROR,
+            logging.CRITICAL,
+        ]
+
+        # Expressed Statements
+        __LOGGER_HANDLER_FORMATTER: Optional[logging.Formatter] = logging.Formatter(
+            LOGGER_OUTPUT_FORMAT
+        )
+        __LOGGER_LEVEL_COVERAGE: int = (
+            level_coverage if level_coverage in __levels__ else logging.DEBUG
+        )
+
+        self.logger = logging.getLogger(__name__ if not verbose_client else "discord")
+        self.logger.setLevel(__LOGGER_LEVEL_COVERAGE)
+
+        if log_to_file:
+            file_handler = logging.FileHandler(
+                filename=LOGGER_FILENAME, encoding="utf-8", mode="w"
+            )
+            file_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
+            self.logger.addHandler(file_handler)
+
+        if out_to_console:
+            console_handler = logging.StreamHandler(stdout)
+            console_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
+            self.logger.addHandler(console_handler)
+
+        if not level_coverage in __levels__:
+            self.logger.warning(
+                "Argument level_coverage is invalid from any of the list in __level__. setLevel() will use a default value (logging.DEBUG) instead."
+            )
+
+        else:
+            self.logger.debug(
+                f"Logger Coverage Level was set to {level_coverage}."
+            )  # todo: Make it enumerated to show the name.
+
+        self.logger.info("The logger has been loaded.")
+
+    def _resolve_envs(self) -> None: # # Mandatory.
         self.envs: dict[str, Any] = {}  # * (1)
 
         for idx, (env_key, _) in enumerate(ENV_STRUCT_CONSTRAINTS.items()):  # * (3)
@@ -185,207 +362,12 @@ class ActivityBadgeServices(
 
             except Exception:  # We can't catch <class 'NoneType'> here. Use Exception instead.
                 self.logger.critical(
-                    "Certain environment variables cannot be found. Are you running on local? Invoke --running-on-local if that would be the case. If this was deployed, please report this issue to the developer."
+                    "Certain environment variables cannot be found. Are you running on local? Invoke --local if that would be the case. If this was deployed, please report this issue to the developer."
                 )
                 os._exit(-1)
 
         self.logger.info(f"Environment Variables stored in-memory and resolved!")
         self.logger.debug(f"Result of Env. Serialization |> {self.envs}")
-        await asyncio_sleep(0.001)
-
-        # ! (2)
-        self.logger.info("Waiting for the API Connection Tester to finish...")
-        await wait([self._test_api_task])
-
-        # todo: SUBJECT FOR CHANGE, WE ARE TRYING TO AUTH WITHOUT HAVING IT POST.
-        await self.github_api_connect()  # Authenticate first before we do something.
-
-        # todo: Create error when it was unable to connect or the README does not exist.
-        ensure_future(self.github_action_repo(GithubRunnerActions.FETCH_README))
-
-    # Wrapper of other steps.
-    async def process(self) -> None:
-        """
-        Step 3 | Discord Accessing and Caching of Data.
-        Step 4 | Badge Generation.
-        Step 5 | Submit changes.
-
-        Let these tasks have a referrable variable first, just for DRY implementation.
-        """
-
-        # self.badge_task: list[Future] = gather(
-        #     self.validate_ext_badge(), self.prepare_badge_elements()
-        # )
-
-        await asyncio_sleep(0.001)
-        self.discord_client_task: Task = ensure_future(
-            self.start(self.envs["DISCORD_BOT_TOKEN"])
-        )  # * (4)
-
-        self.logger.info("Entrypoint: Done loading all tasks. Reaching Endpoint...")
-
-    async def __end__(self) -> None:
-        """
-        An end-part of the entrypoint functionality. This contains handler for when to end the script and display logs when it can't.
-        It should wait 0.5 sec for every changes. Anything below 0.5 will cause the log to be unreadable.
-        """
-
-        __timeout_start = curr_exec_time()
-
-        while True:
-            __this_time = curr_exec_time() - __timeout_start
-            __tasks: Set[Task] = all_tasks()
-
-            if __this_time >= MAXIMUM_RUNTIME_SECONDS:
-                self.logger.critical(
-                    "Time's up! We are taking too much time. Something is wrong... Terminating the script..."
-                )
-                os._exit(-1)
-
-            if len(all_tasks()) <= 1:
-                self.logger.info(
-                    "No other tasks were detected aside from Main Event Loop. Closing some sessions."
-                )
-
-                await self.close()
-                self.logger.info("Closing Sessions (1 of 2) ASSERT | discord -> Done.")
-                await self._api_session.close()
-                self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
-
-                # if not self.is_closed():
-                # 	self.logger.info(
-                # 		"Discord Client WebSocket is still open. Re-issuing Closing Session -> Awaiting."
-                # 	)
-
-                # 	try:
-                # 		await self.discord_client_task
-
-                # 	# todo: TRY TO CREATE A FUNCTION DOES THIS IN ENTRYPOINT OR SOMEWHERE ELSE. SEE CLIENT HANDLING OF ERROR WHICH IS THE SAME AS THIS.
-                # 	except AttributeError as Err:
-                # 		self.logger.critical(
-                # 			f"The referred Env. Var. is missing which results to NoneType. This is a developer's fault, please issue this problem to the author's repository. | Info: {Err}"
-                # 		)
-                # 		os._exit(-1)
-
-                # 	except LoginFailure:
-                # 		self.logger.critical(
-                # 			"The provided DISCORD_BOT_TOKEN is malformed. Please copy and replace your secret token and try again."
-                # 		)
-                # 		os._exit(-1)
-
-                # 	self.logger.info(
-                # 		"Discord Client WebSocket is still open. Re-issuing Closing Session -> Done."
-                # 	)
-
-                break
-
-            self.logger.info(
-                f"Waiting for other {len(__tasks)} tasks to finish. | Time Execution: {__this_time:.2f}/{MAXIMUM_RUNTIME_SECONDS} seconds."
-            )
-
-            await asyncio_sleep(0.4)
-
-    # # Utility Functions
-    def _init_logger(
-        self,
-        level_coverage: Optional[int] = logging.DEBUG,
-        log_to_file: Optional[bool] = False,
-        out_to_console: Optional[bool] = False,
-        verbose_client: Optional[bool] = False,
-    ) -> None:
-        """
-        Step 0.3 | Loads the logger for all associated modules.
-
-        Args:
-                        level_coverage (Optional[int], optional): Sets the level (and above) to cover it in the logs or in stream. Defaults to logging.DEBUG.
-                        log_to_file (Optional[bool], optional): Creates a file and logs the data if set to True, or otherwise. Defaults to False.
-                        out_to_console (Optional[bool], optional): Output the log reports in the console, if enabled. Defaults to False.
-                        verbose_client (Optional[bool], optional): Bind discord to the logger to log other events that is out of scope of entrypoint.
-        Summary: todo.
-        """
-
-        __levels__ = [
-            logging.DEBUG,
-            logging.INFO,
-            logging.WARNING,
-            logging.ERROR,
-            logging.CRITICAL,
-        ]
-
-        # Expressed Statements
-        __LOGGER_HANDLER_FORMATTER: Optional[logging.Formatter] = logging.Formatter(
-            LOGGER_OUTPUT_FORMAT
-        )
-        __LOGGER_LEVEL_COVERAGE: int = (
-            level_coverage if level_coverage in __levels__ else logging.DEBUG
-        )
-
-        self.logger = logging.getLogger(__name__ if not verbose_client else "discord")
-        self.logger.setLevel(__LOGGER_LEVEL_COVERAGE)
-
-        if log_to_file:
-            file_handler = logging.FileHandler(
-                filename=LOGGER_FILENAME, encoding="utf-8", mode="w"
-            )
-            file_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
-            self.logger.addHandler(file_handler)
-
-        if out_to_console:
-            console_handler = logging.StreamHandler(stdout)
-            console_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
-            self.logger.addHandler(console_handler)
-
-        if not level_coverage in __levels__:
-            self.logger.warning(
-                "Argument level_coverage is invalid from any of the list in __level__. setLevel() will use a default value (logging.DEBUG) instead."
-            )
-
-        else:
-            self.logger.debug(
-                f"Logger Coverage Level was set to {level_coverage}."
-            )  # todo: Make it enumerated to show the name.
-
-        self.logger.info("The logger has been loaded.")
-
-    def _check_dotenv(self) -> None:
-        """
-        Step 0.2 | Prepare the .env file to load in this script.
-        If function "find_dotenv" raise an error, the script won't run.
-        Or else, run Step 0.2.
-
-        todo: Change either --running-on-local, --run-locally, and --local.
-
-        Pre-req: Argument -rl or --run-locally. Or otherwise, will not run this function.
-        """
-        try:
-            from dotenv import find_dotenv, load_dotenv
-
-        except ModuleNotFoundError:
-            self.logger.critical(
-                "Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies."
-            )
-
-        self.logger.info(
-            "Argument -rl / --running-on-local is invoked. Checking for '.env' file."
-        )
-
-        try:
-            load_dotenv(
-                find_dotenv(
-                    filename=ROOT_LOCATION + ENV_FILENAME,
-                    raise_error_if_not_found=True,
-                )
-            )
-            self.logger.info(
-                f"Env File at {ROOT_LOCATION + ENV_FILENAME} was validated."
-            )
-
-        except IOError:
-            self.logger.critical(
-                f"File {ENV_FILENAME} at {ROOT_LOCATION} is malformed or does not exists!"
-            )
-            raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
-
 
 # # Entrypoint Code
 loop_instance: AbstractEventLoop = get_event_loop()

@@ -84,8 +84,8 @@ class ArgumentResolver:
         )
 
         self.__parser.add_argument(
-            "-rl",
-            "--running-on-local",
+            "-l",
+            "--local",
             action="store_true",
             help=ARG_CONSTANTS["HELP_DESC_RUNNING_LOCALLY"],
             required=False,

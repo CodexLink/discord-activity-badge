@@ -19,7 +19,6 @@ if __name__ == "__main__":
 
     raise IsolatedExecNotAllowed
 
-
 import os
 from asyncio import ensure_future
 from typing import List
@@ -40,7 +39,6 @@ from elements.constants import (
     DISCORD_DATA_FIELD_GAME,
     DISCORD_DATA_FIELD_PRESENCE,
     DISCORD_DATA_FIELD_UNSPECIFIED,
-    DISCORD_ON_READY_MSG,
 )
 
 
@@ -71,14 +69,13 @@ class DiscordClientHandler(DiscordClient):
                         (3.b) The use of asyncio.gather() or Queue() won't work here because we need to wait for the inner scope function to finish first. Can't do asynchronously on this space.
 
         """
-        ensure_future(super().__ainit__())  # * ?? [a, b], Subject to change later.
+        # ensure_future(super().__ainit__())  # * ?? [a, b], Subject to change later.
 
-        self.logger.info(DISCORD_ON_READY_MSG % self.user)
+        self.logger.info(f"Discord Client {self.user} is ready for evaluation of user's activity presence.")
 
         self.__client_container: object = type(
             DISCORD_DATA_CONTAINER, (object,), DISCORD_DATA_CONTAINER_ATTRS
         )  # * (1) [a, b]
-        self.logger.debug(f"Container (object) Created: {self.__client_container}")
 
         ensure_future(
             (
@@ -90,9 +87,9 @@ class DiscordClientHandler(DiscordClient):
                 )
             )
         )  # * (2)
-        self.logger.info(f"Pushed {self.user}'s Rich Presence to Discord API.")
+        self.logger.info(f"Pushed Rich Presence Context Discord API to Display {self.user}'s status.")
 
-        self.logger.info(f"Fetching Discord User's Data.")
+        self.logger.info(f"Fetching Discord User's Data.") # todo: Annotate this later.
 
         await self._get_activities_via_guild(await self.__get_user())  # * 3 [a, b]
         self.logger.info(
@@ -120,7 +117,7 @@ class DiscordClientHandler(DiscordClient):
         """
 
         self.logger.info(
-            "Step 1 of 2 | Attempting to fetch discord user's info for validation use."
+            "Step 1.a of 2 | Attempting to fetch discord user's info for validation use."
         )
 
         try:
@@ -134,7 +131,7 @@ class DiscordClientHandler(DiscordClient):
             self.__client_container.user["discriminator"] = __user_info__.discriminator
 
             self.logger.info(
-                "Step 1 of 2 | Finished fetching user information. (id, name, and discriminator)"
+                "Step 1.b of 2 | Finished fetching user information."
             )
 
             return __user_info__

@@ -46,8 +46,16 @@ BADGE_DEFAULT_STATUS_SEP_CHAR: Final[str] = "|"
 BADGE_ICON: Final[str] = "discord"
 BADGE_REGEX_STRUCT_IDENTIFIER: Final[
     str
-] = r"(?P<Delimiter>\[\!\[)(?P<Identifier>(\w+(\s|\b)){1,3})\]\((?P<badge_url>https://[a-z]+.[a-z]{2,4})/(?P<entrypoint>\w+)/(?P<color_badge>[^...]+\b)/(?P<status_badge>[^...?]+)\?(?P<params>[^)]+)\)\]\((?P<redirect_url>https://[a-z]+.[a-z]{2,4}/[^)]+)\)"
+] = r"(?P<Delimiter>\[\!\[)(?P<Identifier>([a-zA-Z0-9_()-]+(\s|\b)){1,6})\]\((?P<badge_url>https://[a-z]+.[a-z]{2,4})/(?P<entrypoint>\w+)/(?P<color_badge>[^...]+\b)/(?P<status_badge>[^...?]+)\?(?P<params>[^)]+)\)\]\((?P<redirect_url>https://[a-z]+.[a-z]{2,4}/[^)]+)\)"
 
+# # Base64 Actions and Related Classiications
+
+@unique
+class Base64Actions(IntEnum):
+    DECODE_B64_TO_FILE = auto()
+    ENCODE_B64_TO_FILE = auto()
+
+B64_ACTION_FILENAME : str = "._temp"
 
 # # Classified Arguments Information
 ARG_CONSTANTS: Final[dict[str, str]] = {  # Cannot evaluate less.
@@ -221,10 +229,6 @@ DISCORD_DATA_FIELD_GAME: Final[str] = "game_activity"
 DISCORD_DATA_FIELD_PRESENCE: Final[str] = "rich_presence"
 DISCORD_DATA_FIELD_UNSPECIFIED: Final[str] = "unspecified_activity"
 
-DISCORD_ON_READY_MSG: Final[
-    str
-] = "Client (%s) is ready for evaluation of user's activity presence."
-
 # # Discord Client Intents
 DISCORD_CLIENT_INTENTS: Intents = Intents.none()
 DISCORD_CLIENT_INTENTS.guilds = True
@@ -253,7 +257,6 @@ class ResponseTypes(IntEnum):
     RESPONSE = 0
     RESPONSE_STATUS = 1
     IS_OKAY = 2
-
 
 @unique
 class GithubRunnerActions(IntEnum):
