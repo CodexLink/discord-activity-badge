@@ -57,7 +57,7 @@ class ArgumentResolver:
             "--dry-run",
             action="store_true",
             help=ARG_CONSTANTS["HELP_DESC_DRY_RUN"],
-        )
+        ) # todo: This is conflicting with the other way to enable dry run. To be evaluated later.
 
         self.__parser.add_argument(
             "-lc",

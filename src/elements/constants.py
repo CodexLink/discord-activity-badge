@@ -30,6 +30,8 @@ from typing import Any, Final
 
 from discord import Intents
 
+from .typing import BadgeStructure, RegExp
+
 # # Argument Class Container Metadata
 ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgsContainer"
 
@@ -38,24 +40,27 @@ BADGE_BASE_URL: Final[str] = "https://badgen.net"
 BADGE_URI: Final[str] = BADGE_BASE_URL + "/badge/%s/%s/%s"
 BADGE_DEFAULT_SUBJECT: Final[
     str
-] = "Rich Presence"  # todo: Add this as one of the variables that can be overriden.
+] = "Activity"  # todo: Add this as one of the variables that can be overriden.
 BADGE_DEFAULT_SUBJECT_BG_COLOR: Final[str] = "black"
 BADGE_DEFAULT_STATUS: Final[str] = "%s %s"
 BADGE_DEFAULT_STATUS_BG_COLOR: Final[str] = "red"
 BADGE_DEFAULT_STATUS_SEP_CHAR: Final[str] = "|"
 BADGE_ICON: Final[str] = "discord"
 BADGE_REGEX_STRUCT_IDENTIFIER: Final[
-    str
-] = r"(?P<Delimiter>\[\!\[)(?P<Identifier>([a-zA-Z0-9_()-]+(\s|\b)){1,6})\]\((?P<badge_url>https://[a-z]+.[a-z]{2,4})/(?P<entrypoint>\w+)/(?P<color_badge>[^...]+\b)/(?P<status_badge>[^...?]+)\?(?P<params>[^)]+)\)\]\((?P<redirect_url>https://[a-z]+.[a-z]{2,4}/[^)]+)\)"
+    RegExp
+] = RegExp(r"(?P<Delimiter>\[\!\[)(?P<badge_identifier>([a-zA-Z0-9_()-]+(\s|\b)){1,6})\]\((?P<badge_url>https://[a-z]+.[a-z]{2,4})/(?P<entrypoint>\w+)/(?P<color_badge>[^...]+\b)/(?P<status_badge>[^...?]+)\?(?P<params>[^)]+)\)\]\((?P<redirect_url>https://[a-z]+.[a-z]{2,4}/[^)]+)\)")
+BADGE_BASE_MARKDOWN: BadgeStructure = BadgeStructure("[[!{0}]({1})]({2})") # todo: Document this one later.
 
 # # Base64 Actions and Related Classiications
+
 
 @unique
 class Base64Actions(IntEnum):
     DECODE_B64_TO_FILE = auto()
     ENCODE_B64_TO_FILE = auto()
 
-B64_ACTION_FILENAME : str = "._temp"
+
+B64_ACTION_FILENAME: str = "._temp"
 
 # # Classified Arguments Information
 ARG_CONSTANTS: Final[dict[str, str]] = {  # Cannot evaluate less.
@@ -94,11 +99,6 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": None,
         "is_required": True,
     },
-    "INPUT_DISCORD_BOT_TOKEN": {
-        "expected_type": str,
-        "fallback_value": None,
-        "is_required": True,
-    },
     # # Required Inputs
     "INPUT_DISCORD_BOT_TOKEN": {
         "expected_type": str,
@@ -110,7 +110,7 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": None,
         "is_required": True,
     },
-    "INPUT_PROFILE_REPO": {
+    "INPUT_PROFILE_REPOSITORY": {
         "expected_type": str,
         "fallback_value": None,
         "is_required": True,
@@ -120,12 +120,12 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": None,
         "is_required": True,
     },
-    # # Optional Inputs — Extensibility and Customization
-    "INPUT_ALLOW_PM_ON_CLICK": {
-        "expected_type": bool,
-        "fallback_value": False,
+    "INPUT_BADGE_IDENTIFIER_NAME": {
+        "expected_type": str,
+        "fallback_value": "(Script) Discord Activity Badge",
         "is_required": False,
     },
+    # # Optional Inputs — Extensibility and Customization
     "INPUT_APPEND_DETAIL_PRESENCE": {
         "expected_type": bool,
         "fallback_value": False,
@@ -134,6 +134,11 @@ ENV_STRUCT_CONSTRAINTS: Final[
     "INPUT_COMMIT_MESSAGE": {
         "expected_type": str,
         "fallback_value": f"Discord Activity Badge Updated as of {__eval_date_on_exec}.",
+        "is_required": False,
+    },
+    "INPUT_PREFERRED_ACTIVITY": {
+        "expected_type": bool,
+        "fallback_value": False,
         "is_required": False,
     },
     "INPUT_SHOW_HOURS_MINUTES_ELAPSED": {
@@ -197,19 +202,13 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "expected_type": bool,
         "fallback_value": False,
         "is_required": False,
-    },
-    "INPUT_DO_NOT_SEND_ERR_REPORTS": {
-        "expected_type": bool,
-        "fallback_value": False,
-        "is_required": False,
-    },
+    }
 }
 
 # # Discord Client Container Metadata
 DISCORD_DATA_CONTAINER: Final[str] = "UserStatusContainer"
-DISCORD_DATA_CONTAINER_ATTRS: Final[
-    dict[str, Any]
-] = {  # todo: Fill it up later. +  Ref: https://stackoverflow.com/questions/3603502/prevent-creating-new-attributes-outside-init
+DISCORD_DATA_CONTAINER_ATTRS: Final[dict[str, Any]] = {
+
     "user": {
         "id": None,
         "name": None,
@@ -257,6 +256,7 @@ class ResponseTypes(IntEnum):
     RESPONSE = 0
     RESPONSE_STATUS = 1
     IS_OKAY = 2
+
 
 @unique
 class GithubRunnerActions(IntEnum):

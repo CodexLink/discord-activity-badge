@@ -29,6 +29,7 @@ from elements.constants import (
     B64_ACTION_FILENAME,
     BADGE_REGEX_STRUCT_IDENTIFIER,
     Base64Actions,
+    BADGE_BASE_MARKDOWN,
 )
 from elements.typing import BadgeStructure, Base64, ResolvedHTTPResponse
 from base64 import b64decode, b64encode
@@ -74,16 +75,81 @@ class BadgeConstructor:
 
         with open(B64_ACTION_FILENAME, "r") as _:
             _match = self._re_pattern.search(_.read(), MULTILINE)
+
+            self._is_badge_identified: bool = _match.group("badge_identifier") is None
+
             self.logger.info(
-                "Badge found! Attempting to dissect..."
-                if _match
-                else "Badge not found! Parameter set to append badge on the top of the line in README.md. Please fix this later."
+                "Badge with identifier (%s) found!."
+                % self.envs["BADGE_IDENTIFIER_NAME"]
+                if self.envs["BADGE_IDENTIFIER_NAME"] == _match.group("Identifier")
+                else "Badge with identifier (%s) not found! Will attempt to append the badge on the top of the contents of README.md. Please fix this later!"
+                % self.envs["BADGE_IDENTIFIER_NAME"]
             )  # And also discord as well. This assume its the user's first time.
 
-    async def prepare_badge_metadata(self) -> None:
-        # _sketch_badge: BadgeStructure = ""
+    async def evaluate_badge_conditions(self) -> None:
+        """
+            For every possible arguments declared in actions.yml, the output of the badge will change.
 
-        self.logger.info("Checking Badge Parameters from ENV.")
+            Let the following be the construction recipe for the badge: [![<badge_identifier>](<badge_url>)](redirect_url)
+
+            Where:
+                - badge_identifier: Unique Name of the Badge
+                - badge_url: The badge URL that is rendered in Markdown (README).
+                - redirect_url: The url to redirect when the badge is clicked.
+
+            ! The badge itself should be recognized by RegEx declared in elements/constants.py:49 (BADGE_REGEX_STRUCT_IDENTIFIER)
+
+            As for how it looks, Level 1:
+                Icon > Badge [Name, Foreground] (1) > Status [Name, Foreground] (2)
+
+            Deeper Structure with involvement of Discord Data, Level 2:
+                Icon > Badge [Name, Foreground] (1) > Prefix + (User State (State if Activity does not exist) or Custom State) + Denoter + Time Elapsed + Postfix [Name, Foreground] (2)
+
+            * Every User State represents CustomActivity.
+
+            Further Examples:
+                - Discord Activity, Currently Offline ()
+                - Discord Activity, Playing Honkai Impact 3, 6 hours elapsed ()
+                - Discord Activity, Playing Honkai Impact 3, 6h 9m elapsed ()
+                - Discord Activity, Doing something for fun. (Currently Online) ()
+                - Status, Visual Studio Code, Editing entrypoint.py:159, 6 hours elapsed
+                - Status, Visual Studio Code, Debugging for 6 hours (this is a pre and post modified)
+                - Visual Studio Code, Editing entrypoint.py:159, 6 hours elapsed
+                - Listening to, Some Music in Spotify
+                - Playing, Honkai Impact 3, 69 minutes remain.
+                - Streaming, in Twitch (this wasnt supported yet but will try after post-development)
+                - Online, There is no end to learning.
+
+
+            At this point, I came to realize that there are lots of configurations that I have to invoke.
+
+            Conditions for badge_identifier:
+                - Should be similar that is declared under workflows.
+                - () and - _ can be invoked and identified by the Regex.
+                - Whenever we have one in the README: We can just replace that string and use re.sub then commit and push.
+                - If otherwise: we will create a badge and put it on top. Let the user put it somewhere else they like.
+
+            @o: There's no impactful changes per condition. Just references.
+
+            Conditions for badge_url:
+                For this group, this is where we have to put all arguments managed in one place.
+                ! First prioritize `Extensibility and Customization` section, .
+                - As w
+
+            Conditions for redirect_url:
+                - The output of this would probably be the repository of the special repository or anything else. todo: Add arguments [REDIRECT_ON_BADGE_CLICK]
+
+        """
+        _sketch_badge: BadgeStructure = BadgeStructure("")
+
+
+        self.logger.info(
+            "Evaluating Conditons from Optional Extensibility and Customizations..."
+        )
+
+        if self.envs["APPEND_DETAIL_PRESENCE"]:
+            # self.env
+            pass
 
     # By this point, there are a variety of Activities. We need to select one and avail to resolve from what the user wants.
     # First let's evaluate what user wants to display in their badge.

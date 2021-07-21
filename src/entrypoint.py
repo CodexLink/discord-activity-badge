@@ -88,7 +88,10 @@ class ActivityBadgeServices(
 
         # * We can now insert the arguments at this point.
         self._init_logger(
-            level_coverage=logging.DEBUG, log_to_file=False, out_to_console=True
+            level_coverage=logging.DEBUG,
+            log_to_file=self.args_container.no_file,
+            out_to_console=self.args_container.log_to_console,
+            verbose_client=self.args_container.verbose_client,
         )  # * (1) [a,b]
 
         # todo:ake ArgumentParser be the first one to execute.
@@ -134,13 +137,13 @@ class ActivityBadgeServices(
 
         else:
             self.logger.info(
-                "Argument -rl / --running-on-local is not invoked. Skipping '.env' checking... (at self.__check_dotenv)"
+                "Argument -l / --local is not invoked. Skipping '.env' checking... (at self.__check_dotenv)"
             )
 
         self._resolve_envs()
         await asyncio_sleep(0.001)
 
-        self.logger.info("Waiting for the API Connection Tester to finish...") # ! (2)
+        self.logger.info("Waiting for the API Connection Tester to finish...")  # ! (2)
         await wait([self._test_api_task])
 
         await self.github_api_connect()  # Authenticate first before we do something.
@@ -160,7 +163,9 @@ class ActivityBadgeServices(
 
         """
 
-        _raw_readme_data: Future = ensure_future(self.exec_api_actions(GithubRunnerActions.FETCH_README)) # todo: Create error when it was unable to connect or the README does not exist.
+        _raw_readme_data: Future = ensure_future(
+            self.exec_api_actions(GithubRunnerActions.FETCH_README)
+        )  # todo: Create error when it was unable to connect or the README does not exist.
 
         # Will resolve later in terms of variables.
         # self.badge_task: list[Future] = gather(
@@ -169,14 +174,16 @@ class ActivityBadgeServices(
         # * Because we have to wait for the API request of the README data, so we just have to do ensure_future() with it.
         await asyncio_sleep(0.001)
 
-
         self.logger.info("Instantiating Discord Client's WebSocket and Connection...")
-        self.discord_client_task: Task = ensure_future(
-            self.start(self.envs["DISCORD_BOT_TOKEN"])
-        )  # * (4)
 
-        await wait([_raw_readme_data]) # Checkpoint.
+        ensure_future(self.evaluate_badge_conditions())
+
+        _discord_client_task: Future = ensure_future(self.start(self.envs["DISCORD_BOT_TOKEN"]))   # * (4)
+
+        await wait([_raw_readme_data])  # Checkpoint.
         ensure_future(self.check_badge_identifier(_raw_readme_data.result()))
+
+
 
         self.logger.info("Entrypoint: Done loading all tasks.")
 
@@ -217,17 +224,16 @@ class ActivityBadgeServices(
             await asyncio_sleep(0.4)
 
     # # Utility Functions
-    def _check_dotenv(self) -> None: # # Mandatory.
+    def _check_dotenv(self) -> None:  # # Mandatory.
         """
         Step 0.2 | Prepare the .env file to load in this script.
         If function "find_dotenv" raise an error, the script won't run.
         Or else, run Step 0.2.
 
-
         Pre-req: Argument -l or --local. Or otherwise, this function will not run.
         """
         try:
-            self.logger.info(f"Invoked -rl / --running-on-local, importing `dotenv` packages.")
+            self.logger.info(f"Invoked -l / --local, importing `dotenv` packages.")
             from dotenv import find_dotenv, load_dotenv
 
         except ModuleNotFoundError:
@@ -253,7 +259,7 @@ class ActivityBadgeServices(
             )
             raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
 
-    def _init_logger( # # Mandatory.
+    def _init_logger(  # # Mandatory.
         self,
         level_coverage: Optional[int] = logging.DEBUG,
         log_to_file: Optional[bool] = False,
@@ -313,7 +319,7 @@ class ActivityBadgeServices(
 
         self.logger.info("The logger has been loaded.")
 
-    def _resolve_envs(self) -> None: # # Mandatory.
+    def _resolve_envs(self) -> None:  # # Mandatory.
         self.envs: dict[str, Any] = {}  # * (1)
 
         for idx, (env_key, _) in enumerate(ENV_STRUCT_CONSTRAINTS.items()):  # * (3)
@@ -346,7 +352,7 @@ class ActivityBadgeServices(
 
                     else:
                         self.logger.critical(
-                            f"Env. Var. #{idx} | {env_key} does not exist or does not have a supplied value! Please fill up the required fields to able to use this script."
+                            f"[{idx + 1}] Env. Var. {env_key} does not exist or does not have a supplied value! Please fill up the required fields (in constants.py) to be able to use this script."
                         )
                         os._exit(-1)
 
@@ -362,12 +368,13 @@ class ActivityBadgeServices(
 
             except Exception:  # We can't catch <class 'NoneType'> here. Use Exception instead.
                 self.logger.critical(
-                    "Certain environment variables cannot be found. Are you running on local? Invoke --local if that would be the case. If this was deployed, please report this issue to the developer."
+                    "Certain environment variables cannot be found. Are you running on local? Invoke --local if that would be the case. If persisting, check your environment file. If this was deployed, please report this issue to the developer."
                 )
                 os._exit(-1)
 
         self.logger.info(f"Environment Variables stored in-memory and resolved!")
         self.logger.debug(f"Result of Env. Serialization |> {self.envs}")
+
 
 # # Entrypoint Code
 loop_instance: AbstractEventLoop = get_event_loop()

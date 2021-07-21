@@ -137,8 +137,8 @@ class AsyncRequestAPI:
         if actions is GithubRunnerActions.FETCH_README:
             __user_repo = (
                 "{0}/{0}".format(self.envs["GITHUB_ACTOR"])
-                if not len(self.envs["PROFILE_REPO"])
-                else "{0}".format(self.envs["PROFILE_REPO"])
+                if not len(self.envs["PROFILE_REPOSITORY"])
+                else "{0}".format(self.envs["PROFILE_REPOSITORY"])
             )
             __repo_path = "{0}/repos/{1}/readme".format(
                 self.envs["GITHUB_API_URL"], __user_repo

@@ -1,5 +1,5 @@
-<h1 align="center">Discord Rich Presence Activity Badge Action</h1>
-<h4 align="center">A containerized action that bridges the Discord User's Rich Presence to a Presentable Badge on their Special Repository (Github Profile). Powered by <b>Python + Asnycio + discord.py</b></h4>
+<h1 align="center">Discord Activity Badge Action</h1>
+<h4 align="center">A containerized action that bridges the Discord User's Activities and State  to a Representable Badge on their Special Repository (Github Profile). Powered by <b>Docker and Python + AsnycIO + discord.py + aiohttp.</b></h4>
 
 <div align="center">
 
@@ -11,18 +11,6 @@
 [![CodeFactor Code Quality Grade](https://img.shields.io/codefactor/grade/github/CodexLink/discord-rich-presence-activity-badge?label=CodeFactor%20Code%20Quality&logo=codefactor)](https://www.codefactor.io/repository/github/codexlink/discord-rich-presence-activity-badge)
 [![Repository License](https://img.shields.io/badge/Repo%20License-Apache%20License%202.0-blueviolet)](https://github.com/CodexLink/discord-rich-presence-activity-badge/blob/main/LICENSE)
 </div>
-
-## Development: What's missing?
-
-To give you an overview, here is the list that contain implementations and tasks that I haven't started yet.
-
-- Badge Constructor (Validator is Done)
-- README Modifier
-- Git Commit and Push as User
-
-> The list will be updated as I push possible changes.
-
-TL;DR: Semi-usable but cannot be used **as-is** due to components missing.
 
 ## Usage
 
@@ -43,12 +31,12 @@ on:
 
 jobs:
   BadgeUpdater:
-    name: Discord Activity Static Badge Updater
+    name: Static Badge Updater
     runs-on: ubuntu-latest
 
     steps:
       - name: Update README Discord Badge to Latest Upstream
-      - uses: CodexLink/discord-rich-presence-activity-badge@main
+      - uses: CodexLink/discord-activity-badge@main
 
         with:
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
@@ -60,7 +48,7 @@ jobs:
 
 ### Constraints
 
-[... Mention about the possible limitations to avoid abuse of this tool. ]
+> To be added later.
 
 ## Parameters
 
@@ -72,10 +60,12 @@ These inputs are required in order to run the Docker Container.
 
 | Inputs                                               | Required? | Description                            |
 |------------------------------------------------------|----|-----------------------------------------------|
+| `COMMIT_MESSAGE` | `str` | User's Discord Rich Presence Updated, Badge Status Changed. | The commit message that the user wants to invoke whenever there's changes. | None, will include later. |
 | `DISCORD_BOT_TOKEN` | `Yes` | The token of your bot from the Discord's Developer Page. It was used to allow usage of Discord API. |
 | `DISCORD_USER_ID` | `Yes` | A long integer ID used to indicate who you are in a certain mutual guild. |
 | `PROFILE_REPOSITORY` | `No` | The repository from where the commits will be pushed. Fill this when you are indirectly deploying the script under different repository. |
 | `WORKFLOW_TOKEN` | `No` | The token of the Github Workflow Instance used to authenticate commits deployed by the script. Fill this when you are indirectly deploying the script under different repository. |
+| `BADGE_IDENTIFIER_NAME` | `No` (defaults to `Discord Activity Badge`) | The name of the badge (in markdown form) that will be utilized to replace the state of the user. If the identifier does not exists, then it will proceed to create a new one and append it on the top. You must arranged it right after. |
 
 > Having of one the requirements left out will result in an error. If possible, the bot will send you a message about it in Discord.
 
@@ -91,16 +81,15 @@ These parameters are extensible that may help you customize the base output of t
 
 | Input       | Type        | Default     | Description | Result                 |
 | ----------- | ----------- | ----------- | ----------- | ---------------------- |
-| `ALLOW_PM_ON_CLICK` | `bool` | `False` | Allows viewers to click on the badge to PM the user. Be careful if enabled. This exposes your Discord ID. (**not token!**) | [![Discord Me](https://badgen.net/badge/Discord/CodexLink%205848/7289DA?logo=discord&scale=3)](https://discord.com/channels/@me/799166063753035776) |
-| `APPEND_DETAIL_PRESENCE` | `bool` | `False` | Appends `detail` field to the Badge. | Unavailable. |
-| `COMMIT_MESSAGE` | `str` | User's Discord Rich Presence Updated, Badge Status Changed. | The commit message that the user wants to invoke whenever there's changes. | None, will include later. |
+| `APPEND_DETAIL_PRESENCE` | `bool` | `False` | (**_Rich Presence Only!_**) Appends `detail` field to the Badge alongside with the application. | Unavailable. |
+| `PREFERRED_ACTIVITY` | `str` |`ALL_ACTIVITIES` | Renders a particular activity instead of default. If the preferred activity does not exist, it will not render any activity, which should render the state of the user instead. | Unavailable. |
 | `SHOW_HOURS_MINUTES_ELAPSED` | `bool` | `False` | Allows to display hours and minutes, instead of hours only. | Unavailable. |
 | `SHOW_OTHER_STATUS` | `bool` | `False` | Allows other activities (such as game, stream, custom, etc) to display if Rich Presence is not present. | Unavailable. |
 | `SHOW_TIME_DURATION` | `bool` |`False` | Enables `SHOW_OTHER_STATUS` and Rich Presence to be shown in the badge aside from User State. | Unavailable. |
 
 #### Badge Customizations
 
-Sometimes, you might wanna do some customizaion on different cases of your status badge. The following parameters will help you do it.
+Sometimes, you might wanna do some customization on different cases of your status badge. The following parameters will help you do it.
 
 | Input       | Type        | Description | Result                 |
 | ----------- | ----------- | ----------- | ---------------------- |
@@ -109,16 +98,15 @@ Sometimes, you might wanna do some customizaion on different cases of your statu
 
 **You got some ideas? Please generate an issue or PR, and we will talk about it.**
 
-> Support for other acitivities like Spotify will be evaluated later.
+> Support for other activities like Spotify may be evaluated later.
 
 #### Development Parameters
 
-When developing, there are other fields that shouldn't be used in the first place. Though they are helpful.
+When developing, there are other fields that shouldn't be used in the first place. Though they are helpful if you are planning to contribute or replicate the project.
 
 | Input       | Type        | Default     | Description | Result                 |
 | ----------- | ----------- | ----------- | ----------- | ---------------------- |
-| `SHOULD_DRY_RUN` | `bool` | `False` | Overrides the status badge whenever there's no activity is present. | Unavailable. |
-| `DO_NOT_SEND_ERR_REPORTS` | `bool` | `False` | Enables/Disables the Discord Client to send error reports to you. | None. |
+| `IS_DRY_RUN` | `bool` | `False` | Runs the usual process except it doesn't commit changes. | Unavailable. |
 
 ## Examples
 
@@ -148,7 +136,9 @@ Here contains a list of resources that I have used in any forms that contributed
 - https://stackoverflow.com/a/41766306/5353223
 - https://stackoverflow.com/questions/41351346/python-asyncio-task-list-generation-without-executing-the-function (Helped me understand more of the use of as_completed.)
 - https://stackoverflow.com/a/49710946/5353223 (After knowing the O of Time for `match()` vs `search()`)
-> This section is still incomplete, I will put more and format it later.
+- https://stackoverflow.com/questions/3603502/prevent-creating-new-attributes-outside-init
+
+> This section is still incomplete. I will put more and format it later.
 
 ## License
 

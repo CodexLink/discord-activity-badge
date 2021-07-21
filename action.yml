@@ -22,18 +22,21 @@ inputs:
     required: false
     default: ${{ github.token }}
 
-  # # Optional Inputs — Extensibility and Customization
-  ALLOW_PM_ON_CLICK:
-    description: "Allows viewers to click on the badge to PM the user. Be careful if enabled. This exposes your Discord ID. (not token!)"
+  BADGE_IDENTIFIER_NAME:
+    description: "The name of the badge (in markdown form) that will be utilized to replace the state of the user. If the identifier does not exists, then it will proceed to create a new one and append it on the top. You must arranged it right after."
     required: false
 
+  # # Optional Inputs — Extensibility and Customization
   APPEND_DETAIL_PRESENCE:
     description: "Appends `detail` field to the Badge."
     required: false
 
   COMMIT_MESSAGE:
     description: "The commit message that the user wants to invoke whenever there's changes."
-    default: "User's Discord Rich Presence Updated, Badge Status Changed."
+    required: false
+
+  PREFERRED_ACTIVITY:
+    description: "Renders a particular activity instead of default. If the preferred activity does not exist, it will not render any activity, which should render the state of the user instead."
     required: false
 
   SHOW_HOURS_MINUTES_ELAPSED:
@@ -83,12 +86,9 @@ inputs:
 
   # # Development Inputs
   IS_DRY_RUN:
-    description: "Overrides the status badge whenever there's no activity is present."
+    description: "Runs the usual process except it doesn't commit changes."
     required: false
 
-  DO_NOT_SEND_ERR_REPORTS:
-    description: "Enables/Disables the Discord Client to send error reports to you."
-    required: false
 
 runs:
   using: "docker"
