@@ -30,17 +30,17 @@ from typing import Any, Final
 
 from discord import Intents
 
-from .typing import BadgeStructure, RegExp
+from .typing import BadgeStructure, RegExp, ColorHEX
 
 # # Argument Class Container Metadata
-ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgsContainer"
+ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgumentsContainer"
 
 # # Badge Generator Constants
 BADGE_BASE_URL: Final[str] = "https://badgen.net"
 BADGE_URI: Final[str] = BADGE_BASE_URL + "/badge/%s/%s/%s"
 BADGE_DEFAULT_SUBJECT: Final[
     str
-] = "Activity"  # todo: Add this as one of the variables that can be overriden.
+] = "Rich Presence"  # todo: Add this as one of the variables that can be overriden.
 BADGE_DEFAULT_SUBJECT_BG_COLOR: Final[str] = "black"
 BADGE_DEFAULT_STATUS: Final[str] = "%s %s"
 BADGE_DEFAULT_STATUS_BG_COLOR: Final[str] = "red"
@@ -75,9 +75,24 @@ ARG_CONSTANTS: Final[dict[str, str]] = {  # Cannot evaluate less.
 }
 
 # # Constraints
-__date_on_exec: datetime = datetime.now()
-__eval_date_on_exec: str = __date_on_exec.strftime("%m/%d/%y — %I:%M:%S %p")
+_date_on_exec: datetime = datetime.now()
+_eval_date_on_exec: str = _date_on_exec.strftime("%m/%d/%y — %I:%M:%S %p")
 MAXIMUM_RUNTIME_SECONDS = 10
+
+@unique
+class PreferredActivityDisplay(IntEnum):
+    CUSTOM = auto()
+    GAME = auto()
+    RICH_PRESENCE = auto()
+    STREAM = auto()
+
+@unique
+class PreferredTimeDisplay(IntEnum):
+    DISABLED = auto()
+    HOURS = auto()
+    HOURS_MINUTES = auto()
+    MINUTES = auto()
+    SECONDS = auto()
 
 """
     The following constants is a mapped dictionary structure. It will be used to evaluate environment variable's values
@@ -88,7 +103,7 @@ MAXIMUM_RUNTIME_SECONDS = 10
 ENV_STRUCT_CONSTRAINTS: Final[
     dict[str, Any]
 ] = {  # ! Check /action.yml for more information.
-    # # Github Actions Runner Provided Environmental Variable
+    # # Github Actions Environmental Variables
     "GITHUB_API_URL": {
         "expected_type": str,
         "fallback_value": None,
@@ -100,6 +115,11 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "is_required": True,
     },
     # # Required Inputs
+    "INPUT_COMMIT_MESSAGE": {
+        "expected_type": str,
+        "fallback_value": f"Discord Activity Badge Updated as of {_eval_date_on_exec}.",
+        "is_required": False,
+    },
     "INPUT_DISCORD_BOT_TOKEN": {
         "expected_type": str,
         "fallback_value": None,
@@ -125,78 +145,104 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": "(Script) Discord Activity Badge",
         "is_required": False,
     },
-    # # Optional Inputs — Extensibility and Customization
+    # # Optional Inputs — Extensibility and Customization - User States
+    "BADGE_ONLINE_STATE": {
+        "expected_type": str,
+        "fallback_value": "Online",
+        "is_required": False,
+    },
+    "BADGE_ONLINE_STATE_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#61d800",
+        "is_required": False,
+    },
+    "BADGE_IDLE_STATE": {
+        "expected_type": str,
+        "fallback_value": "Idle",
+        "is_required": False,
+    },
+    "BADGE_IDLE_STATE_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#edca00",
+        "is_required": False,
+    },
+    "BADGE_DND_STATE": {
+        "expected_type": str,
+        "fallback_value": "Do-Not-Disturb",
+        "is_required": False,
+    },
+    "BADGE_DND_STATE_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#fc4409",
+        "is_required": False,
+    },
+    "BADGE_OFFLINE_STATE": {
+        "expected_type": str,
+        "fallback_value": "Offline",
+        "is_required": False,
+    },
+    "BADGE_OFFLINE_STATE_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#545454",
+        "is_required": False,
+    },
+    # # Optional Inputs — Extensibility and Customization - Activity States
+    "INPUT_ACTIVITY_CUSTOM_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#c70094",
+        "is_required": False,
+    },
+    "INPUT_ACTIVITY_GAME_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#00cd90",
+        "is_required": False,
+    },
+    "INPUT_ACTIVITY_RICH_PRESENCE_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#df1473",
+        "is_required": False,
+    },
+    "INPUT_ACTIVITY_STREAM_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#4d14df",
+        "is_required": False,
+    },
     "INPUT_APPEND_DETAIL_PRESENCE": {
         "expected_type": bool,
         "fallback_value": False,
         "is_required": False,
     },
-    "INPUT_COMMIT_MESSAGE": {
-        "expected_type": str,
-        "fallback_value": f"Discord Activity Badge Updated as of {__eval_date_on_exec}.",
-        "is_required": False,
-    },
-    "INPUT_PREFERRED_ACTIVITY": {
+    "INPUT_APPEND_STATE_ON_SUBJECT": {
         "expected_type": bool,
         "fallback_value": False,
         "is_required": False,
     },
-    "INPUT_SHOW_HOURS_MINUTES_ELAPSED": {
+    "INPUT_PREFERRED_ACTIVITY_TO_DISPLAY": {
+        "expected_type": PreferredActivityDisplay, # todo: Add handler for Enums.
+        "fallback_value": PreferredActivityDisplay.RICH_PRESENCE,
+        "is_required": False,
+    },
+    "INPUT_SHIFT_STATE_ACTIVITY_COLORS": {
         "expected_type": bool,
         "fallback_value": False,
         "is_required": False,
     },
-    "INPUT_SHOW_OTHER_STATUS": {
-        "expected_type": bool,
-        "fallback_value": False,
+    "INPUT_TIME_TO_DISPLAY": {
+        "expected_type": PreferredTimeDisplay,
+        "fallback_value": PreferredTimeDisplay.DISABLED,
         "is_required": False,
     },
-    "INPUT_SHOW_TIME_DURATION": {
-        "expected_type": bool,
-        "fallback_value": False,
-        "is_required": False,
-    },
-    # # Optional Inputs — Badge Customizations
-    "INPUT_NO_ACTIVITY_ONLINE_STATUS": {
+    "INPUT_TIME_ELAPSED_OVERRIDE_STRING": {
         "expected_type": str,
-        "fallback_value": "Online",
+        "fallback_value": "elapsed.",
         "is_required": False,
     },
-    "INPUT_NO_ACTIVITY_IDLE_STATUS": {
+    "INPUT_TIME_REMAINING_OVERRIDE_STRING": {
         "expected_type": str,
-        "fallback_value": "Idle",
+        "fallback_value": "remaining.",
         "is_required": False,
     },
-    "INPUT_NO_ACTIVITY_DND_STATUS": {
-        "expected_type": str,
-        "fallback_value": "Busy",
-        "is_required": False,
-    },
-    "INPUT_NO_ACTIVITY_OFFLINE_STATUS": {
-        "expected_type": str,
-        "fallback_value": "Offline",
-        "is_required": False,
-    },
-    "INPUT_STATE_ONLINE_COLOR": {  # todo: Pick a color of this one and the other 3.
-        "expected_type": str,
-        "fallback_value": None,
-        "is_required": False,
-    },
-    "INPUT_STATE_IDLE_COLOR": {
-        "expected_type": str,
-        "fallback_value": None,
-        "is_required": False,
-    },
-    "INPUT_STATE_DND_COLOR": {
-        "expected_type": str,
-        "fallback_value": None,
-        "is_required": False,
-    },
-    "INPUT_STATE_OFFLINE_COLOR": {
-        "expected_type": str,
-        "fallback_value": None,
-        "is_required": False,
-    },
+
     # # Development Inputs
     "INPUT_IS_DRY_RUN": {
         "expected_type": bool,
