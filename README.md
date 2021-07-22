@@ -14,7 +14,7 @@
 
 ## Usage
 
-To be constructed later.
+**The script is not yet finished! (around 90% is done) This is just a notice!!!**
 
 ### Workflow
 
@@ -48,7 +48,22 @@ jobs:
 
 ### Constraints
 
-> To be added later.
+The following sub-topics pinpoints some things to consider before attempting to use this script.
+
+### Rate Limits
+
+As this script performs changes to the badge by static, we know that we might potentially abuse the API. We need to know some limitations and conclude the best minimum time update so that we won't get flagged.
+
+As I further check some limitations from any of the APIs, here are the following restrictions upon request.
+
+- 5000 Requests per hour (Github API).
+- 50 Requests per Second (Discord API).
+
+> There are no rate-limitations declared in badgen.net so far. Will further investigate.
+
+### Method
+
+This method (describes the script) shows the very cheap way to bridge our Discord to Github. There are many other ways that can made this quite easier but I don't want to spend some money (if I have a money). Plus, this is a pet project with the practice of committing to the development + practice of design patterns and formality (even when I'm alone).
 
 ## Parameters
 
@@ -58,14 +73,14 @@ The following sub-sections contain a set of possible inputs that you can integra
 
 These inputs are required in order to run the Docker Container.
 
-| Inputs   | Defaults | Description                            |
-| :------: | :----:   | -------------------------------------- |
-| `COMMIT_MESSAGE` | `str` | User's Discord Rich Presence Updated, Badge Status Changed. | The commit message that the user wants to invoke whenever there's changes. | None, will include later. |
-| `DISCORD_BOT_TOKEN` | `Yes` | The token of your bot from the Discord's Developer Page. It was used to allow usage of Discord API. |
-| `DISCORD_USER_ID` | `Yes` | A long integer ID used to indicate who you are in a certain mutual guild. |
-| `PROFILE_REPOSITORY` | `No` | The repository from where the commits will be pushed. Fill this when you are indirectly deploying the script under different repository. |
-| `WORKFLOW_TOKEN` | `No` | The token of the Github Workflow Instance used to authenticate commits deployed by the script. Fill this when you are indirectly deploying the script under different repository. |
-| `BADGE_IDENTIFIER_NAME` | `No` (defaults to `Discord Activity Badge`) | The name of the badge (in markdown form) that will be utilized to replace the state of the user. If the identifier does not exists, then it will proceed to create a new one and append it on the top. You must arranged it right after. |
+| Inputs   | Type + Defaults | Description                            |
+| -------- | :---------------| -------------------------------------- |
+| `COMMIT_MESSAGE` | `str`: Discord Activity Badge Updated as of `datetime.datetime.now().strftime("%m/%d/%y — %I:%M:%S %p")` ***See constants.py:79 (_eval_date_on_exec)*** | The commit message that will be invoked in the commit when there's changes to push.
+| `DISCORD_BOT_TOKEN` | `str` (**Required**) | The token of your bot from the Discord's Developer Page. Note that, you have to use your own bot! Go check [Discord Developers](https://discord.com/developers/). |
+| `DISCORD_USER_ID` | `int` (Required) | An integer ID used to identify you in Discord. This does not associate your name and discriminator, so you are fine. |
+| `PROFILE_REPOSITORY` | `str`: `GITHUB_ACTOR/GITHUB_ACTOR` | The repository from where the commits will be pushed. Fill this up  when you are indirectly deploying the script under different repository. |
+| `WORKFLOW_TOKEN` | `str` (**Required**) | The token of the Github Workflow Instance used to authenticate commits deployed by the script. Fill this up if you want to test locally so that you aren't going to be rate limited. |
+| `BADGE_IDENTIFIER_NAME` | `str`: Discord Activity Badge | The name of the badge (in markdown form) that will be utilized to replace the badge state's contents. If the identifier does not exists, it will proceed to create a new one and append it on the top of your README. **You must arranged it right after.** |
 
 > Having of one the requirements left out will result in an error. If possible, the bot will send you a message about it in Discord.
 
@@ -93,7 +108,7 @@ The following badges are the base structure that will be utilized when further p
 | `str` `[ONLINE/IDLE/DND/OFFLINE]_PREFIX` *Defaults to*: **Currently** | The string to append **before** the `state`. [![Demo 1](https://badgen.net/badge/Discord%20Activity/Was%20Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge) |
 | `str` `[ONLINE/IDLE/DND/OFFLINE]_STATE` *Defaults to*: **[Online, Idle, Do Not Disturb, Offline]** | Overides the status output in ***online / idle / dnd / offline*** mode** states. [![Demo 2](https://badgen.net/badge/Discord%20Activity/Current%20Away-From-Keyboard/yellow?icon=discord)](https://github.com/CodexLink/discord-activity-badge) |
 | `str` `[ONLINE/IDLE/DND/OFFLINE]_POSTFIX`  *Defaults to*: **None** |  The string to append **after** the `state`. [![Demo 3](https://badgen.net/badge/Discord%20Activity/Currently%20Online%20for%20a%20while/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge) |
-| `str` `[ONLINE/IDLE/DND/OFFLINE]_COLOR` *Note*:***HEX RGB only*** | Overrides the status color when the user is in ***online / idle / dnd / offline*** mode states. [![Demo 4](https://badgen.net/badge/Discord%20Activity/Currently%20Offline/D103FA?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+| `str` `[ONLINE/IDLE/DND/OFFLINE]_COLOR` *Note*: ***HEX RGB only*** | Overrides the status color when the user is in ***online / idle / dnd / offline*** mode states. [![Demo 4](https://badgen.net/badge/Discord%20Activity/Currently%20Offline/D103FA?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 
 > These are also applicable even when there's an activity. It will automatically invoke.
 
@@ -137,7 +152,7 @@ When developing, there are other fields that shouldn't be used in the first plac
 | ----------- | ----------- | ----------- | ----------- |
 | `IS_DRY_RUN` | `bool` | `False` | Runs the usual process but it doesn't commit changes. |
 
-## Examples
+## Beyond Examples: Usage
 
 Coming soon. But if you want to stay tuned, please check my [Github Profile](https://github.com/CodexLink/CodexLink) featuring it.
 
