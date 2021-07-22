@@ -3,13 +3,13 @@
 
 <div align="center">
 
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/CodexLink/discord-rich-presence-activity-badge/)
-[![Container Tester](https://github.com/CodexLink/discord-rich-presence-activity-badge/actions/workflows/docker_test.yml/badge.svg)](https://github.com/CodexLink/discord-rich-presence-activity-badge/actions/workflows/docker_test.yml)
-[![Containerization | Discord Rich Presence Activity Badge](https://github.com/CodexLink/discord-rich-presence-activity-badge/actions/workflows/docker_deploy.yml/badge.svg)](https://github.com/CodexLink/discord-rich-presence-activity-badge/actions/workflows/docker_deploy.yml)
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/CodexLink/discord-activity-badge/)
+[![Container Tester](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_test.yml/badge.svg)](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_test.yml)
+[![Containerization | Discord Rich Presence Activity Badge](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_deploy.yml/badge.svg)](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_deploy.yml)
 
-[![Codacy Code Quality Grade](https://badgen.net/codacy/grade/42fcd1c143464a288522e236f929b1a8?icon=codacy&label=Codacy%20Code%20Quality)](https://app.codacy.com/gh/CodexLink/discord-rich-presence-activity-badge/dashboard)
-[![CodeFactor Code Quality Grade](https://img.shields.io/codefactor/grade/github/CodexLink/discord-rich-presence-activity-badge?label=CodeFactor%20Code%20Quality&logo=codefactor)](https://www.codefactor.io/repository/github/codexlink/discord-rich-presence-activity-badge)
-[![Repository License](https://img.shields.io/badge/Repo%20License-Apache%20License%202.0-blueviolet)](https://github.com/CodexLink/discord-rich-presence-activity-badge/blob/main/LICENSE)
+[![Codacy Code Quality Grade](https://badgen.net/codacy/grade/42fcd1c143464a288522e236f929b1a8?icon=codacy&label=Codacy%20Code%20Quality)](https://app.codacy.com/gh/CodexLink/discord-activity-badge/dashboard)
+[![CodeFactor Code Quality Grade](https://img.shields.io/codefactor/grade/github/CodexLink/discord-activity-badge?label=CodeFactor%20Code%20Quality&logo=codefactor)](https://www.codefactor.io/repository/github/codexlink/discord-activity-badge)
+[![Repository License](https://img.shields.io/badge/Repo%20License-Apache%20License%202.0-blueviolet)](https://github.com/CodexLink/discord-activity-badge/blob/main/LICENSE)
 </div>
 
 ## Usage
@@ -77,28 +77,56 @@ To make ease with the usage of these optional inputs, please check the results o
 
 #### Extensibility and Customization
 
-These parameters are extensible that may help you customize the base output of the badge.
+The script offers extensibility and customization that allows you to render multiple ways of designing your badge.
 
-| Input       | Type        | Default     | Description | Result                 |
-| ----------- | ----------- | ----------- | ----------- | ---------------------- |
-| `APPEND_DETAIL_PRESENCE` | `bool` | `False` | (**_Rich Presence Only!_**) Appends `detail` field to the Badge alongside with the application. | Unavailable. |
-| `PREFERRED_ACTIVITY` | `str` |`ALL_ACTIVITIES` | Renders a particular activity instead of default. If the preferred activity does not exist, it will not render any activity, which should render the state of the user instead. | Unavailable. |
-| `SHOW_HOURS_MINUTES_ELAPSED` | `bool` | `False` | Allows to display hours and minutes, instead of hours only. | Unavailable. |
-| `SHOW_OTHER_STATUS` | `bool` | `False` | Allows other activities (such as game, stream, custom, etc) to display if Rich Presence is not present. | Unavailable. |
-| `SHOW_TIME_DURATION` | `bool` |`False` | Enables `SHOW_OTHER_STATUS` and Rich Presence to be shown in the badge aside from User State. | Unavailable. |
+##### User State
 
-#### Badge Customizations
+[![Example Online](https://badgen.net/badge/Discord%20Activity/Currently%20Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example Idle](https://badgen.net/badge/Discord%20Activity/Currently%20Idle/yellow?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example DND](https://badgen.net/badge/Discord%20Activity/Do%20Not%20Disturb/red?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example Offline](https://badgen.net/badge/Discord%20Activity/Currently%20Offline/black?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 
-Sometimes, you might wanna do some customization on different cases of your status badge. The following parameters will help you do it.
+> The string `Discord Activity`, Status Color and Discord Icon is changeable.
 
 | Input       | Type        | Description | Result                 |
 | ----------- | ----------- | ----------- | ---------------------- |
-| `NO_ACTIVITY_[ONLINE/IDLE/DND/OFFLINE]_STATUS` | `str` | Overrides the status badge description when the user is in ***online / idle / dnd / offline*** mode** state and no activity is present. | Unavailable. |
-| `STATE_[ONLINE/IDLE/DND/OFFLINE]_COLOR` | `str` | Overrides the color of the status badge when the user is in ***online / idle / dnd / offline*** mode. **This will take effect if there's no rich presence.** | Unavailable. |
+| `[ONLINE/IDLE/DND/OFFLINE]_PREFIX` | `str` *Defaults to*: **Currently** | The string to append **before** the `state`. | [![Demo 1](https://badgen.net/badge/Discord%20Activity/Was%20Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge) |
+| `[ONLINE/IDLE/DND/OFFLINE]_STATE` | `str` | Overrides the status output in ***online / idle / dnd / offline*** mode** states. | [![Demo 2](https://badgen.net/badge/Discord%20Activity/Current%20Away-From-Keyboard/yellow?icon=discord)](https://github.com/CodexLink/discord-activity-badge) |
+| `[ONLINE/IDLE/DND/OFFLINE]_POSTFIX` | `str` *Defaults to*: **None** | The string to append **after** the `state`.  | [![Demo 3](https://badgen.net/badge/Discord%20Activity/Currently%20Online%20for%20a%While/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge) |
+| `[ONLINE/IDLE/DND/OFFLINE]_COLOR` | `str` ***HEX RGB only*** | Overrides the status color when the user is in ***online / idle / dnd / offline*** mode** states. | [![Demo 4](https://badgen.net/badge/Discord%20Activity/Currently%20Offline/D103FA?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 
-**You got some ideas? Please generate an issue or PR, and we will talk about it.**
+> These are also applicable even when there's an activity. It will automatically invoke.
 
-> Support for other activities like Spotify may be evaluated later.
+##### Activity States
+
+[![Example #2](https://badgen.net/badge/Discord%20Activity/Playing%20Honkai%20Impact%203,%206%20hours%20elapsed./?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #3](https://badgen.net/badge/Discord%20Activity/Playing%20Honkai%20Impact%203,%206%20h%209m%20%20elapsed./green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #4](https://badgen.net/badge/Discord%20Activity/Doing%20something%20for%20fun.%20%28Currently%20Away%29/yellow?icon=discord&labelColor=red)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #4](https://badgen.net/badge/Currently%20Away/Doing%20something%20for%20fun./yellow?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #5](https://badgen.net/badge/Discord%20Activity/Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #6](https://badgen.net/badge/Discord%20Activity/Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #7](https://badgen.net/badge/Discord%20Activity/Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #8](https://badgen.net/badge/Discord%20Activity/Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #9](https://badgen.net/badge/Discord%20Activity/Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #10](https://badgen.net/badge/Discord%20Activity/Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #11](https://badgen.net/badge/Discord%20Activity/Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #12](https://badgen.net/badge/Discord%20Activity/Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+[![Example #13](https://badgen.net/badge/Discord%20Activity/Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+
+| Input       | Type        | Description | Result                 |
+| ----------- | ----------- | ----------- | ---------------------- |
+| `APPEND_DETAIL_PRESENCE` | `bool` *Defaults to*: **False** | (**_Rich Presence Only!_**) Appends `detail` field to the Status Badge alongside with the application name. | Unavailable. |
+| `APPEND_STATE_ON_SUBJECT` | `bool`  *Defaults to*: **False** | Overrides `Discord Activity` (Subject String) **and** User State with the state of `Playing`, `Watching`, `Listening`, this avoids making the status longer and balanced. If this is a `CustomActivity`, it will append User's State [online, idle, dnd, offline] instead. | Unavailable. |
+| `PREFERRED_ACTIVITY` | `str` *Options*: [`ALL_ACTIVITIES`] | Renders a particular activity as a prioritized activity. If the preferred activity does not exist, it will render any activity by default. (**) | Unavailabe.
+| `SHIFT_STATE_ACTIVITY_COLORS` | `str` | Interchange state and activity colors. This is useful only if you want to retain your state color position even though `APPEND_STATE_ON_SUBJECT` is true. | Unavailable. |
+| `SHOW_TIME_DURATION` | `bool` *Defaults to*: **False** | Appends time after the application name or detail when `APPEND_DETAIL_PRESENCE` is **True**. | Unavailable. |
+| `TIME_ELAPSED_OVERRIDE_STRING` | `str` *Default to*: **elapsed** | Overrides the string appended whenever the time is displayed for elapsed. This is effective only when SHOW_TIME_DURATION is **True**. | Unavailable. |
+| `TIME_REMAINING_OVERRIDE_STRING` | `str` *Default to*: **remaining** | OVerrides the stringappended whenever the time is displayed for remaining. This is effective only when SHOW_TIME_DURATION is **True**. | Unvailable. |
+
+**You got some ideas or did I miss something out? Please generate an issue or PR (if you have declared it on your own), and we will talk about it.**
+
+> Support for other activities like **Spotify** may be evaluated later.
+> ** For more information on how the script renders the badge based on preference, please check...
 
 #### Development Parameters
 
