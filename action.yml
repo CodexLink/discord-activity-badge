@@ -3,7 +3,11 @@ description: "A containerized action that bridges the Discord User's Rich Presen
 author: "Janrey 'CodexLink' Licas"
 
 inputs:
-  # # Required Inputs
+  # # Required Parameters
+  BADGE_IDENTIFIER_NAME:
+    description: "The name of the badge (in markdown form) that will be utilized to replace the state of the user. If the identifier does not exists, then it will proceed to create a new one and append it on the top. You must arranged it right after."
+    required: false
+
   COMMIT_MESSAGE:
     description: "The commit message that the user wants to invoke whenever there's changes."
     required: false
@@ -21,72 +25,111 @@ inputs:
     default: ${{ github.repository }}
     required: false
 
+  REDIRECT_TO_URL_ON_CLICK:
+    description: "The URL to point when the badge has been clicked."
+    default: ${{ github.repository }}
+    required: false
+
   WORKFLOW_TOKEN:
     description: "The token of the Github Workflow Instance used to authenticate commits deployed by the script. Fill this when you are indirectly deploying the script under different repository."
     required: false
     default: ${{ github.token }}
 
-  BADGE_IDENTIFIER_NAME:
-    description: "The name of the badge (in markdown form) that will be utilized to replace the state of the user. If the identifier does not exists, then it will proceed to create a new one and append it on the top. You must arranged it right after."
-    required: false
-
-  # # Optional Inputs — Extensibility and Customization - User States
+  # # Optional Parameters — Colors and Intentions.
   BADGE_ONLINE_STATE:
     description: "Overrides the status output in Online state."
-    required: False
-
-  BADGE_ONLINE_STATE_COLOR:
-    description: "Overrides the status color when the user is in Online state."
     required: False
 
   BADGE_IDLE_STATE:
     description: "Overrides the status output in Idle state."
     required: False
 
-  BADGE_IDLE_STATE_COLOR:
-    description: "Overrides the status color when the user is in Idle state."
-    required: False
-
   BADGE_DND_STATE:
     description: "Overrides the status output in Do-Not-Disturb (DND) state."
-    required: False
-
-  BADGE_DND_STATE_COLOR:
-    description: "Overrides the status color when the user is in Do-Not-Disturb (DND) state."
     required: False
 
   BADGE_OFFLINE_STATE:
     description: "Overrides the status output in Offline state."
     required: False
 
+  CUSTOM_ACTIVITY_STATE:
+    description: "Overrides `Discord Activity` (Subject String) and User State with the state of `CustomActivity` with custom strings."
+    required: False
+
+  GAME_ACTIVITY_STATE:
+    description: "Overrides `Discord Activity` (Subject String) and User State with the state of `Game` with custom strings."
+    required: False
+
+  RICH_PRESENCE_STATE:
+    description: "Overrides `Discord Activity` (Subject String) and User State with the state of `Activity` with custom strings."
+    required: False
+
+  STREAM_ACTIVITY_STATE:
+    description: "Overrides `Discord Activity` (Subject String) and User State with the state of `Stream` with custom strings."
+    required: False
+
+  UNSPECIFIED_ACTIVITY_STATE:
+    description: "Overrides `Discord Activity` (Subject String) and User State with the state of `Unspecified` with custom strings."
+    required: False
+
+  BADGE_ONLINE_STATE_COLOR:
+    description: "Overrides the status color when the user is in Online state."
+    required: False
+
+  BADGE_IDLE_STATE_COLOR:
+    description: "Overrides the status color when the user is in Idle state."
+    required: False
+
+  BADGE_DND_STATE_COLOR:
+    description: "Overrides the status color when the user is in Do-Not-Disturb (DND) state."
+    required: False
+
   BADGE_OFFLINE_STATE_COLOR:
     description: "Overrides the status color when the user is in Offline state."
     required: False
 
-  # # Optional Inputs — Extensibility and Customization - Activity States
-  ACTIVITY_CUSTOM_COLOR:
+  CUSTOM_ACTIVITY_COLOR:
     description: "Renders status badge color whenever there's a Custom activity. Please check README.md for more information about this parameter."
     required: false
 
-  ACTIVITY_GAME_COLOR:
+  GAME_ACTIVITY_COLOR:
     description: "Renders status badge color whenever there's a Game activity. Please check README.md for more information about this parameter."
     required: false
 
-  ACTIVITY_RICH_PRESENCE_COLOR:
+  RICH_PRESENCE_ACTIVITY_COLOR:
     description: "Renders status badge color whenever there's a Rich Presence. Please check README.md for more information about this parameter."
     required: false
 
-  ACTIVITY_STREAM_COLOR:
+  STREAM_ACTIVITY_COLOR:
     description: "Renders status badge color whenever there's a Stream activity. Please check README.md for more information about this parameter."
     required: false
 
+  # # Optional Parameters — Context
   APPEND_DETAIL_PRESENCE:
     description: "(Rich Presence Only!) Appends `detail` field to the Status string alongside with the application name."
+    required: false
+
+  CONTEXT_TO_APPEND_ON_SUBJECT:
+    description: "Overrides additional information to append in the badge. So far, other than `DETAILS`, only `STATE` is allowed to be appended since it shows the other context of the application."
     required: false
 
   APPEND_STATE_ON_SUBJECT:
     description: "Overrides `Discord Activity` (Subject String) **and** User State with the state of `Playing`, `Watching`, `Listening`, this avoids making the status longer and balanced. Please check the README.md for more information about this parameter."
     required: False
+
+  TIME_DISPLAY_OUTPUT:
+    description: "Appends time (based on preference) after the application name or detail when `APPEND_DETAIL_PRESENCE` is `True`."
+    required: false
+
+  TIME_DISPLAY_ELAPSED_OVERRIDE_STRING:
+    description: "Overrides the string appended whenever the time is displayed for elapsed. This is effective only when `SHOW_TIME_DURATION` is `True`."
+    required: false
+
+  TIME_DISPLAY_REMAINING_OVERRIDE_STRING:
+    description: "Overrides the string appended whenever the time is displayed for remaining. This is effective only when `SHOW_TIME_DURATION` is `True`."
+    required: false
+
+  # # Optional Parameters — Preferences
 
   PREFERRED_ACTIVITY_TO_DISPLAY:
     description: "Renders a particular activity as a prioritized activity. If the preferred activity does not exist, it will render any activity by default."
@@ -96,23 +139,10 @@ inputs:
     description: "Interchange state and activity colors. This is useful only if you want to retain your state color position even though `APPEND_STATE_ON_SUBJECT` is true."
     required: False
 
-  SHOW_HOURS_MINUTES_ELAPSED:
-    description: "Allows to display hours and minutes, instead of hours only."
-    required: false
-
-  TIME_ELAPSED_OVERRIDE_STRING:
-    description: "Overrides the string appended whenever the time is displayed for elapsed. This is effective only when `SHOW_TIME_DURATION` is `True`."
-    required: false
-
-  TIME_REMAINING_OVERRIDE_STRING:
-    description: "Overrides the string appended whenever the time is displayed for remaining. This is effective only when `SHOW_TIME_DURATION` is `True`."
-    required: false
-
-  # # Development Inputs
+  # # Development Parameters
   IS_DRY_RUN:
     description: "Runs the usual process except it doesn't commit changes."
     required: false
-
 
 runs:
   using: "docker"

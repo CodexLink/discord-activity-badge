@@ -36,20 +36,14 @@ from .typing import BadgeStructure, RegExp, ColorHEX
 ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgumentsContainer"
 
 # # Badge Generator Constants
-BADGE_BASE_URL: Final[str] = "https://badgen.net"
-BADGE_URI: Final[str] = BADGE_BASE_URL + "/badge/%s/%s/%s"
-BADGE_DEFAULT_SUBJECT: Final[
-    str
-] = "Rich Presence"  # todo: Add this as one of the variables that can be overriden.
-BADGE_DEFAULT_SUBJECT_BG_COLOR: Final[str] = "black"
-BADGE_DEFAULT_STATUS: Final[str] = "%s %s"
-BADGE_DEFAULT_STATUS_BG_COLOR: Final[str] = "red"
-BADGE_DEFAULT_STATUS_SEP_CHAR: Final[str] = "|"
+BADGE_BASE_URL: Final[str] = "https://badgen.net/badge/"
 BADGE_ICON: Final[str] = "discord"
-BADGE_REGEX_STRUCT_IDENTIFIER: Final[
-    RegExp
-] = RegExp(r"(?P<Delimiter>\[\!\[)(?P<badge_identifier>([a-zA-Z0-9_()-]+(\s|\b)){1,6})\]\((?P<badge_url>https://[a-z]+.[a-z]{2,4})/(?P<entrypoint>\w+)/(?P<color_badge>[^...]+\b)/(?P<status_badge>[^...?]+)\?(?P<params>[^)]+)\)\]\((?P<redirect_url>https://[a-z]+.[a-z]{2,4}/[^)]+)\)")
-BADGE_BASE_MARKDOWN: BadgeStructure = BadgeStructure("[[!{0}]({1})]({2})") # todo: Document this one later.
+BADGE_REGEX_STRUCT_IDENTIFIER: Final[RegExp] = RegExp(
+    r"(?P<Delimiter>\[\!\[)(?P<badge_identifier>([a-zA-Z0-9_()-]+(\s|\b)){1,6})\]\((?P<badge_url>https://[a-z]+.[a-z]{2,4})/(?P<entrypoint>\w+)/(?P<subject_badge>[^...]+\b)/(?P<status_badge>[^?]+)\?(?P<params>[^)]+)\)\]\((?P<redirect_url>https://[a-z]+.[a-z]{2,4}/[^)]+)\)"
+)
+BADGE_BASE_MARKDOWN: BadgeStructure = BadgeStructure(
+    "[![{0}]({1})]({2})"
+)  # todo: Document this one later.
 
 # # Base64 Actions and Related Classiications
 
@@ -79,12 +73,15 @@ _date_on_exec: datetime = datetime.now()
 _eval_date_on_exec: str = _date_on_exec.strftime("%m/%d/%y — %I:%M:%S %p")
 MAXIMUM_RUNTIME_SECONDS = 10
 
+
 @unique
 class PreferredActivityDisplay(IntEnum):
-    CUSTOM = auto()
-    GAME = auto()
+    CUSTOM_ACTIVITY = auto()
+    GAME_ACTIVITY = auto()
     RICH_PRESENCE = auto()
-    STREAM = auto()
+    STREAM_ACTIVITY = auto()
+    UNSPECIFIED_ACTIVITY = auto()
+
 
 @unique
 class PreferredTimeDisplay(IntEnum):
@@ -93,6 +90,11 @@ class PreferredTimeDisplay(IntEnum):
     HOURS_MINUTES = auto()
     MINUTES = auto()
     SECONDS = auto()
+
+@unique
+class ContextOnSubject(IntEnum):
+    DETAIL = auto()
+    STATE = auto()
 
 """
     The following constants is a mapped dictionary structure. It will be used to evaluate environment variable's values
@@ -114,7 +116,12 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": None,
         "is_required": True,
     },
-    # # Required Inputs
+    # # Required Parameters
+    "INPUT_BADGE_IDENTIFIER_NAME": {
+        "expected_type": str,
+        "fallback_value": "(Script) Discord Activity Badge",
+        "is_required": False,
+    },
     "INPUT_COMMIT_MESSAGE": {
         "expected_type": str,
         "fallback_value": f"Discord Activity Badge Updated as of {_eval_date_on_exec}.",
@@ -133,92 +140,138 @@ ENV_STRUCT_CONSTRAINTS: Final[
     "INPUT_PROFILE_REPOSITORY": {
         "expected_type": str,
         "fallback_value": None,
-        "is_required": True,
+        "is_required": False,
+    },
+    "INPUT_REDIRECT_TO_URL_ON_CLICK": {
+        "expected_type": str,
+        "fallback_value": None,
+        "is_required": False,
     },
     "INPUT_WORKFLOW_TOKEN": {
         "expected_type": str,
         "fallback_value": None,
         "is_required": True,
     },
-    "INPUT_BADGE_IDENTIFIER_NAME": {
-        "expected_type": str,
-        "fallback_value": "(Script) Discord Activity Badge",
-        "is_required": False,
-    },
-    # # Optional Inputs — Extensibility and Customization - User States
-    "BADGE_ONLINE_STATE": {
+    # # Optional Parameters — Colors and Intentions.
+    "INPUT_BADGE_ONLINE_STATE": {
         "expected_type": str,
         "fallback_value": "Online",
         "is_required": False,
     },
-    "BADGE_ONLINE_STATE_COLOR": {
-        "expected_type": ColorHEX,
-        "fallback_value": "#61d800",
-        "is_required": False,
-    },
-    "BADGE_IDLE_STATE": {
+    "INPUT_BADGE_IDLE_STATE": {
         "expected_type": str,
         "fallback_value": "Idle",
         "is_required": False,
     },
-    "BADGE_IDLE_STATE_COLOR": {
-        "expected_type": ColorHEX,
-        "fallback_value": "#edca00",
-        "is_required": False,
-    },
-    "BADGE_DND_STATE": {
+    "INPUT_BADGE_DND_STATE": {
         "expected_type": str,
         "fallback_value": "Do-Not-Disturb",
         "is_required": False,
     },
-    "BADGE_DND_STATE_COLOR": {
-        "expected_type": ColorHEX,
-        "fallback_value": "#fc4409",
-        "is_required": False,
-    },
-    "BADGE_OFFLINE_STATE": {
+    "INPUT_BADGE_OFFLINE_STATE": {
         "expected_type": str,
         "fallback_value": "Offline",
         "is_required": False,
     },
-    "BADGE_OFFLINE_STATE_COLOR": {
-        "expected_type": ColorHEX,
-        "fallback_value": "#545454",
+    "INPUT_CUSTOM_ACTIVITY_STATE": {
+        "expected_type": str,
+        "fallback_value": None,
         "is_required": False,
     },
-    # # Optional Inputs — Extensibility and Customization - Activity States
-    "INPUT_ACTIVITY_CUSTOM_COLOR": {
+    "INPUT_GAME_ACTIVITY_STATE": {
+        "expected_type": str,
+        "fallback_value": "Playing Game",
+        "is_required": False,
+    },
+    "INPUT_RICH_PRESENCE_STATE": {
+        "expected_type": str,
+        "fallback_value": "Currently Playing",
+        "is_required": False,
+    },
+    "INPUT_STREAM_ACTIVITY_STATE": {
+        "expected_type": str,
+        "fallback_value": "Currently Streaming",
+        "is_required": False,
+    },
+    "INPUT_UNSPECIFIED_ACTIVITY_STATE": {
+        "expected_type": str,
+        "fallback_value": "???", # todo: This.
+        "is_required": False,
+    },
+    "INPUT_CUSTOM_ACTIVITY_COLOR": {
         "expected_type": ColorHEX,
         "fallback_value": "#c70094",
         "is_required": False,
     },
-    "INPUT_ACTIVITY_GAME_COLOR": {
+    "INPUT_GAME_ACTIVITY_COLOR": {
         "expected_type": ColorHEX,
         "fallback_value": "#00cd90",
         "is_required": False,
     },
-    "INPUT_ACTIVITY_RICH_PRESENCE_COLOR": {
+    "INPUT_RICH_PRESENCE_ACTIVITY_COLOR": {
         "expected_type": ColorHEX,
         "fallback_value": "#df1473",
         "is_required": False,
     },
-    "INPUT_ACTIVITY_STREAM_COLOR": {
+    "INPUT_STREAM_ACTIVITY_COLOR": {
         "expected_type": ColorHEX,
         "fallback_value": "#4d14df",
         "is_required": False,
     },
+    "INPUT_UNSPECIFIED_ACTIVITY_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "???", # todo: This.
+        "is_required": False,
+    },
+    "INPUT_BADGE_ONLINE_STATE_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#61d800",
+        "is_required": False,
+    },
+    "INPUT_BADGE_IDLE_STATE_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#edca00",
+        "is_required": False,
+    },
+    "INPUT_BADGE_DND_STATE_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#fc4409",
+        "is_required": False,
+    },
+    "INPUT_BADGE_OFFLINE_STATE_COLOR": {
+        "expected_type": ColorHEX,
+        "fallback_value": "#545454",
+        "is_required": False,
+    },
+    # # Optional Parameters — Context
     "INPUT_APPEND_DETAIL_PRESENCE": {
         "expected_type": bool,
         "fallback_value": False,
         "is_required": False,
     },
-    "INPUT_APPEND_STATE_ON_SUBJECT": {
-        "expected_type": bool,
-        "fallback_value": False,
+    "INPUT_CONTEXT_TO_APPEND_ON_SUBJECT": {
+        "expected_type": ContextOnSubject,
+        "fallback_value": ContextOnSubject.DETAIL,
         "is_required": False,
     },
+    "INPUT_TIME_DISPLAY_OUTPUT": {
+        "expected_type": PreferredTimeDisplay,
+        "fallback_value": PreferredTimeDisplay.DISABLED,
+        "is_required": False,
+    },
+    "INPUT_TIME_DISPLAY_ELAPSED_OVERRIDE_STRING": {
+        "expected_type": str,
+        "fallback_value": "elapsed.",
+        "is_required": False,
+    },
+    "INPUT_TIME_DISPLAY_REMAINING_OVERRIDE_STRING": {
+        "expected_type": str,
+        "fallback_value": "remaining.",
+        "is_required": False,
+    },
+    # # Optional Parameters — Preferences
     "INPUT_PREFERRED_ACTIVITY_TO_DISPLAY": {
-        "expected_type": PreferredActivityDisplay, # todo: Add handler for Enums.
+        "expected_type": PreferredActivityDisplay,
         "fallback_value": PreferredActivityDisplay.RICH_PRESENCE,
         "is_required": False,
     },
@@ -227,52 +280,25 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": False,
         "is_required": False,
     },
-    "INPUT_TIME_TO_DISPLAY": {
-        "expected_type": PreferredTimeDisplay,
-        "fallback_value": PreferredTimeDisplay.DISABLED,
-        "is_required": False,
-    },
-    "INPUT_TIME_ELAPSED_OVERRIDE_STRING": {
-        "expected_type": str,
-        "fallback_value": "elapsed.",
-        "is_required": False,
-    },
-    "INPUT_TIME_REMAINING_OVERRIDE_STRING": {
-        "expected_type": str,
-        "fallback_value": "remaining.",
-        "is_required": False,
-    },
-
-    # # Development Inputs
+    # # Development Parameters
     "INPUT_IS_DRY_RUN": {
         "expected_type": bool,
         "fallback_value": False,
         "is_required": False,
-    }
+    },
 }
 
 # # Discord Client Container Metadata
 DISCORD_DATA_CONTAINER: Final[str] = "UserStatusContainer"
-DISCORD_DATA_CONTAINER_ATTRS: Final[dict[str, Any]] = {
-
+DISCORD_STRUCT_BLUEPRINT: Final[dict[str, Any]] = {
     "user": {
         "id": None,
         "name": None,
         "discriminator": None,
-        "status": {
-            "state": None,
-            "on_web": None,
-            "on_mobile": None,
-        },
+        "status": {},
         "presence": {},  # Contains user's presence activity. Field is known over runtime since we have two distinct types.
     },  # Contains user's information, this excludes the Discord Rich Presence.
 }
-
-# # Discord Client Data Container Fields
-DISCORD_DATA_FIELD_CUSTOM: Final[str] = "custom_activity"
-DISCORD_DATA_FIELD_GAME: Final[str] = "game_activity"
-DISCORD_DATA_FIELD_PRESENCE: Final[str] = "rich_presence"
-DISCORD_DATA_FIELD_UNSPECIFIED: Final[str] = "unspecified_activity"
 
 # # Discord Client Intents
 DISCORD_CLIENT_INTENTS: Intents = Intents.none()

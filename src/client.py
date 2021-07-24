@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
 import os
 from asyncio import ensure_future
-from typing import Any, List
+from typing import List
 
 from discord import Activity, ActivityType, Member
 from discord import Client as DiscordClient
@@ -34,11 +34,8 @@ from discord.user import User
 from elements.constants import (
     DISCORD_CLIENT_INTENTS,
     DISCORD_DATA_CONTAINER,
-    DISCORD_DATA_CONTAINER_ATTRS,
-    DISCORD_DATA_FIELD_CUSTOM,
-    DISCORD_DATA_FIELD_GAME,
-    DISCORD_DATA_FIELD_PRESENCE,
-    DISCORD_DATA_FIELD_UNSPECIFIED,
+    DISCORD_STRUCT_BLUEPRINT,
+    PreferredActivityDisplay,
 )
 
 
@@ -71,12 +68,13 @@ class DiscordClientHandler(DiscordClient):
         """
         # ensure_future(super().__ainit__())  # * ?? [a, b], Subject to change later.
 
-        self.logger.info(f"Discord Client {self.user} is ready for evaluation of user's activity presence.")
+        self.logger.info(
+            f"Discord Client {self.user} is ready for evaluation of user's activity presence."
+        )
 
         self._client_ctx: object = type(
-            DISCORD_DATA_CONTAINER, (object,), DISCORD_DATA_CONTAINER_ATTRS
+            DISCORD_DATA_CONTAINER, (object,), DISCORD_STRUCT_BLUEPRINT
         )  # * (1) [a, b]
-
 
         ensure_future(
             (
@@ -88,10 +86,11 @@ class DiscordClientHandler(DiscordClient):
                 )
             )
         )  # * (2)
-        self.logger.info(f"Pushed Rich Presence Context Discord API to Display {self.user}'s status.")
+        self.logger.info(
+            f"Pushed Rich Presence Context Discord API to Display {self.user}'s status."
+        )
 
-
-        self.logger.info(f"Fetching Discord User's Data.") # todo: Annotate this later.
+        self.logger.info(f"Fetching Discord User's Data.")  # todo: Annotate this later.
 
         await self.get_activities_via_guild(await self.get_user())  # * 3 [a, b]
         self.logger.info(
@@ -123,9 +122,7 @@ class DiscordClientHandler(DiscordClient):
         )
 
         try:
-            _user_info = await self.fetch_user(
-                os.environ.get("INPUT_DISCORD_USER_ID")
-            )
+            _user_info = await self.fetch_user(self.envs["DISCORD_USER_ID"])
 
             self.some_data_later = _user_info
 
@@ -134,9 +131,7 @@ class DiscordClientHandler(DiscordClient):
             self._client_ctx.user["name"] = _user_info.name
             self._client_ctx.user["discriminator"] = _user_info.discriminator
 
-            self.logger.info(
-                "Step 1.b of 2 | Finished fetching user information."
-            )
+            self.logger.info("Step 1.b of 2 | Finished fetching user information.")
 
             return _user_info
 
@@ -185,27 +180,28 @@ class DiscordClientHandler(DiscordClient):
             )
 
         # * (1.1.b)
-        for each_guilds in fetched_user.mutual_guilds: # todo: Add something to message to the user so that they know the error.
+        for each_guilds in fetched_user.mutual_guilds:
             if not isinstance(each_guilds, Guild):
                 await self.__exit_client_on_error(
                     f"The list of mutual guild/s is/are expected to be {Guild}, but received a type {type(each_guilds)}"
-                )
+                )  # Add function to message this error to the user.
 
-        # * (1.2)
+            # * (1.2)
             _fetched_member: Member = each_guilds.get_member(fetched_user.id)
 
-            if _fetched_member: # todo: Check if this one work.
+            if _fetched_member:  # todo: Check if this one work.
                 break
 
         # * (2)
-        if not (_fetched_member.activities):
+        if not _fetched_member.activities:
             self.logger.warning(
                 "This user doesn't have any activity. Letting BadgeConstructor to fill it."
             )
 
         else:
             self.logger.info(
-                f"{_fetched_member} contains {len(_fetched_member.activities)} activit%s." % ("y" if not len(_fetched_member.activities) > 1 else "ies")
+                f"{_fetched_member} contains {len(_fetched_member.activities)} activit%s."
+                % ("y" if not len(_fetched_member.activities) > 1 else "ies")
             )
 
             _activity_picked: List[str] = []
@@ -221,16 +217,18 @@ class DiscordClientHandler(DiscordClient):
                         f"{each_activities.__class__.__name__} was not in _activity_picked. (Contains {_activity_picked})"
                     )
                     __activity: dict = each_activities.to_dict()
-                    __cls_name: str = each_activities.__class__.__name__ # should be ClassName?
+                    __cls_name: str = (
+                        each_activities.__class__.__name__
+                    )  # should be ClassName?
 
                     __resolved_activity_name = (
-                        DISCORD_DATA_FIELD_CUSTOM
+                        PreferredActivityDisplay.CUSTOM_ACTIVITY.name
                         if __cls_name == CustomActivity.__name__
-                        else DISCORD_DATA_FIELD_PRESENCE
+                        else PreferredActivityDisplay.RICH_PRESENCE.name
                         if __cls_name == Activity.__name__
-                        else DISCORD_DATA_FIELD_GAME
+                        else PreferredActivityDisplay.GAME_ACTIVITY.name
                         if __cls_name == Game.__name__
-                        else DISCORD_DATA_FIELD_UNSPECIFIED
+                        else PreferredActivityDisplay.UNSPECIFIED_ACTIVITY.name
                     )
 
                     self.logger.debug(
@@ -256,18 +254,12 @@ class DiscordClientHandler(DiscordClient):
                     )
 
             # * (4)
-            self._client_ctx.user["status"][
-                "status"
-            ] = _fetched_member.status.value
-            self._client_ctx.user["status"][
-                "on_web"
-            ] = _fetched_member.web_status.value
+            self._client_ctx.user["status"]["status"] = _fetched_member.status
+            self._client_ctx.user["status"]["on_web"] = _fetched_member.web_status
             self._client_ctx.user["status"][
                 "on_desktop"
-            ] = _fetched_member.desktop_status.value
-            self._client_ctx.user["status"][
-                "on_mobile"
-            ] = _fetched_member.mobile_status.value
+            ] = _fetched_member.desktop_status
+            self._client_ctx.user["status"]["on_mobile"] = _fetched_member.mobile_status
 
             self.logger.info(
                 "Step 2 of 2 | Finished Fetching Discord User's Rich Presence and Other Activities."

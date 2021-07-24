@@ -73,17 +73,17 @@ class AsyncRequestAPI:
         )
 
     async def test_api_conn(self) -> None:
-        __endpoints: list[HttpsURL] = [
+        _endpoints: list[HttpsURL] = [
             self.envs["GITHUB_API_URL"],
             "https://badgen.net",
         ]
-        __responses: list[Future] = []
+        _responses: list[Future] = []
 
-        for idx, each_endpoint in enumerate(__endpoints):
+        for idx, each_endpoint in enumerate(_endpoints):
             self.logger.info(
-                f"Attempting to Test Connection ({idx + 1}/{len(__endpoints)}) | {each_endpoint}..."
+                f"Attempting to Test Connection ({idx + 1}/{len(_endpoints)}) | {each_endpoint}..."
             )
-            __responses.append(
+            _responses.append(
                 self._request(
                     each_endpoint,
                     rest_response=GithubRunnerActions.TEST_CONN_APIS,
@@ -91,7 +91,7 @@ class AsyncRequestAPI:
                 )
             )
 
-        for response in as_completed(__responses):
+        for response in as_completed(_responses):
             _tasks = await response
 
             # todo: We can make something out of this better.
@@ -185,6 +185,9 @@ class AsyncRequestAPI:
                             f"You are potentially Rate Limited by Github API. Did you keep on retrying or you are over-committing changes? | More Info: {RecvCtx}"
                         )
                         os._exit(-1)
+
+        elif actions is GithubRunnerActions.COMMIT_CHANGES:
+            pass
 
     async def _request(
         self,

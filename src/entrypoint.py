@@ -21,7 +21,9 @@ if __name__ != "__main__":
 
     raise EntryImportNotAllowed
 
+from distutils.util import strtobool
 import logging
+from multiprocessing.sharedctypes import Value
 import os
 from asyncio import (
     AbstractEventLoop,
@@ -36,7 +38,7 @@ from asyncio import sleep as asyncio_sleep
 from asyncio import wait
 from sys import stdout
 from time import time as curr_exec_time
-from typing import Any, Generator, Optional, Set
+from typing import Any, Generator, Optional, Set, Type, Union
 
 from api import AsyncRequestAPI
 from args import ArgumentResolver
@@ -53,6 +55,8 @@ from elements.constants import (
     GithubRunnerActions,
 )
 from elements.exceptions import DotEnvFileNotFound
+from enum import Enum, IntEnum
+from elements.constants import PreferredActivityDisplay, PreferredTimeDisplay
 
 
 class ActivityBadgeServices(
@@ -167,23 +171,19 @@ class ActivityBadgeServices(
             self.exec_api_actions(GithubRunnerActions.FETCH_README)
         )  # todo: Create error when it was unable to connect or the README does not exist.
 
-        # Will resolve later in terms of variables.
-        # self.badge_task: list[Future] = gather(
-        #     self.validate_ext_badge(), self.prepare_badge_elements()
-        # ! I think I can put the prepare_badge_metadata() here. We cannot make this one gathered with check_badge_identifier
-        # * Because we have to wait for the API request of the README data, so we just have to do ensure_future() with it.
         await asyncio_sleep(0.001)
 
         self.logger.info("Instantiating Discord Client's WebSocket and Connection...")
 
-        ensure_future(self.evaluate_badge_conditions())
-
-        _discord_client_task: Future = ensure_future(self.start(self.envs["DISCORD_BOT_TOKEN"]))   # * (4)
+        _discord_client_task: Future = ensure_future(
+            self.start(self.envs["DISCORD_BOT_TOKEN"])
+        )  # * (4)
 
         await wait([_raw_readme_data])  # Checkpoint.
         ensure_future(self.check_badge_identifier(_raw_readme_data.result()))
 
-
+        await wait([_discord_client_task])  # Checkpoint.
+        ensure_future(self.construct_badge())
 
         self.logger.info("Entrypoint: Done loading all tasks.")
 
@@ -324,18 +324,24 @@ class ActivityBadgeServices(
 
         for idx, (env_key, _) in enumerate(ENV_STRUCT_CONSTRAINTS.items()):  # * (3)
 
-            _env_literal_val: str = os.environ.get(env_key)
-            _env_cleaned_name: str = env_key.removeprefix("INPUT_")
-            # # For Github Actions.
-            self.logger.debug(
-                "[%i] Env. Var. %s contains %s to be evaluated in %s."
-                % (
-                    idx + 1,
-                    env_key,
-                    ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],
-                    type(ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]),
+            try:
+                _env_literal_val: str = os.environ.get(env_key)
+                _env_cleaned_name: str = env_key.removeprefix("INPUT_")
+                # # For Github Actions.
+                self.logger.debug(
+                    "[%i] Env. Var. %s contains %s to be evaluated in %s."
+                    % (
+                        idx + 1,
+                        env_key,
+                        _env_literal_val if len(_env_literal_val) else "None",
+                        ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"],
+                    )
                 )
-            )
+            except KeyError as Err:
+                self.logger.critical(
+                    f"Dictionary Key doesn't exists. This is a bug, please report this to the developer! | Info: {Err}"
+                )
+                os._exit(-1)
 
             try:  # Catch whenever environments does not exists under that instance (runner).
                 if not len(
@@ -344,10 +350,21 @@ class ActivityBadgeServices(
 
                     # todo: check if optional with no default values has a true type of `str` or just NoneType.
 
+                    self.logger.debug(
+                        f"Env. Var. {env_key} doesn't have any value but exists. Checking if they are labelled as `required`..."
+                    )
+
                     if not ENV_STRUCT_CONSTRAINTS[env_key]["is_required"]:
                         self.envs[_env_cleaned_name] = ENV_STRUCT_CONSTRAINTS[env_key][
                             "expected_type"
                         ](ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])
+                        self.logger.info(
+                            "Env. Var. %s has now a resolved value of %s! (Due to being `None`...)"
+                            % (
+                                env_key,
+                                ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],
+                            )
+                        )
                         continue
 
                     else:
@@ -356,19 +373,66 @@ class ActivityBadgeServices(
                         )
                         os._exit(-1)
 
-                if ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] in [bool, int, str]:
+                if ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] in [int, str]:
                     self.envs[_env_cleaned_name] = ENV_STRUCT_CONSTRAINTS[env_key][
                         "expected_type"
                     ](_env_literal_val)
+                elif ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] is bool:
+                    try:
+                        self.envs[_env_cleaned_name] = bool(
+                            strtobool((_env_literal_val))
+                        )
+                    except ValueError:
+                        _fallback_bool_val: bool = ENV_STRUCT_CONSTRAINTS[env_key][
+                            "fallback_value"
+                        ]
+                        self.envs[_env_cleaned_name] = _fallback_bool_val
+                        self.logger.warn(
+                            f"Env. Var. {env_key} has an invalid key that can't be serialized to boolean. Using a fallback value {_fallback_bool_val} instead."
+                        )
+
+                elif issubclass(ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"], Enum):
+                    self.logger.debug(
+                        f"Env. Var. {env_key} expected type is a subclass of Enum! Attempting to resolve its value..."
+                    )
+                    _enum_candidates: list[Type[Enum]] = [
+                        PreferredActivityDisplay,
+                        PreferredTimeDisplay,
+                    ]
+
+                    is_valid: Union[None, bool] = None
+
+                    if len(_env_literal_val):
+                        for each_enums in _enum_candidates:  # This is gonna hurt.
+                            for _each_cls in each_enums:
+                                is_valid = _env_literal_val == _each_cls.name
+                                self.envs[_env_cleaned_name] = (
+                                    _each_cls
+                                    if _env_literal_val == _each_cls.name
+                                    else ENV_STRUCT_CONSTRAINTS[env_key][
+                                        "fallback_value"
+                                    ]
+                                )
+                                if is_valid:
+                                    break
+                            if is_valid:
+                                break
+
+                        self.logger.info(
+                            (f"Env. Var. {env_key} now has a value of %s!" % _each_cls)
+                            if is_valid
+                            else f"Env. Var. {env_key} was unable to resolve the given argument ({_env_literal_val}). Reverting to %s..."
+                            % (ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])
+                        )
 
                 else:
                     self.logger.critical(
                         f"Env. Var. '{_env_literal_val}' cannot be resolved / serialized due to its expected_type not a candidate for serialization. Please contact the developer about this for more information."
                     )
 
-            except Exception:  # We can't catch <class 'NoneType'> here. Use Exception instead.
+            except Exception as Err:  # We can't catch <class 'NoneType'> here. Use Exception instead.
                 self.logger.critical(
-                    "Certain environment variables cannot be found. Are you running on local? Invoke --local if that would be the case. If persisting, check your environment file. If this was deployed, please report this issue to the developer."
+                    f"Environment Variable {env_key} cannot be found. Are you running on local? Invoke --local if that would be the case. If persisting, check your environment file. If this was deployed, please report this issue to the developer. | Info: {Err}"
                 )
                 os._exit(-1)
 
