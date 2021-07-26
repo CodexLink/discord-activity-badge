@@ -76,11 +76,11 @@ MAXIMUM_RUNTIME_SECONDS = 10
 
 @unique
 class PreferredActivityDisplay(IntEnum):
-    CUSTOM_ACTIVITY = auto()
-    GAME_ACTIVITY = auto()
+    CUSTOM = auto()
+    GAME = auto()
     RICH_PRESENCE = auto()
-    STREAM_ACTIVITY = auto()
-    UNSPECIFIED_ACTIVITY = auto()
+    STREAM = auto()
+    UNSPECIFIED = auto()
 
 
 @unique
@@ -102,6 +102,7 @@ class ContextOnSubject(IntEnum):
     to serialize a certain value. Keep in mind that fallback is supported for optional inputs only! Required inputs will error
     if they fail to meet the expected type.
 """
+
 ENV_STRUCT_CONSTRAINTS: Final[
     dict[str, Any]
 ] = {  # ! Check /action.yml for more information.
@@ -153,49 +154,49 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "is_required": True,
     },
     # # Optional Parameters — Colors and Intentions.
-    "INPUT_BADGE_ONLINE_STATE": {
-        "expected_type": str,
-        "fallback_value": "Online",
-        "is_required": False,
-    },
-    "INPUT_BADGE_IDLE_STATE": {
-        "expected_type": str,
-        "fallback_value": "Idle",
-        "is_required": False,
-    },
-    "INPUT_BADGE_DND_STATE": {
-        "expected_type": str,
-        "fallback_value": "Do-Not-Disturb",
-        "is_required": False,
-    },
-    "INPUT_BADGE_OFFLINE_STATE": {
-        "expected_type": str,
-        "fallback_value": "Offline",
-        "is_required": False,
-    },
-    "INPUT_CUSTOM_ACTIVITY_STATE": {
+    "INPUT_CUSTOM_ACTIVITY_STRING": {
         "expected_type": str,
         "fallback_value": None,
         "is_required": False,
     },
-    "INPUT_GAME_ACTIVITY_STATE": {
+    "INPUT_GAME_ACTIVITY_STRING": {
         "expected_type": str,
         "fallback_value": "Playing Game",
         "is_required": False,
     },
-    "INPUT_RICH_PRESENCE_STATE": {
+    "INPUT_RICH_PRESENCE_STRING": {
         "expected_type": str,
         "fallback_value": "Currently Playing",
         "is_required": False,
     },
-    "INPUT_STREAM_ACTIVITY_STATE": {
+    "INPUT_STREAM_ACTIVITY_STRING": {
         "expected_type": str,
         "fallback_value": "Currently Streaming",
         "is_required": False,
     },
-    "INPUT_UNSPECIFIED_ACTIVITY_STATE": {
+    "INPUT_UNSPECIFIED_ACTIVITY_STRING": {
         "expected_type": str,
         "fallback_value": "???", # todo: This.
+        "is_required": False,
+    },
+    "INPUT_ONLINE_STATUS_STRING": {
+        "expected_type": str,
+        "fallback_value": "Online",
+        "is_required": False,
+    },
+    "INPUT_IDLE_STATUS_STRING": {
+        "expected_type": str,
+        "fallback_value": "Idle",
+        "is_required": False,
+    },
+    "INPUT_DND_STATUS_STRING": {
+        "expected_type": str,
+        "fallback_value": "Do-Not-Disturb",
+        "is_required": False,
+    },
+    "INPUT_OFFLINE_STATUS_STRING": {
+        "expected_type": str,
+        "fallback_value": "Offline",
         "is_required": False,
     },
     "INPUT_CUSTOM_ACTIVITY_COLOR": {
@@ -223,24 +224,29 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": "???", # todo: This.
         "is_required": False,
     },
-    "INPUT_BADGE_ONLINE_STATE_COLOR": {
+    "INPUT_ONLINE_STATUS_COLOR": {
         "expected_type": ColorHEX,
         "fallback_value": "#61d800",
         "is_required": False,
     },
-    "INPUT_BADGE_IDLE_STATE_COLOR": {
+    "INPUT_IDLE_STATUS_COLOR": {
         "expected_type": ColorHEX,
         "fallback_value": "#edca00",
         "is_required": False,
     },
-    "INPUT_BADGE_DND_STATE_COLOR": {
+    "INPUT_DND_STATUS_COLOR": {
         "expected_type": ColorHEX,
         "fallback_value": "#fc4409",
         "is_required": False,
     },
-    "INPUT_BADGE_OFFLINE_STATE_COLOR": {
+    "INPUT_OFFLINE_STATUS_COLOR": {
         "expected_type": ColorHEX,
         "fallback_value": "#545454",
+        "is_required": False,
+    },
+    "INPUT_STATIC_SUBJECT_STRING": {
+        "expected_type": str,
+        "fallback_value": None,
         "is_required": False,
     },
     # # Optional Parameters — Context
@@ -249,7 +255,7 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": False,
         "is_required": False,
     },
-    "INPUT_CONTEXT_TO_APPEND_ON_SUBJECT": {
+    "INPUT_ACTIVITY_CONTEXT_TO_APPEND_ON_STATUS": {
         "expected_type": ContextOnSubject,
         "fallback_value": ContextOnSubject.DETAIL,
         "is_required": False,
@@ -275,7 +281,7 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": PreferredActivityDisplay.RICH_PRESENCE,
         "is_required": False,
     },
-    "INPUT_SHIFT_STATE_ACTIVITY_COLORS": {
+    "INPUT_SHIFT_STATUS_ACTIVITY_COLORS": {
         "expected_type": bool,
         "fallback_value": False,
         "is_required": False,

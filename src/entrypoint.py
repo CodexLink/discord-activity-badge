@@ -334,7 +334,11 @@ class ActivityBadgeServices(
                         idx + 1,
                         env_key,
                         _env_literal_val if len(_env_literal_val) else "None",
-                        ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"],
+                        ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"]
+                        if not hasattr(
+                            ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"], "__call__"
+                        )
+                        else ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"].__name__,
                     )
                 )
             except KeyError as Err:
@@ -355,14 +359,22 @@ class ActivityBadgeServices(
                     )
 
                     if not ENV_STRUCT_CONSTRAINTS[env_key]["is_required"]:
-                        self.envs[_env_cleaned_name] = ENV_STRUCT_CONSTRAINTS[env_key][
-                            "expected_type"
-                        ](ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])
+                        # self.logger.debug("It's not required, but is it None? > %s" % ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"] is None)
+                        self.envs[_env_cleaned_name] = (
+                            ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"](
+                                ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]
+                            )
+                            if ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]
+                            is not None
+                            else None
+                        )
+
                         self.logger.info(
-                            "Env. Var. %s has now a resolved value of %s! (Due to being `None`...)"
+                            "Env. Var. %s has now a resolved value of %s! (with type %s)"
                             % (
                                 env_key,
                                 ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],
+                                type(ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]),
                             )
                         )
                         continue
@@ -374,9 +386,15 @@ class ActivityBadgeServices(
                         os._exit(-1)
 
                 if ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] in [int, str]:
-                    self.envs[_env_cleaned_name] = ENV_STRUCT_CONSTRAINTS[env_key][
-                        "expected_type"
-                    ](_env_literal_val)
+                    self.envs[_env_cleaned_name] = (
+                        ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"](
+                            _env_literal_val
+                        )
+                        # ! Evaluate this. Because this doesn't seem in the right place.
+                        if ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"] is None
+                        else None
+                    )
+
                 elif ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] is bool:
                     try:
                         self.envs[_env_cleaned_name] = bool(

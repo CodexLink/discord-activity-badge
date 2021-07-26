@@ -167,7 +167,6 @@ class BadgeConstructor:
                 # If yes, check what activity is it so that we could process other variables by locking into it.
                 # This is were we gonna check if preferred activity exist.
 
-
                 for (
                     each_cls
                 ) in (
@@ -197,9 +196,12 @@ class BadgeConstructor:
                             )
 
                 self.logger.info(
-                    f"Preferred Activity {each_cls.name} %s" % "exists!"
-                    if _is_preferred_exists
-                    else f"does not exists. Using other activity such as {each_cls}"
+                    f"Preferred Activity {each_cls.name} %s"
+                    % (
+                        "exists!"
+                        if _is_preferred_exists
+                        else f"does not exists. Using other activity such as {each_cls.name}."
+                    )
                 )
 
             else:
@@ -207,20 +209,27 @@ class BadgeConstructor:
                     "There's no activities detected by the time it was fetched."
                 )
 
-            # Check if we should append User's State instead of Activity State.
-            _subject_output = self.envs[
-                "%s_STATE"
-                % (
-                    f"ACTIVITY_{_preferred_activity}"
-                    if self.envs["APPEND_STATE_ON_SUBJECT"] and _is_preferred_exists
-                    else "BADGE_%s"
-                    % self._client_ctx.user["status"]["status"].name.upper()
+            # Check if we should append User's State instead of Activity State in the Subject.
+
+            _subject_output = self.envs[  # ! Add Static Subject String. If that is included, disabled this condition.
+                (
+                    "%s_STRING"
+                    % (
+                        _preferred_activity
+                        if _is_preferred_exists
+                        else "%s_STATUS"
+                        % self._client_ctx.user["status"]["status"].name.upper()
+                    )
                 )
+                if self.envs["STATIC_SUBJECT_STRING"] is None
+                else "STATIC_SUBJECT_STRING"
             ]
 
-            self.logger.debug(f"Output is {_subject_output}")
+            self.logger.debug(_preferred_activity)
+            self.logger.debug(_subject_output)
+            self.logger.debug(_status_output)
 
-            return
+            return # ! I was now able to append STATIC_SUBJECT_STRING when filled. We can now utilize and go construct string of _status_output.
             # Handle the time.
             if self.envs["TIME_TO_DISPLAY"] is not PreferredTimeDisplay.DISABLED:
 

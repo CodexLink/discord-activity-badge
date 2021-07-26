@@ -209,7 +209,7 @@ class DiscordClientHandler(DiscordClient):
             # * (3)
             for idx, each_activities in enumerate(_fetched_member.activities):
                 self.logger.debug(
-                    f"Activities Iteration {idx + 1} of {len(_fetched_member.activities)} | {each_activities}"
+                    f"Activity #{idx + 1} of {len(_fetched_member.activities)} | {each_activities}"
                 )
 
                 if not each_activities.__class__.__name__ in _activity_picked:
@@ -222,13 +222,13 @@ class DiscordClientHandler(DiscordClient):
                     )  # should be ClassName?
 
                     __resolved_activity_name = (
-                        PreferredActivityDisplay.CUSTOM_ACTIVITY.name
+                        PreferredActivityDisplay.CUSTOM.name
                         if __cls_name == CustomActivity.__name__
                         else PreferredActivityDisplay.RICH_PRESENCE.name
                         if __cls_name == Activity.__name__
-                        else PreferredActivityDisplay.GAME_ACTIVITY.name
+                        else PreferredActivityDisplay.GAME.name
                         if __cls_name == Game.__name__
-                        else PreferredActivityDisplay.UNSPECIFIED_ACTIVITY.name
+                        else PreferredActivityDisplay.UNSPECIFIED.name
                     )
 
                     self.logger.debug(
@@ -253,23 +253,23 @@ class DiscordClientHandler(DiscordClient):
                         f"Ignored {each_activities} since one data of same type was appended in _activity_picked (Contains: {_activity_picked})"
                     )
 
-            # * (4)
-            self._client_ctx.user["status"]["status"] = _fetched_member.status
-            self._client_ctx.user["status"]["on_web"] = _fetched_member.web_status
-            self._client_ctx.user["status"][
-                "on_desktop"
-            ] = _fetched_member.desktop_status
-            self._client_ctx.user["status"]["on_mobile"] = _fetched_member.mobile_status
+        # * (4)
+        self._client_ctx.user["status"]["status"] = _fetched_member.status
+        self._client_ctx.user["status"]["on_web"] = _fetched_member.web_status
+        self._client_ctx.user["status"][
+            "on_desktop"
+        ] = _fetched_member.desktop_status
+        self._client_ctx.user["status"]["on_mobile"] = _fetched_member.mobile_status
 
-            self.logger.info(
-                "Step 2 of 2 | Finished Fetching Discord User's Rich Presence and Other Activities."
-            )
-            self.logger.debug(
-                f"Client Container ({DISCORD_DATA_CONTAINER}) now contains the following: {self._client_ctx.user}"
-            )
+        self.logger.info(
+            "Step 2 of 2 | Finished fetching discord user's rich presence and other activities."
+        )
+        self.logger.debug(
+            f"Client container ({DISCORD_DATA_CONTAINER}) now contains the following: {self._client_ctx.user}"
+        )
 
     async def __exit_client_on_error(self, err_message: str) -> None:
         self.logger.error(err_message)
         await self.close()
-        self.logger.error("Closed Connection to Discord Gateway API due to error.")
+        self.logger.error("Closed Connection to discord gateway api due to error.")
         os._exit(-1)
