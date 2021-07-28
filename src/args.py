@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
 from argparse import ArgumentParser
 from asyncio import gather
-
+import os
 from elements.constants import ARG_CONSTANTS, ARG_PLAIN_CONTAINER_NAME
 
 

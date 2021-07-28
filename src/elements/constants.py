@@ -38,6 +38,7 @@ ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgumentsContainer"
 # # Badge Generator Constants
 BADGE_BASE_URL: Final[str] = "https://badgen.net/badge/"
 BADGE_ICON: Final[str] = "discord"
+BADGE_BASE_SUBJECT: Final[str] = "Discord User"
 BADGE_REGEX_STRUCT_IDENTIFIER: Final[RegExp] = RegExp(
     r"(?P<Delimiter>\[\!\[)(?P<badge_identifier>([a-zA-Z0-9_()-]+(\s|\b)){1,6})\]\((?P<badge_url>https://[a-z]+.[a-z]{2,4})/(?P<entrypoint>\w+)/(?P<subject_badge>[^...]+\b)/(?P<status_badge>[^?]+)\?(?P<params>[^)]+)\)\]\((?P<redirect_url>https://[a-z]+.[a-z]{2,4}/[^)]+)\)"
 )
@@ -76,16 +77,16 @@ MAXIMUM_RUNTIME_SECONDS = 10
 
 @unique
 class PreferredActivityDisplay(IntEnum):
-    CUSTOM = auto()
-    GAME = auto()
+    CUSTOM_ACTIVITY = auto()
+    GAME_ACTIVITY = auto()
     RICH_PRESENCE = auto()
-    STREAM = auto()
-    UNSPECIFIED = auto()
+    STREAM_ACTIVITY = auto()
+    UNSPECIFIED_ACTIVITY = auto()
 
 
 @unique
 class PreferredTimeDisplay(IntEnum):
-    DISABLED = auto()
+    TIME_DISABLED = auto()
     HOURS = auto()
     HOURS_MINUTES = auto()
     MINUTES = auto()
@@ -93,7 +94,8 @@ class PreferredTimeDisplay(IntEnum):
 
 @unique
 class ContextOnSubject(IntEnum):
-    DETAIL = auto()
+    CONTEXT_DISABLED = auto()
+    DETAILS = auto()
     STATE = auto()
 
 """
@@ -250,19 +252,19 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "is_required": False,
     },
     # # Optional Parameters — Context
-    "INPUT_APPEND_DETAIL_PRESENCE": {
+    "INPUT_TIME_DISPLAY_SHORTHAND": {
         "expected_type": bool,
         "fallback_value": False,
         "is_required": False,
     },
-    "INPUT_ACTIVITY_CONTEXT_TO_APPEND_ON_STATUS": {
+    "INPUT_PREFERRED_PRESENCE_CONTEXT": {
         "expected_type": ContextOnSubject,
-        "fallback_value": ContextOnSubject.DETAIL,
+        "fallback_value": ContextOnSubject.DETAILS,
         "is_required": False,
     },
     "INPUT_TIME_DISPLAY_OUTPUT": {
         "expected_type": PreferredTimeDisplay,
-        "fallback_value": PreferredTimeDisplay.DISABLED,
+        "fallback_value": PreferredTimeDisplay.TIME_DISABLED,
         "is_required": False,
     },
     "INPUT_TIME_DISPLAY_ELAPSED_OVERRIDE_STRING": {
@@ -286,6 +288,11 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": False,
         "is_required": False,
     },
+    "INPUT_STATUS_CONTEXT_SEPERATOR": {
+        "expected_type": str,
+        "fallback_value": None,
+        "is_required": False,
+    }, # ! Bug, cannot process the variable and turns to None whenver there's no fallback_value and there's a value inside of the .env.
     # # Development Parameters
     "INPUT_IS_DRY_RUN": {
         "expected_type": bool,
@@ -302,7 +309,7 @@ DISCORD_STRUCT_BLUEPRINT: Final[dict[str, Any]] = {
         "name": None,
         "discriminator": None,
         "status": {},
-        "presence": {},  # Contains user's presence activity. Field is known over runtime since we have two distinct types.
+        "activities": {},  # Contains user's presence activity. Field is known over runtime since we have two distinct types.
     },  # Contains user's information, this excludes the Discord Rich Presence.
 }
 
@@ -343,3 +350,6 @@ class GithubRunnerActions(IntEnum):
     FETCH_README = auto()
     UPDATE_README = auto()
     COMMIT_CHANGES = auto()
+
+# # Time Constants
+TIME_STRINGS : list[str] = ["hours", "minutes"]

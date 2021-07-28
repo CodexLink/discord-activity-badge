@@ -67,6 +67,7 @@ class DiscordClientHandler(DiscordClient):
 
         """
         # ensure_future(super().__ainit__())  # * ?? [a, b], Subject to change later.
+        self.logger.debug(f"Is WebSocket currently ratelimited??? > {self.is_ws_ratelimited()}")
 
         self.logger.info(
             f"Discord Client {self.user} is ready for evaluation of user's activity presence."
@@ -222,25 +223,25 @@ class DiscordClientHandler(DiscordClient):
                     )  # should be ClassName?
 
                     __resolved_activity_name = (
-                        PreferredActivityDisplay.CUSTOM.name
+                        PreferredActivityDisplay.CUSTOM_ACTIVITY.name
                         if __cls_name == CustomActivity.__name__
                         else PreferredActivityDisplay.RICH_PRESENCE.name
                         if __cls_name == Activity.__name__
-                        else PreferredActivityDisplay.GAME.name
+                        else PreferredActivityDisplay.GAME_ACTIVITY.name
                         if __cls_name == Game.__name__
-                        else PreferredActivityDisplay.UNSPECIFIED.name
+                        else PreferredActivityDisplay.UNSPECIFIED_ACTIVITY.name
                     )
 
                     self.logger.debug(
                         f"Pushing context '{__resolved_activity_name}' to self._client_container.user -> in key 'presence'..."
                     )
 
-                    self._client_ctx.user["presence"][
+                    self._client_ctx.user["activities"][
                         __resolved_activity_name
                     ] = __activity
 
                     self.logger.debug(
-                        f"Pushed to self._client_container.user in key 'presence' as '{__resolved_activity_name}.'"
+                        f"Pushed to self._client_container.user in key 'activities' as '{__resolved_activity_name}.'"
                     )
 
                     _activity_picked.append(__cls_name)
@@ -271,5 +272,5 @@ class DiscordClientHandler(DiscordClient):
     async def __exit_client_on_error(self, err_message: str) -> None:
         self.logger.error(err_message)
         await self.close()
-        self.logger.error("Closed Connection to discord gateway api due to error.")
+        self.logger.error("Closed connection to discord gateway api due to error.")
         os._exit(-1)

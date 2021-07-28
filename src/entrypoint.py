@@ -45,6 +45,7 @@ from args import ArgumentResolver
 from badge import BadgeConstructor
 from client import DiscordClientHandler
 from elements.constants import (
+    ContextOnSubject,
     ENV_FILENAME,
     ENV_STRUCT_CONSTRAINTS,
     LOGGER_FILENAME,
@@ -199,11 +200,12 @@ class ActivityBadgeServices(
             __this_time = curr_exec_time() - __timeout_start
             __tasks: Set[Task] = all_tasks()
 
-            if __this_time >= MAXIMUM_RUNTIME_SECONDS:
-                self.logger.critical(
-                    "Time's up! We are taking too much time. Something is wrong... Terminating the script..."
-                )
-                os._exit(-1)
+            # if __this_time >= MAXIMUM_RUNTIME_SECONDS:
+            #     self.logger.critical(
+            #         "The script took longer to finish than the expected time of 5 seconds. This may be due to connection to Discord Gateway API not responding or your connection is not stable enough if you are running in local. If this issue occured in Github Runner, please try again. If persisting, contact (CodexLink) the developer."
+            #     ) # ! Keep an extra information in README.md where you can check the connection by going through any voice channel and see the status of your connection.
+            #     os._exit(-1)
+
 
             if len(all_tasks()) <= 1:
                 self.logger.info(
@@ -211,7 +213,7 @@ class ActivityBadgeServices(
                 )
 
                 await self.close()
-                self.logger.info("Closing Sessions (1 of 2) ASSERT | discord -> Done.")
+                self.logger.info("Closing Sessions (1 of 2) | discord -> Done.")
                 await self._api_session.close()
                 self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
 
@@ -220,6 +222,7 @@ class ActivityBadgeServices(
             self.logger.info(
                 f"Waiting for other {len(__tasks)} tasks to finish. | Time Execution: {__this_time:.2f}/{MAXIMUM_RUNTIME_SECONDS} seconds."
             )
+            # self.logger.debug(f"All Tasks in Queue | {all_tasks()}")
 
             await asyncio_sleep(0.4)
 
@@ -292,7 +295,9 @@ class ActivityBadgeServices(
             level_coverage if level_coverage in __levels__ else logging.DEBUG
         )
 
-        self.logger = logging.getLogger(__name__ if not verbose_client else "discord")
+        self.logger: logging.Logger = logging.getLogger(
+            __name__ if not verbose_client else "discord"
+        )
         self.logger.setLevel(__LOGGER_LEVEL_COVERAGE)
 
         if log_to_file:
@@ -405,7 +410,7 @@ class ActivityBadgeServices(
                             "fallback_value"
                         ]
                         self.envs[_env_cleaned_name] = _fallback_bool_val
-                        self.logger.warn(
+                        self.logger.warning(
                             f"Env. Var. {env_key} has an invalid key that can't be serialized to boolean. Using a fallback value {_fallback_bool_val} instead."
                         )
 
@@ -414,23 +419,27 @@ class ActivityBadgeServices(
                         f"Env. Var. {env_key} expected type is a subclass of Enum! Attempting to resolve its value..."
                     )
                     _enum_candidates: list[Type[Enum]] = [
+                        ContextOnSubject,
                         PreferredActivityDisplay,
                         PreferredTimeDisplay,
                     ]
 
                     is_valid: Union[None, bool] = None
 
-                    if len(_env_literal_val):
+                    # Since all enums are declared in upper case. User might intend to apply values in non-case-sensitive form. Hence, we gonna explicitly uppercase them.
+                    _enum_case_env_val: str = _env_literal_val.upper()
+                    if len(_enum_case_env_val):
                         for each_enums in _enum_candidates:  # This is gonna hurt.
                             for _each_cls in each_enums:
-                                is_valid = _env_literal_val == _each_cls.name
+                                is_valid = _enum_case_env_val == _each_cls.name
                                 self.envs[_env_cleaned_name] = (
                                     _each_cls
-                                    if _env_literal_val == _each_cls.name
+                                    if _enum_case_env_val == _each_cls.name
                                     else ENV_STRUCT_CONSTRAINTS[env_key][
                                         "fallback_value"
                                     ]
                                 )
+                                print(_enum_case_env_val, _each_cls.name)
                                 if is_valid:
                                     break
                             if is_valid:
@@ -439,13 +448,13 @@ class ActivityBadgeServices(
                         self.logger.info(
                             (f"Env. Var. {env_key} now has a value of %s!" % _each_cls)
                             if is_valid
-                            else f"Env. Var. {env_key} was unable to resolve the given argument ({_env_literal_val}). Reverting to %s..."
+                            else f"Env. Var. {env_key} was unable to resolve the given argument ({_enum_case_env_val}). Reverting to %s..."
                             % (ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])
                         )
 
                 else:
                     self.logger.critical(
-                        f"Env. Var. '{_env_literal_val}' cannot be resolved / serialized due to its expected_type not a candidate for serialization. Please contact the developer about this for more information."
+                        f"Env. Var. '{_enum_case_env_val}' cannot be resolved / serialized due to its expected_type not a candidate for serialization. Please contact the developer about this for more information."
                     )
 
             except Exception as Err:  # We can't catch <class 'NoneType'> here. Use Exception instead.

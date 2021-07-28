@@ -137,11 +137,11 @@ Whenever you want to change the context of the badge, you can use this set of pa
 
 | Parameters    | Description + Result |
 | :-----------: | :------------------: |
-`bool` `APPEND_DETAIL_PRESENCE` *Defaults to*: **False** | (**_Rich Presence Only!_**) Appends `detail` field to the Status string alongside with the application name. [![Demo #5](https://badgen.net/badge/Discord%20Activity/Playing%20Visual%20Studio%20Code,%20Editing%20entrypoint.py:159/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
-`bool` `ACTIVITY_CONTEXT_TO_APPEND_ON_STATUS` *Options*: *[***DETAIL***, STATE]* | Overrides additional information to append in the badge. So far, only`DETAILS` and`STATE` are allowed to be appended since it shows the other context of the application. Keep note that this is only effective when `APPEND_DETAIL_PRESENCE` is **True**.
-`str` `TIME_DISPLAY_OUTPUT` *Options*: *[**DISABLED**, HOURS, HOURS_MINUTES, MINUTES, SECONDS]* | Appends time (based on preference) after the application name or detail when `APPEND_DETAIL_PRESENCE` is **True**. [![Demo #8](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code,%206%20hours%20Elapsed./green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+`str` `PREFERRED_PRESENCE_CONTEXT` *Options*: *[***DETAILS***, STATE, CONTEXT_DISABLED]* | Overrides additional information to append in the badge. So far, only`DETAILS` and`STATE` are allowed to be appended since it shows the other context of the application.
+`str` `TIME_DISPLAY_OUTPUT` *Options*: *[**TIME_DISABLED**, HOURS, HOURS_MINUTES, MINUTES, SECONDS]* | Appends time (based on preference) after the application name or detail when `APPEND_PRESENCE_CONTEXT` is **True**. [![Demo #8](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code,%206%20hours%20Elapsed./green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 `str` `TIME_DISPLAY_ELAPSED_OVERRIDE_STRING` *Defaults to*: **elapsed.** | Overrides the string appended whenever the time is displayed for elapsed. This is effective only when SHOW_TIME_DURATION is **True**. [![Demo #9](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code,%206%20hours%20and%20counting./green?icon=discord)](https://github.com/CodexLink/discord-activity-badge) |
 `str` `TIME_DISPLAY_REMAINING_OVERRIDE_STRING` *Defaults to*: **remaining.** | Overrides the string appended whenever the time is displayed for remaining. This is effective only when `TIME_TO_DISPLAY` is **True**. [![Demo #10](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code,%206%20hours%209%20minutes%20to%20finish./green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
+`bool` `TIME_DISPLAY_SHORTHAND` *Defaults to*: **False** | Displays the time with **hours** and **minutes** shorthanded to **h** and **m**. [![Demo #9](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code,%206%20h./green?icon=discord)](https://github.com/CodexLink/discord-activity-badge) |
 
 #### Preferences
 
@@ -149,6 +149,7 @@ Whenever you want to change the context of the badge, you can use this set of pa
 | :-----------: | :----------------: |
 `str` `PREFERRED_ACTIVITY_TO_DISPLAY` *Options*: *[CUSTOM_ACTIVITY, GAME_ACTIVITY, **RICH_PRESENCE**, STREAM_ACTIVITY, UNSPECIFIED_ACTIVITY]* | Renders a particular activity as a prioritized activity. If the preferred activity does not exist, it will render any activity by default. **There will be no demo since it only picks what activity should be displayed.**
 `bool` `SHIFT_STATE_ACTIVITY_COLORS` *Defaults to*: **False** | Interchange state and activity colors. This is useful only if you want to retain your state color position even though `APPEND_STATE_ON_SUBJECT` is true. [![Example #8](https://badgen.net/badge/Currently%20Streaming/Visual%20Studio%20Code/green?icon=discord&labelColor=purple)](https://github.com/CodexLink/discord-activity-badge)
+`str (char)` `STATUS_CONTEXT_SEPERATOR` *Defaults to*: **`,`** | The character/s that seperates the context of every status elements. Keep note that, once you declared a value on this parameter, it will automatically adds space from both ends to ensure that the content displays properly. If otherwise, the script will do the spacing on its own. [![Example #8](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code%20%7C%20Idling%20In%20Workspace%20%7C%207%20hours%20elapsed./green?icon=discord&labelColor=yellow)](https://github.com/CodexLink/discord-activity-badge)
 
 **You got some ideas or did I miss something out? Please generate an issue or PR (if you have declared it on your own), and we will talk about it.**
 
@@ -196,6 +197,10 @@ Here contains a list of resources that I have used in any forms that contributed
 - https://www.epochconvert.com/
 - https://stackoverflow.com/a/18472142/5353223
 - https://stackoverflow.com/a/624939/5353223
+- https://stackoverflow.com/a/41766306/5353223
+- https://stackoverflow.com/a/11743262/5353223
+- https://stackoverflow.com/questions/9437726/how-to-get-the-value-of-a-variable-given-its-name-in-a-string
+- https://stackoverflow.com/a/18470628/5353223
 
 > This section is still incomplete. I will put more and format it later.
 

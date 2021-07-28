@@ -117,16 +117,16 @@ inputs:
     required: False
 
   # # Optional Parameters — Context
-  APPEND_DETAIL_PRESENCE:
-    description: "(Rich Presence Only!) Appends `detail` field to the Status string alongside with the application name."
+  TIME_DISPLAY_SHORTHAND:
+    description: "Displays the time with hours and minutes shorthanded to h and m."
     required: false
 
-  ACTIVITY_CONTEXT_TO_APPEND_ON_STATUS:
+  PREFERRED_PRESENCE_CONTEXT:
     description: "Overrides additional information to append in the badge. So far, only `DETAILS`, and `STATE` are allowed to be appended since it shows the other context of the application."
     required: false
 
   TIME_DISPLAY_OUTPUT:
-    description: "Appends time (based on preference) after the application name or detail when `APPEND_DETAIL_PRESENCE` is `True`."
+    description: "Appends time (based on preference) after the application name or detail when `APPEND_PRESENCE_CONTEXT` is `True`."
     required: false
 
   TIME_DISPLAY_ELAPSED_OVERRIDE_STRING:
@@ -145,6 +145,10 @@ inputs:
   SHIFT_STATUS_ACTIVITY_COLORS:
     description: "Interchange state and activity colors. This is useful only if you want to retain your state color position even though `APPEND_STATE_ON_SUBJECT` is true."
     required: False
+
+  STATUS_CONTEXT_SEPERATOR:
+    description: "The character/s that seperates the context of every status elements."
+    required: false
 
   # # Development Parameters
   IS_DRY_RUN:
