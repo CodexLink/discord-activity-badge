@@ -84,7 +84,7 @@ inputs:
     description: "Renders status badge color whenever there's a Game activity. Please check README.md for more information about this parameter."
     required: false
 
-  RICH_PRESENCE_ACTIVITY_COLOR:
+  RICH_PRESENCE_COLOR:
     description: "Renders status badge color whenever there's a Rich Presence. Please check README.md for more information about this parameter."
     required: false
 

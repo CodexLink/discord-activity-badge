@@ -214,7 +214,7 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": "#00cd90",
         "is_required": False,
     },
-    "INPUT_RICH_PRESENCE_ACTIVITY_COLOR": {
+    "INPUT_RICH_PRESENCE_COLOR": {
         "expected_type": ColorHEX,
         "fallback_value": "#df1473",
         "is_required": False,

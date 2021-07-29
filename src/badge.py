@@ -21,10 +21,8 @@ if __name__ == "__main__":
 
 import os
 from asyncio import ensure_future, Future, sleep as asyncio_sleep, wait
-from re import compile, MULTILINE, Pattern
-from tkinter import W
-from turtle import st
-from typing import Any, Union
+from re import compile, Match, MULTILINE, Pattern
+from typing import Any, Optional, Union
 from datetime import datetime, timedelta
 
 from elements.constants import (
@@ -43,12 +41,14 @@ from elements.typing import (
     ActivityDictName,
     BadgeStructure,
     Base64,
+    ColorHEX,
     HttpsURL,
     ResolvedHTTPResponse,
 )
 from base64 import b64decode, b64encode
 from urllib.parse import quote
 from logging import Logger
+
 
 class BadgeConstructor:
     # * The following variables are declared since there's no typing hint inheritance.
@@ -76,12 +76,12 @@ class BadgeConstructor:
                     "Convertion from Base64 to README Markdown Format is done!"
                 )
 
-                return _out
-
             except Exception as Err:
                 self.logger.error(
                     f"Something happened while writing the file from Base64. Exceptions are not documented by this part. Maybe in the future. | More Info: {Err}"
                 )
+
+        return _out
 
     async def check_badge_identifier(self, readme_ctx: Base64) -> None:
         self.logger.info("Converting README to Markdown File...")
@@ -97,25 +97,29 @@ class BadgeConstructor:
 
         with open(B64_ACTION_FILENAME, "r") as _:
             try:
-                _match = self._re_pattern.search(_.read(), MULTILINE)
-                self._is_badge_identified: bool = (
-                    _match.group("badge_identifier") is None
+                _match: Optional[Match[Any]] = self._re_pattern.search(
+                    _.read(), MULTILINE
                 )
 
-                self.logger.info(  # # PLEASE NOTE THAT BADGE_IDENTIFIER_NAME shouldn't be required as how we handle the condition here. Evaluate the condition...
-                    "Badge with identifier (%s) found!."
-                    % _match.group(
-                        "badge_identifier"
-                    )  # todo: Add some container to avoid direct reference.
-                    if self.envs["BADGE_IDENTIFIER_NAME"]
-                    == _match.group("badge_identifier")
-                    else "Badge with identifier (%s) not found! Will attempt to append the badge on the top of the contents of README.md. Please fix this later!"
-                    % self.envs["BADGE_IDENTIFIER_NAME"]
-                )  # And also discord as well. This assume its the user's first time.
+                if _match:
+                    self._is_badge_identified: bool = (
+                        _match.group("badge_identifier") is None
+                    )
+                    # # PLEASE NOTE THAT BADGE_IDENTIFIER_NAME shouldn't be required as how we handle the condition here. Evaluate the condition...
+                    self.logger.info(
+                        (
+                            "Badge with identifier (%s) found!."
+                            % _match.group("badge_identifier")
+                        )
+                        if self.envs["BADGE_IDENTIFIER_NAME"]
+                        == _match.group("badge_identifier")
+                        else "Badge with identifier (%s) not found! Will attempt to append the badge on the top of the contents of README.md. Please fix this later!"
+                        % self.envs["BADGE_IDENTIFIER_NAME"]
+                    )
 
             except IndexError as Err:
                 self.logger.warn(
-                    "The RegEx can't find any badge with Identifier in README. If you think that this is a bug then please let the developer know."
+                    f"The RegEx can't find any badge with Identifier in README. If you think that this is a bug then please let the developer know. | Info: {Err}"
                 )
 
     async def construct_badge(self) -> None:
@@ -159,11 +163,10 @@ class BadgeConstructor:
 
         """
 
-        # These variables shouldn't be de-alloc until we finish the whole function, not just from the try-except scope.
+        # These variables shouldn't be de-alloc'd until we finish the whole function, not just from the try-except scope.
         _subject_output: BadgeStructure = BadgeStructure("")
         _status_output: BadgeStructure = BadgeStructure("")
         _preferred_activity: ActivityDictName = ActivityDictName("")
-        _time_string: BadgeStructure = BadgeStructure("")
         _is_preferred_exists: bool = False
 
         # try:
@@ -177,7 +180,9 @@ class BadgeConstructor:
             "activities"
         ]  # * Append any activity if there's one. We assure that this is dict even with len() == 0.
 
-        if len(_presence_ctx):  # Does _presence_ctx really contains something?
+        _contains_activities: bool = bool(len(_presence_ctx))
+
+        if _contains_activities:  # Does _presence_ctx really contains something?
 
             # If yes, check what activity is it so that we could process other variables by locking into it.
             # This is were we gonna check if preferred activity exist.
@@ -224,18 +229,14 @@ class BadgeConstructor:
             )
 
         # Check if we should append User's State instead of Activity State in the Subject.
-        _state_string = (
-            "%s_STRING"
-            % (  # This was placed under variable because of reference later.
-                _preferred_activity
-                if len(_preferred_activity)
-                else "%s_STATUS"
-                % self._user_ctx["statuses"]["status"].name.upper()
-            )
+        _state_string = "%s_STRING" % (
+            _preferred_activity
+            if len(_preferred_activity)
+            else "%s_STATUS" % self._user_ctx["statuses"]["status"].name.upper()
         )
         _subject_output = (
             BADGE_BASE_SUBJECT
-            if not len(_presence_ctx) and self.envs["STATIC_SUBJECT_STRING"] is None
+            if not _contains_activities and self.envs["STATIC_SUBJECT_STRING"] is None
             else (
                 self.envs[  # ! Add Static Subject String. If that is included, disabled this condition.
                     _state_string
@@ -267,7 +268,7 @@ class BadgeConstructor:
                 or self.envs["TIME_DISPLAY_OUTPUT"]
                 is not PreferredTimeDisplay.TIME_DISABLED
             )
-            and len(_presence_ctx)
+            and _contains_activities
             else ""
         )
 
@@ -284,7 +285,7 @@ class BadgeConstructor:
                         % self._user_ctx["statuses"]["status"].name.upper()
                     ]
                 )
-                if not len(_presence_ctx)
+                if not _contains_activities
                 else _presence_ctx[_preferred_activity]["name"]
             )
             + (  # # Append the seperator. This one is condition-hell since we have to consider two other values and the state of the badge.
@@ -306,9 +307,10 @@ class BadgeConstructor:
             )
         )
 
-        if self.envs[
-            "TIME_DISPLAY_OUTPUT"
-        ] is not PreferredTimeDisplay.TIME_DISABLED and len(_presence_ctx):
+        if (
+            self.envs["TIME_DISPLAY_OUTPUT"] is not PreferredTimeDisplay.TIME_DISABLED
+            and _contains_activities
+        ):
             _status_string += _seperator  # ! Seperator #2
 
             # Handle if the preferred activity exists or otherwise.
@@ -386,11 +388,9 @@ class BadgeConstructor:
 
                 _status_string += (
                     (
-                        f"%s %s"
-                        % (
-                            f"{_hours} %s" % TIME_STRINGS[0] if _hours >= 1 else "",
-                            f"{_minutes} %s" % TIME_STRINGS[1] if _minutes >= 1 else "",
-                        )
+                        (f"{_hours} %s" % TIME_STRINGS[0] if _hours >= 1 else "")
+                        + (" " if _hours and _minutes else "")
+                        + (f"{_minutes} %s" % TIME_STRINGS[1] if _minutes >= 1 else "")
                         + (
                             f" %s"
                             % self.envs[
@@ -400,7 +400,7 @@ class BadgeConstructor:
                             ]
                         )
                     )
-                    if _hours >= 1 or _minutes >= 1
+                    if is_time_displayable
                     else "Just started."
                 )
 
@@ -415,7 +415,50 @@ class BadgeConstructor:
         self.logger.debug(f"State Output > {_state_string}")
         self.logger.debug(f"Status Output > {_status_output}")
         self.logger.debug(f"Final Output > {_subject_output} | {_status_string}")
-        return
+        # self.logger.debug(f"State String > {_state}")
+        # ! Since we are done with the construction of the output. It's time to manage the colors.
+
+        # I know that _state_string is similar to this case. But I want more control and its reasonable to re-implement, because its main focus was to display a string.
+
+        _status_color: ColorHEX = ColorHEX(
+(            self.envs[
+                "%s_COLOR" % _state_string.removesuffix("_STRING")
+                + (
+                    ""
+                    if _preferred_activity
+                    == PreferredActivityDisplay.RICH_PRESENCE.name
+                    else "_ACTIVITY"
+                    if _contains_activities
+                    else ""
+                )
+            ]) if self.envs["STATIC_SUBJECT_STRING"] is not None else "" # Or black. It depends on what's gonna be the output.
+        )
+
+        _subject_color: ColorHEX = ColorHEX(
+            self.envs[
+                "%s_COLOR"
+                % (
+                    "%s_STATUS" % self._user_ctx["statuses"]["status"].name.upper()
+                    if _contains_activities or self.envs["STATIC_SUBJECT_STRING"] is None
+                    else _state_string.removesuffix("_STRING")
+                )
+            ]
+        )
+
+        self.logger.debug(
+            f"Status Color: {_status_color} | Subject Color: {_subject_color}."
+        )
+
+        if self.envs["SHIFT_STATUS_ACTIVITY_COLORS"]:
+            _status_color, _subject_color = _subject_color, _status_color
+
+
+        # At this point, construct the badge as fully as it is.
+
+        # BADGE_BASE_MARKDOWN.format(
+
+
+        #)
 
         # except KeyError as Err:  # To be enabled on the next commit.
         #     self.logger.error(
