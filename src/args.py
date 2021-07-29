@@ -39,8 +39,8 @@ class ArgumentResolver:
             (2) This await is probably fast, but await is still invoked just to make sure, maybe we can miss about ~300ms of time without it being loaded.
         """
 
-        await gather(self.__load_args(), super().__ainit__())  # * (1)
-        # !!! MRO is changed!
+        # ! mypy can't identify the function `__ainit__` from the super() because there's no subclasses declared under this superclass. The main superclass handles it under MRO.
+        await gather(self.__load_args(), super().__ainit__())  # type: ignore
 
     async def __load_args(self) -> None:
         """
@@ -57,7 +57,7 @@ class ArgumentResolver:
             "--dry-run",
             action="store_true",
             help=ARG_CONSTANTS["HELP_DESC_DRY_RUN"],
-        ) # todo: This is conflicting with the other way to enable dry run. To be evaluated later.
+        )  # todo: This is conflicting with the other way to enable dry run. To be evaluated later.
 
         self.__parser.add_argument(
             "-lc",

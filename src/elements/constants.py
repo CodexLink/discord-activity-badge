@@ -24,11 +24,12 @@ if __name__ == "__main__":
     raise IsolatedExecNotAllowed
 
 from datetime import datetime
-from enum import auto, IntEnum, unique
+from enum import Enum, auto, IntEnum, unique
+from re import L
 from time import strftime
-from typing import Any, Final
+from typing import Any, Final, TypedDict, Union
 
-from discord import Intents
+from discord import Intents, Status
 
 from .typing import BadgeStructure, RegExp, ColorHEX
 
@@ -92,11 +93,13 @@ class PreferredTimeDisplay(IntEnum):
     MINUTES = auto()
     SECONDS = auto()
 
+
 @unique
 class ContextOnSubject(IntEnum):
     CONTEXT_DISABLED = auto()
     DETAILS = auto()
     STATE = auto()
+
 
 """
     The following constants is a mapped dictionary structure. It will be used to evaluate environment variable's values
@@ -178,7 +181,7 @@ ENV_STRUCT_CONSTRAINTS: Final[
     },
     "INPUT_UNSPECIFIED_ACTIVITY_STRING": {
         "expected_type": str,
-        "fallback_value": "???", # todo: This.
+        "fallback_value": "???",  # todo: This.
         "is_required": False,
     },
     "INPUT_ONLINE_STATUS_STRING": {
@@ -223,7 +226,7 @@ ENV_STRUCT_CONSTRAINTS: Final[
     },
     "INPUT_UNSPECIFIED_ACTIVITY_COLOR": {
         "expected_type": ColorHEX,
-        "fallback_value": "???", # todo: This.
+        "fallback_value": "???",  # todo: This.
         "is_required": False,
     },
     "INPUT_ONLINE_STATUS_COLOR": {
@@ -292,7 +295,7 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "expected_type": str,
         "fallback_value": None,
         "is_required": False,
-    }, # ! Bug, cannot process the variable and turns to None whenver there's no fallback_value and there's a value inside of the .env.
+    },  # ! Bug, cannot process the variable and turns to None whenver there's no fallback_value and there's a value inside of the .env.
     # # Development Parameters
     "INPUT_IS_DRY_RUN": {
         "expected_type": bool,
@@ -303,15 +306,24 @@ ENV_STRUCT_CONSTRAINTS: Final[
 
 # # Discord Client Container Metadata
 DISCORD_DATA_CONTAINER: Final[str] = "UserStatusContainer"
-DISCORD_STRUCT_BLUEPRINT: Final[dict[str, Any]] = {
-    "user": {
-        "id": None,
-        "name": None,
-        "discriminator": None,
-        "status": {},
-        "activities": {},  # Contains user's presence activity. Field is known over runtime since we have two distinct types.
-    },  # Contains user's information, this excludes the Discord Rich Presence.
+
+class DISCORD_USER_STRUCT(TypedDict):
+    id: int
+    name: str
+    discriminator: str  # I don't know why it was declared as `str` when its 4-digit which is `int`.
+    statuses: dict[str, Union[Enum, Status, str]]
+    activities: dict[str, Any]  # To many elements to cover.
+
+
+
+BLUEPRINT_INIT_VALUES: DISCORD_USER_STRUCT = {
+    "id": 0,
+    "name": "",
+    "discriminator": "",
+    "statuses": {},
+    "activities": {},
 }
+
 
 # # Discord Client Intents
 DISCORD_CLIENT_INTENTS: Intents = Intents.none()
@@ -351,5 +363,6 @@ class GithubRunnerActions(IntEnum):
     UPDATE_README = auto()
     COMMIT_CHANGES = auto()
 
+
 # # Time Constants
-TIME_STRINGS : list[str] = ["hours", "minutes"]
+TIME_STRINGS: list[str] = ["hours", "minutes"]

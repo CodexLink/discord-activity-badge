@@ -23,6 +23,7 @@ if __name__ == "__main__":
 from typing import NewType as _N
 
 HttpsURL = _N("HttpsURL", str)
+HttpsURLPath = _N("HttpsURLPath", str)
 Base64 = _N("Base64", str)
 ResolvedHTTPResponse = _N("ResolvedHTTPResponse", dict)
 BadgeStructure = _N("BadgeStructure", str)

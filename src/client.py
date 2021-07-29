@@ -21,9 +21,9 @@ if __name__ == "__main__":
 
 import os
 from asyncio import ensure_future
-from typing import List
+from typing import Any, TypedDict, cast, List, Optional, Union
 
-from discord import Activity, ActivityType, Member
+from discord import Activity, ActivityType, ClientUser, Member, Streaming
 from discord import Client as DiscordClient
 from discord import Status
 from discord.activity import Activity, CustomActivity, Game
@@ -32,14 +32,20 @@ from discord.guild import Guild
 from discord.user import User
 
 from elements.constants import (
+    BLUEPRINT_INIT_VALUES,
     DISCORD_CLIENT_INTENTS,
     DISCORD_DATA_CONTAINER,
-    DISCORD_STRUCT_BLUEPRINT,
+    DISCORD_USER_STRUCT,
     PreferredActivityDisplay,
 )
+from logging import Logger
 
 
 class DiscordClientHandler(DiscordClient):
+    logger: Logger  # * Declared since there's no typing hint inheritance.
+    envs: Any
+    user: ClientUser
+
     """
     A DiscordClient Async Wrapper for handling request of user's related activities for badge processing.
 
@@ -67,15 +73,26 @@ class DiscordClientHandler(DiscordClient):
 
         """
         # ensure_future(super().__ainit__())  # * ?? [a, b], Subject to change later.
-        self.logger.debug(f"Is WebSocket currently ratelimited??? > {self.is_ws_ratelimited()}")
+        self.logger.debug(
+            f"Is WebSocket currently ratelimited??? > {self.is_ws_ratelimited()}"
+        )
 
         self.logger.info(
             f"Discord Client {self.user} is ready for evaluation of user's activity presence."
         )
 
-        self._client_ctx: object = type(
-            DISCORD_DATA_CONTAINER, (object,), DISCORD_STRUCT_BLUEPRINT
-        )  # * (1) [a, b]
+        # I cannot do reference by variable of this blank blueprint because TypedDict and other elements associated to it is complaining about it.
+        self._user_ctx: DISCORD_USER_STRUCT = (
+            BLUEPRINT_INIT_VALUES
+            # {
+            #     "user": {},
+            #     "id": 0,
+            #     "name": "",
+            #     "discriminator": "",
+            #     "status": {},
+            #     "activities": {},
+            # }
+        )
 
         ensure_future(
             (
@@ -93,7 +110,7 @@ class DiscordClientHandler(DiscordClient):
 
         self.logger.info(f"Fetching Discord User's Data.")  # todo: Annotate this later.
 
-        await self.get_activities_via_guild(await self.get_user())  # * 3 [a, b]
+        await self.get_activities_via_guild(await self.get_discord_user())  # * 3 [a, b]
         self.logger.info(
             "Discord Client is finished fetching data and is saved for badge processing."
         )
@@ -103,7 +120,7 @@ class DiscordClientHandler(DiscordClient):
 
         # We might wanna catch it here to provide accurate information about the possible occurence of the error.
 
-    async def get_user(self) -> User:
+    async def get_discord_user(self) -> User:
         """
         Obtains Discord User's Basic Information and returns it as a "discord.user.User".
 
@@ -111,11 +128,11 @@ class DiscordClientHandler(DiscordClient):
         Sadly, we can't just do it directly with User. It's the Discord's API limitation, as far as I know.
 
         Notes:
-                        (1) The implementation of variable assignments is quite uncommon in this case. The self._client_container.user is non-existent
-                        (1) unless instantiated. Please refer to elements.constants | Discord Client Container Metadata to see the elements that is mypy unable to find.
+            (1) The implementation of variable assignments is quite uncommon in this case. The self._client_container.user is non-existent
+            (1) unless instantiated. Please refer to elements.constants | Discord Client Container Metadata to see the elements that is mypy unable to find.
 
         Returns:
-                        User: Contains information of the user encapsulated in <class 'discord.user.Users'>.
+            User: Contains information of the user encapsulated in <class 'discord.user.Users'>.
         """
 
         self.logger.info(
@@ -125,16 +142,11 @@ class DiscordClientHandler(DiscordClient):
         try:
             _user_info = await self.fetch_user(self.envs["DISCORD_USER_ID"])
 
-            self.some_data_later = _user_info
-
-            # * (1) and similar.
-            self._client_ctx.user["id"] = _user_info.id
-            self._client_ctx.user["name"] = _user_info.name
-            self._client_ctx.user["discriminator"] = _user_info.discriminator
+            self._user_ctx["id"] = _user_info.id
+            self._user_ctx["name"] = _user_info.name
+            self._user_ctx["discriminator"] = _user_info.discriminator
 
             self.logger.info("Step 1.b of 2 | Finished fetching user information.")
-
-            return _user_info
 
         except NotFound as Err:
             await self.__exit_client_on_error(
@@ -145,6 +157,8 @@ class DiscordClientHandler(DiscordClient):
             await self.__exit_client_on_error(
                 f"Failed to make request due to malformed data given under DISCORD_USER_ID key. Which results to: {Err} | This can be a developer's fault upon assigning non-existent Env Key, please make an issue about this problem."
             )
+
+        return _user_info
 
     async def get_activities_via_guild(self, fetched_user: User) -> None:
         """
@@ -188,86 +202,87 @@ class DiscordClientHandler(DiscordClient):
                 )  # Add function to message this error to the user.
 
             # * (1.2)
-            _fetched_member: Member = each_guilds.get_member(fetched_user.id)
+            _fetched_member: Optional[Member] = each_guilds.get_member(fetched_user.id)
 
             if _fetched_member:  # todo: Check if this one work.
                 break
 
         # * (2)
-        if not _fetched_member.activities:
-            self.logger.warning(
-                "This user doesn't have any activity. Letting BadgeConstructor to fill it."
-            )
-
-        else:
-            self.logger.info(
-                f"{_fetched_member} contains {len(_fetched_member.activities)} activit%s."
-                % ("y" if not len(_fetched_member.activities) > 1 else "ies")
-            )
-
-            _activity_picked: List[str] = []
-
-            # * (3)
-            for idx, each_activities in enumerate(_fetched_member.activities):
-                self.logger.debug(
-                    f"Activity #{idx + 1} of {len(_fetched_member.activities)} | {each_activities}"
+        if _fetched_member:
+            if not _fetched_member.activities:
+                self.logger.warning(
+                    "This user doesn't have any activity. Letting BadgeConstructor to fill it."
                 )
 
-                if not each_activities.__class__.__name__ in _activity_picked:
+            else:
+                self.logger.info(
+                    f"{_fetched_member} contains {len(_fetched_member.activities)} activit%s."
+                    % ("y" if not len(_fetched_member.activities) > 1 else "ies")
+                )
+
+                _activity_picked: List[str] = []
+
+                # * (3)
+                for idx, each_activities in enumerate(_fetched_member.activities):
                     self.logger.debug(
-                        f"{each_activities.__class__.__name__} was not in _activity_picked. (Contains {_activity_picked})"
-                    )
-                    __activity: dict = each_activities.to_dict()
-                    __cls_name: str = (
-                        each_activities.__class__.__name__
-                    )  # should be ClassName?
-
-                    __resolved_activity_name = (
-                        PreferredActivityDisplay.CUSTOM_ACTIVITY.name
-                        if __cls_name == CustomActivity.__name__
-                        else PreferredActivityDisplay.RICH_PRESENCE.name
-                        if __cls_name == Activity.__name__
-                        else PreferredActivityDisplay.GAME_ACTIVITY.name
-                        if __cls_name == Game.__name__
-                        else PreferredActivityDisplay.UNSPECIFIED_ACTIVITY.name
+                        f"Activity #{idx + 1} of {len(_fetched_member.activities)} | {each_activities}"
                     )
 
-                    self.logger.debug(
-                        f"Pushing context '{__resolved_activity_name}' to self._client_container.user -> in key 'presence'..."
-                    )
+                    if not each_activities.__class__.__name__ in _activity_picked:
+                        self.logger.debug(
+                            f"{each_activities.__class__.__name__} was not in _activity_picked. (Contains {_activity_picked})"
+                        )
 
-                    self._client_ctx.user["activities"][
-                        __resolved_activity_name
-                    ] = __activity
+                        # ! I can't type `__activity_ctx` for because BaseActivity and Spotify doesn't have `to_dict` function.
+                        __activity_ctx: dict[Union[str, dict[Any, Any]], Any] = each_activities.to_dict() # type: ignore
+                        __cls_name: str = (
+                            each_activities.__class__.__name__
+                        )
 
-                    self.logger.debug(
-                        f"Pushed to self._client_container.user in key 'activities' as '{__resolved_activity_name}.'"
-                    )
+                        __resolved_activity_name = (
+                            PreferredActivityDisplay.CUSTOM_ACTIVITY.name
+                            if __cls_name == CustomActivity.__name__
+                            else PreferredActivityDisplay.RICH_PRESENCE.name
+                            if __cls_name == Activity.__name__
+                            else PreferredActivityDisplay.GAME_ACTIVITY.name
+                            if __cls_name == Game.__name__
+                            else PreferredActivityDisplay.UNSPECIFIED_ACTIVITY.name
+                        )
 
-                    _activity_picked.append(__cls_name)
-                    self.logger.debug(
-                        f"Appended {__resolved_activity_name} to _activity_picked. (Now contains: {_activity_picked})"
-                    )
+                        self.logger.debug(
+                            f"Pushing context '{__resolved_activity_name}' to self._client_container.user -> in key 'presence'..."
+                        )
 
-                else:
-                    self.logger.debug(
-                        f"Ignored {each_activities} since one data of same type was appended in _activity_picked (Contains: {_activity_picked})"
-                    )
+                        self._user_ctx["activities"][
+                            __resolved_activity_name
+                        ] = __activity_ctx
 
-        # * (4)
-        self._client_ctx.user["status"]["status"] = _fetched_member.status
-        self._client_ctx.user["status"]["on_web"] = _fetched_member.web_status
-        self._client_ctx.user["status"][
-            "on_desktop"
-        ] = _fetched_member.desktop_status
-        self._client_ctx.user["status"]["on_mobile"] = _fetched_member.mobile_status
+                        self.logger.debug(
+                            f"Pushed to self._client_container ['user'] in key 'activities' as '{__resolved_activity_name}.'"
+                        )
 
-        self.logger.info(
-            "Step 2 of 2 | Finished fetching discord user's rich presence and other activities."
-        )
-        self.logger.debug(
-            f"Client container ({DISCORD_DATA_CONTAINER}) now contains the following: {self._client_ctx.user}"
-        )
+                        _activity_picked.append(__cls_name)
+                        self.logger.debug(
+                            f"Appended {__resolved_activity_name} to _activity_picked. (Now contains: {_activity_picked})"
+                        )
+
+                    else:
+                        self.logger.debug(
+                            f"Ignored {each_activities} since one data of same type was appended in _activity_picked (Contains: {_activity_picked})"
+                        )
+
+            # * (4)
+            self._user_ctx["statuses"]["status"] = _fetched_member.status
+            self._user_ctx["statuses"]["on_web"] = _fetched_member.web_status
+            self._user_ctx["statuses"]["on_desktop"] = _fetched_member.desktop_status
+            self._user_ctx["statuses"]["on_mobile"] = _fetched_member.mobile_status
+
+            self.logger.info(
+                "Step 2 of 2 | Finished fetching discord user's rich presence and other activities."
+            )
+            self.logger.debug(
+                f"Client container ({DISCORD_DATA_CONTAINER}) now contains the following: {self._user_ctx}"
+            )
 
     async def __exit_client_on_error(self, err_message: str) -> None:
         self.logger.error(err_message)

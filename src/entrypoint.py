@@ -23,7 +23,6 @@ if __name__ != "__main__":
 
 from distutils.util import strtobool
 import logging
-from multiprocessing.sharedctypes import Value
 import os
 from asyncio import (
     AbstractEventLoop,
@@ -56,7 +55,7 @@ from elements.constants import (
     GithubRunnerActions,
 )
 from elements.exceptions import DotEnvFileNotFound
-from enum import Enum, IntEnum
+from enum import Enum
 from elements.constants import PreferredActivityDisplay, PreferredTimeDisplay
 
 
@@ -94,9 +93,9 @@ class ActivityBadgeServices(
         # * We can now insert the arguments at this point.
         self._init_logger(
             level_coverage=logging.DEBUG,
-            log_to_file=self.args_container.no_file,
-            out_to_console=self.args_container.log_to_console,
-            verbose_client=self.args_container.verbose_client,
+            log_to_file=getattr(self.args_container, "no_file"),
+            out_to_console=getattr(self.args_container, "log_to_console"),
+            verbose_client=getattr(self.args_container, "verbose_client"),
         )  # * (1) [a,b]
 
         # todo:ake ArgumentParser be the first one to execute.
@@ -137,7 +136,7 @@ class ActivityBadgeServices(
 
         await asyncio_sleep(0.001)
 
-        if self.args_container.local:
+        if getattr(self.args_container, "local"):
             self._check_dotenv()  # ! This cannot be awaited.
 
         else:
@@ -200,14 +199,19 @@ class ActivityBadgeServices(
             __this_time = curr_exec_time() - __timeout_start
             __tasks: Set[Task] = all_tasks()
 
-            # if __this_time >= MAXIMUM_RUNTIME_SECONDS:
-            #     self.logger.critical(
-            #         "The script took longer to finish than the expected time of 5 seconds. This may be due to connection to Discord Gateway API not responding or your connection is not stable enough if you are running in local. If this issue occured in Github Runner, please try again. If persisting, contact (CodexLink) the developer."
-            #     ) # ! Keep an extra information in README.md where you can check the connection by going through any voice channel and see the status of your connection.
-            #     os._exit(-1)
+            if (__this_time >= MAXIMUM_RUNTIME_SECONDS) and not getattr(
+                self.args_container, "local"
+            ):
+                self.logger.critical(
+                    "The script took longer to finish than the expected time of 5 seconds. This may be due to connection to Discord Gateway API not responding or your connection is not stable enough if you are running in local. If this issue occured in Github Runner, please try again. If persisting, contact (CodexLink) the developer."
+                )  # ! Keep an extra information in README.md where you can check the connection by going through any voice channel and see the status of your connection.
+                os._exit(-1)
 
+            # # Keep in mind that, we could make this inline whenever the script is running in local mode.
 
-            if len(all_tasks()) <= 1:
+            if (
+                len(all_tasks()) <= 1
+            ):  # todo: Add seconds I think before we process this code-block.
                 self.logger.info(
                     "No other tasks were detected aside from Main Event Loop. Closing some sessions."
                 )
@@ -279,7 +283,7 @@ class ActivityBadgeServices(
             verbose_client (Optional[bool], optional): Bind discord to the logger to log other events that is out of scope of entrypoint.
         Summary: todo.
         """
-        __levels__ = [
+        _levels = [
             logging.DEBUG,
             logging.INFO,
             logging.WARNING,
@@ -292,7 +296,7 @@ class ActivityBadgeServices(
             LOGGER_OUTPUT_FORMAT
         )
         __LOGGER_LEVEL_COVERAGE: int = (
-            level_coverage if level_coverage in __levels__ else logging.DEBUG
+            level_coverage if level_coverage in _levels else logging.DEBUG
         )
 
         self.logger: logging.Logger = logging.getLogger(
@@ -312,7 +316,7 @@ class ActivityBadgeServices(
             console_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
             self.logger.addHandler(console_handler)
 
-        if not level_coverage in __levels__:
+        if not level_coverage in _levels:
             self.logger.warning(
                 "Argument level_coverage is invalid from any of the list in __level__. setLevel() will use a default value (logging.DEBUG) instead."
             )
@@ -330,7 +334,7 @@ class ActivityBadgeServices(
         for idx, (env_key, _) in enumerate(ENV_STRUCT_CONSTRAINTS.items()):  # * (3)
 
             try:
-                _env_literal_val: str = os.environ.get(env_key)
+                _env_literal_val: Any = os.environ.get(env_key)
                 _env_cleaned_name: str = env_key.removeprefix("INPUT_")
                 # # For Github Actions.
                 self.logger.debug(

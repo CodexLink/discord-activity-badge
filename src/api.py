@@ -30,9 +30,9 @@ from ast import literal_eval
 from asyncio import Future, as_completed, ensure_future, sleep as asyncio_sleep
 from base64 import b64decode, b64encode
 from json import load as JSON_SERIALIZE
-from typing import Any, Optional, Union
+from typing import Any, Coroutine, Optional, Union
 
-from aiohttp import BasicAuth, ClientSession
+from aiohttp import BasicAuth, ClientResponse, ClientSession
 
 from elements.constants import (
     DISCORD_CLIENT_INTENTS,
@@ -43,10 +43,15 @@ from elements.exceptions import (
     SessionRequestHTTPError,
     SessionRequestStatusAssertFailed,
 )
-from elements.typing import Base64, HttpsURL, ResolvedHTTPResponse
+from elements.typing import Base64, HttpsURL, HttpsURLPath, ResolvedHTTPResponse
+from logging import Logger
 
 
 class AsyncRequestAPI:
+    # * The following variables are declared since there's no typing hint inheritance.
+    logger: Logger
+    envs: Any
+
     """
     A set of async functions that handles API handler. This includes Github API and Badgen API.
     The class has the prefix "Static" because of its inability to register other APIs during Runtime.
@@ -75,9 +80,9 @@ class AsyncRequestAPI:
     async def test_api_conn(self) -> None:
         _endpoints: list[HttpsURL] = [
             self.envs["GITHUB_API_URL"],
-            "https://badgen.net",
+            HttpsURL("https://badgen.net"),
         ]
-        _responses: list[Future] = []
+        _responses: list[Union[Coroutine[Any, Any, Future[Any]], ClientResponse]] = []
 
         for idx, each_endpoint in enumerate(_endpoints):
             self.logger.info(
@@ -109,7 +114,7 @@ class AsyncRequestAPI:
     async def github_api_connect(self) -> None:
         self.logger.info("Authenticating to Github API...")
 
-        __conn = await self._request(  # todo: To be annotated soon.
+        __conn: ClientResponse = await self._request(  # todo: To be annotated soon.
             self.envs["GITHUB_API_URL"],
             GithubRunnerActions.AUTH_GITHUB_API,
             should_return=ResponseTypes.RESPONSE,
@@ -131,7 +136,9 @@ class AsyncRequestAPI:
         )
         os._exit(-1)
 
-    async def exec_api_actions(self, actions: GithubRunnerActions) -> Union[Any, ResolvedHTTPResponse]:
+    async def exec_api_actions(
+        self, actions: GithubRunnerActions
+    ) -> Union[Any, ResolvedHTTPResponse]:
 
         # TODO: Check what to try-catch here.
         if actions is GithubRunnerActions.FETCH_README:
@@ -140,9 +147,9 @@ class AsyncRequestAPI:
                 if self.envs["PROFILE_REPOSITORY"] is None
                 else "{0}".format(self.envs["PROFILE_REPOSITORY"])
             )
-            __repo_path = "{0}/repos/{1}/readme".format(
+            __repo_path : HttpsURL = HttpsURL("{0}/repos/{1}/readme".format(
                 self.envs["GITHUB_API_URL"], __user_repo
-            )
+            ))
 
             self.logger.info(
                 f"Fetching User's Github Profile Repository ({__user_repo})..."
@@ -151,9 +158,11 @@ class AsyncRequestAPI:
             # todo: Annotate this later.
             while True:
                 try:
-                    __fetch_readme: Future = await self._request(
+                    __fetch_readme: ClientResponse = await self._request(
                         __repo_path, GithubRunnerActions.FETCH_README
                     )
+
+                    print(type(__fetch_readme))
 
                     # * Give user an option whether we want to decode the b64 or not.
 
@@ -166,7 +175,8 @@ class AsyncRequestAPI:
                     self.logger.info(
                         f"Github Profile ({__user_repo}) README has been fetched."
                     )
-                    return __sresp_content
+
+                    break
 
                 except SyntaxError as RecvCtx:
                     self.logger.error(
@@ -186,6 +196,8 @@ class AsyncRequestAPI:
                         )
                         os._exit(-1)
 
+            return __sresp_content
+
         elif actions is GithubRunnerActions.COMMIT_CHANGES:
             pass
 
@@ -194,9 +206,7 @@ class AsyncRequestAPI:
         url: HttpsURL,
         rest_response: GithubRunnerActions,
         should_return: ResponseTypes = ResponseTypes.RESPONSE,
-    ) -> Union[
-        list[Union[str, bool, int]], Any
-    ]:  # Subject to change, for typing.Any since I don't know what type is it..
+    ) -> Union[Future[Any], ClientResponse]:  # Subject to change, for typing.Any since I don't know what type is it..
 
         if self._api_session.closed:
             self.logger.critical("Session has been closed! Reenabling...")
@@ -218,11 +228,13 @@ class AsyncRequestAPI:
                 auth=BasicAuth(self.envs["GITHUB_ACTOR"], self.envs["WORKFLOW_TOKEN"]),
             )
 
-        if not _http_request.ok: # todo: Make this clarified or confirmed. We don't have a case to where we can see this in action.
+        if (
+            not _http_request.ok
+        ):  # todo: Make this clarified or confirmed. We don't have a case to where we can see this in action.
             self.logger.critical(_http_request.status, _http_request.content)
-            _resp_raw: bytes = _http_request
-            _resp_ctx: dict = literal_eval(_resp_raw)
-            raise SessionRequestStatusAssertFailed(_http_request.response)
+            _resp_raw: ClientResponse = _http_request # Supposed to be ClientResponse
+            _resp_ctx: dict = literal_eval(str(_resp_raw)) # Explicitly invoke str since the value is str.
+            # raise SessionRequestStatusAssertFailed(_http_request.response)
 
         if should_return is ResponseTypes.IS_OKAY:
             return [url, _http_request.ok]

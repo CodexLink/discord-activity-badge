@@ -22,6 +22,7 @@ if __name__ == "__main__":
 import os
 from asyncio import ensure_future, Future, sleep as asyncio_sleep, wait
 from re import compile, MULTILINE, Pattern
+from tkinter import W
 from turtle import st
 from typing import Any, Union
 from datetime import datetime, timedelta
@@ -33,6 +34,7 @@ from elements.constants import (
     Base64Actions,
     BADGE_BASE_MARKDOWN,
     ContextOnSubject,
+    DISCORD_USER_STRUCT,
     PreferredActivityDisplay,
     PreferredTimeDisplay,
     TIME_STRINGS,
@@ -46,9 +48,14 @@ from elements.typing import (
 )
 from base64 import b64decode, b64encode
 from urllib.parse import quote
-
+from logging import Logger
 
 class BadgeConstructor:
+    # * The following variables are declared since there's no typing hint inheritance.
+    logger: Logger
+    envs: Any
+    _user_ctx: DISCORD_USER_STRUCT
+
     """
     An async-class module that generate badge over-time.
     """
@@ -118,21 +125,21 @@ class BadgeConstructor:
         Let the following be the construction recipe for the badge: [![<badge_identifier>](<badge_url>)](redirect_url)
 
         Where:
-			- badge_identifier: Unique Name of the Badge
-			- badge_url: The badge URL that is rendered in Markdown (README).
-			- redirect_url: The url to redirect when the badge is clicked.
+                        - badge_identifier: Unique Name of the Badge
+                        - badge_url: The badge URL that is rendered in Markdown (README).
+                        - redirect_url: The url to redirect when the badge is clicked.
 
         ! The badge itself should be recognizable by RegEx declared in elements/constants.py:49 (BADGE_REGEX_STRUCT_IDENTIFIER)
 
         There are two parts that makes up the whole structure:
-			- Subject
-			- Status
+                        - Subject
+                        - Status
 
-			* These are basically left and right parts of the badge, more of a pill illustration, but I hope you get the point.
+                        * These are basically left and right parts of the badge, more of a pill illustration, but I hope you get the point.
 
         The badge consists of multiple parts, the following is the diminished structure on how we can manipulate it.
-			Subject consists of  [Icon > Text (Either UserState or ActivityState) > Foreground (HEX from UserState or ActivityState)]
-			Badge consists of [User State or DerivedBaseActivity > Detail > Denoter > Time Elapsed or Remaining > Foreground(HEX from UserState or ActivityState)]] (2)
+                        Subject consists of  [Icon > Text (Either UserState or ActivityState) > Foreground (HEX from UserState or ActivityState)]
+                        Badge consists of [User State or DerivedBaseActivity > Detail > Denoter > Time Elapsed or Remaining > Foreground(HEX from UserState or ActivityState)]] (2)
 
         ! The way how it represents by order does not mean the handling of parameters are by order!
         * Every User State represents Derived Classes from disocord.BaseActivity.
@@ -140,15 +147,15 @@ class BadgeConstructor:
         # Further Examples: is declared under README.md. (Subsection Activity States)
 
         Conditions for badge_identifier:
-			- Should be similar that is declared under workflows.
-			- () and - _ can be invoked and identified by the Regex.
-			- Whenever we have one in the README: We can just replace that string and use re.sub then commit and push.
-			- If otherwise: we will create a badge and put it on top. Let the user put it somewhere else they like.
+                        - Should be similar that is declared under workflows.
+                        - () and - _ can be invoked and identified by the Regex.
+                        - Whenever we have one in the README: We can just replace that string and use re.sub then commit and push.
+                        - If otherwise: we will create a badge and put it on top. Let the user put it somewhere else they like.
 
         @o: There's no impactful changes even with per condition. Just references.
 
         Conditions for redirect_url:
-			- The output of this would probably be the repository of the special repository or anything else.
+                        - The output of this would probably be the repository of the special repository or anything else.
 
         """
 
@@ -166,7 +173,7 @@ class BadgeConstructor:
             else "{0}/{0}".format(self.envs["GITHUB_ACTOR"])
         )  # Let's handle this one first before we attempt to do everything thard.
 
-        _presence_ctx: dict[str, Union[int, str, slice]] = self._client_ctx.user[
+        _presence_ctx: dict[str, Union[int, str, slice]] = self._user_ctx[
             "activities"
         ]  # * Append any activity if there's one. We assure that this is dict even with len() == 0.
 
@@ -223,7 +230,7 @@ class BadgeConstructor:
                 _preferred_activity
                 if len(_preferred_activity)
                 else "%s_STATUS"
-                % self._client_ctx.user["status"]["status"].name.upper()
+                % self._user_ctx["statuses"]["status"].name.upper()
             )
         )
         _subject_output = (
@@ -255,8 +262,10 @@ class BadgeConstructor:
                 else " %s " % self.envs["STATUS_CONTEXT_SEPERATOR"]
             )
             if (
-                self.envs["PREFERRED_PRESENCE_CONTEXT"] is not ContextOnSubject.CONTEXT_DISABLED
-                or self.envs["TIME_DISPLAY_OUTPUT"] is not PreferredTimeDisplay.TIME_DISABLED
+                self.envs["PREFERRED_PRESENCE_CONTEXT"]
+                is not ContextOnSubject.CONTEXT_DISABLED
+                or self.envs["TIME_DISPLAY_OUTPUT"]
+                is not PreferredTimeDisplay.TIME_DISABLED
             )
             and len(_presence_ctx)
             else ""
@@ -272,7 +281,7 @@ class BadgeConstructor:
                 (  # # Appends User's State whenever _presence_ctx is zero or otherwise, append the activity's application name.
                     self.envs[
                         "%s_STATUS_STRING"
-                        % self._client_ctx.user["status"]["status"].name.upper()
+                        % self._user_ctx["statuses"]["status"].name.upper()
                     ]
                 )
                 if not len(_presence_ctx)
@@ -297,7 +306,9 @@ class BadgeConstructor:
             )
         )
 
-        if self.envs["TIME_DISPLAY_OUTPUT"] is not PreferredTimeDisplay.TIME_DISABLED and len(_presence_ctx):
+        if self.envs[
+            "TIME_DISPLAY_OUTPUT"
+        ] is not PreferredTimeDisplay.TIME_DISABLED and len(_presence_ctx):
             _status_string += _seperator  # ! Seperator #2
 
             # Handle if the preferred activity exists or otherwise.
@@ -371,29 +382,32 @@ class BadgeConstructor:
                     % (TIME_STRINGS[0], TIME_STRINGS[1])
                 )
 
-                _status_string += f"{_hours} %s {_minutes} %s" % (
-                    TIME_STRINGS[0],
-                    TIME_STRINGS[1],
-                )
+                is_time_displayable: bool = _hours >= 1 or _minutes >= 1
 
-            self.logger.debug(
-                f"{_has_remaining} | {type(_has_remaining)} | {_running_time} | {type(_running_time)}"
-            )
+                _status_string += (
+                    (
+                        f"%s %s"
+                        % (
+                            f"{_hours} %s" % TIME_STRINGS[0] if _hours >= 1 else "",
+                            f"{_minutes} %s" % TIME_STRINGS[1] if _minutes >= 1 else "",
+                        )
+                        + (
+                            f" %s"
+                            % self.envs[
+                                "TIME_DISPLAY_%s_OVERRIDE_STRING" % "ELAPSED"
+                                if not _has_remaining
+                                else "REMAINING"
+                            ]
+                        )
+                    )
+                    if _hours >= 1 or _minutes >= 1
+                    else "Just started."
+                )
 
             self.logger.debug(
                 f"Song is currently under {_running_time} / %s." % (_end_time)
                 if _has_remaining
                 else f"The application has been opened for {_running_time}."
-            )
-
-            # ! Wrapping up with elapsed or remaining strings.
-            _status_string += (
-                f" %s"
-                % self.envs[
-                    "TIME_DISPLAY_%s_OVERRIDE_STRING" % "ELAPSED"
-                    if not _has_remaining
-                    else "REMAINING"
-                ]
             )
 
         self.logger.debug(f"Preferred Activity Context > {_preferred_activity}")
@@ -409,35 +423,4 @@ class BadgeConstructor:
         #     )
         #     os._exit(-1)
 
-        self.logger.info(
-            "Evaluating Conditons from Optional Extensibility and Customizations..."
-        )
-
-    # By this point, there are a variety of Activities. We need to select one and avail to resolve from what the user wants.
-    # First let's evaluate what user wants to display in their badge.
-    # todo: We need a parameter that PREFER_CUSTOM_ACTIVITY_OVER_PRESENCE.
-
-    # First we have to understand that, the way how discord displays the status of user by order.
-    # CustomActivity (Custom Status) > Activity (Rich Presence) > Game (Game)
-    # The way how Discord.py stores activities: CustomActivity(Custom Status) > Game (Game) > Activity (Rich Presence)
-
-    # We will follow how Discord Client displays it.
-
-    """
-		Example:
-		Set of Activities:  (<CustomActivity name='I wanna hug and pat teri~' emoji=<PartialEmoji animated=True name='TeriPats' id=???>>,
-		<Game name='Honkai Impact 3'>,
-		<Activity type=<ActivityType.playing: 0> name='osu!' url=None details=None application_id=??? session_id=None emoji=None>,
-		<Activity type=<ActivityType.playing: 0> name='Visual Studio Code' url=None details='Editing client.py: 165:79 (211)' application_id=??? session_id='??? emoji=None>)
-	"""
-
-    # todo: Let's push this one on the BadgeGenerator instead.
-    # if os.environ.get("INPUT_PREFERRED_ACTIVITY_TO_DISPLAY") in ["CUSTOM_ACTIVITY", "RICH_PRESENCE", "GAME_ACTIVITY"]:
-    # pass
-    # else:
-    # 	self.logger.error("The supplied value of PREFERRED_ACTIVITY_TO_DISPLAY is invalid. Please check the documentation, check your workflow secret/input and try again.")
-    # 	os._exit(-7)
-
     # self.logger.info("Badge Metadata Preparation is done. Waiting for appending Discord's Data.")
-
-    # I need to fiugre out something first.

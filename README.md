@@ -201,6 +201,7 @@ Here contains a list of resources that I have used in any forms that contributed
 - https://stackoverflow.com/a/11743262/5353223
 - https://stackoverflow.com/questions/9437726/how-to-get-the-value-of-a-variable-given-its-name-in-a-string
 - https://stackoverflow.com/a/18470628/5353223
+- https://stackoverflow.com/a/51191130/5353223
 
 > This section is still incomplete. I will put more and format it later.
 
