@@ -25,24 +25,25 @@ if __name__ == "__main__":
 
 from datetime import datetime
 from enum import Enum, auto, IntEnum, unique
-from re import L
 from time import strftime
 from typing import Any, Final, TypedDict, Union
 
 from discord import Intents, Status
 
-from .typing import BadgeStructure, RegExp, ColorHEX
+from .typing import BadgeStructure, HttpsURL, RegExp, ColorHEX
 
 # # Argument Class Container Metadata
 ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgumentsContainer"
 
 # # Badge Generator Constants
-BADGE_BASE_URL: Final[str] = "https://badgen.net/badge/"
+BADGE_BASE_URL: Final[HttpsURL] = HttpsURL("https://badgen.net/badge/")
+BADGE_REDIRECT_BASE_DOMAIN: Final[HttpsURL] = HttpsURL("https://github.com/")
 BADGE_ICON: Final[str] = "discord"
 BADGE_BASE_SUBJECT: Final[str] = "Discord User"
 BADGE_REGEX_STRUCT_IDENTIFIER: Final[RegExp] = RegExp(
     r"(?P<Delimiter>\[\!\[)(?P<badge_identifier>([a-zA-Z0-9_()-]+(\s|\b)){1,6})\]\((?P<badge_url>https://[a-z]+.[a-z]{2,4})/(?P<entrypoint>\w+)/(?P<subject_badge>[^...]+\b)/(?P<status_badge>[^?]+)\?(?P<params>[^)]+)\)\]\((?P<redirect_url>https://[a-z]+.[a-z]{2,4}/[^)]+)\)"
 )
+BADGE_NO_COLOR_DEFAULT: Final[ColorHEX] = ColorHEX("#434343")
 BADGE_BASE_MARKDOWN: BadgeStructure = BadgeStructure(
     "[![{0}]({1})]({2})"
 )  # todo: Document this one later.
@@ -130,7 +131,7 @@ ENV_STRUCT_CONSTRAINTS: Final[
     },
     "INPUT_COMMIT_MESSAGE": {
         "expected_type": str,
-        "fallback_value": f"Discord Activity Badge Updated as of {_eval_date_on_exec}.",
+        "fallback_value": f"Discord Activity Badge Updated as of {_eval_date_on_exec}",
         "is_required": False,
     },
     "INPUT_DISCORD_BOT_TOKEN": {
@@ -148,7 +149,7 @@ ENV_STRUCT_CONSTRAINTS: Final[
         "fallback_value": None,
         "is_required": False,
     },
-    "INPUT_REDIRECT_TO_URL_ON_CLICK": {
+    "INPUT_URL_TO_REDIRECT_ON_CLICK": {
         "expected_type": str,
         "fallback_value": None,
         "is_required": False,
@@ -307,13 +308,13 @@ ENV_STRUCT_CONSTRAINTS: Final[
 # # Discord Client Container Metadata
 DISCORD_DATA_CONTAINER: Final[str] = "UserStatusContainer"
 
+
 class DISCORD_USER_STRUCT(TypedDict):
     id: int
     name: str
     discriminator: str  # I don't know why it was declared as `str` when its 4-digit which is `int`.
     statuses: dict[str, Union[Enum, Status, str]]
     activities: dict[str, Any]  # To many elements to cover.
-
 
 
 BLUEPRINT_INIT_VALUES: DISCORD_USER_STRUCT = {

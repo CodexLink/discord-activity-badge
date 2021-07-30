@@ -28,6 +28,10 @@ from datetime import datetime, timedelta
 from elements.constants import (
     B64_ACTION_FILENAME,
     BADGE_BASE_SUBJECT,
+    BADGE_BASE_URL,
+    BADGE_ICON,
+    BADGE_NO_COLOR_DEFAULT,
+    BADGE_REDIRECT_BASE_DOMAIN,
     BADGE_REGEX_STRUCT_IDENTIFIER,
     Base64Actions,
     BADGE_BASE_MARKDOWN,
@@ -169,301 +173,323 @@ class BadgeConstructor:
         _preferred_activity: ActivityDictName = ActivityDictName("")
         _is_preferred_exists: bool = False
 
-        # try:
-        _redirect_url: HttpsURL = (
-            self.envs["REDIRECT_TO_URL_ON_CLICK"]
-            if self.envs["REDIRECT_TO_URL_ON_CLICK"]
-            else "{0}/{0}".format(self.envs["GITHUB_ACTOR"])
-        )  # Let's handle this one first before we attempt to do everything thard.
+        try:
+            _redirect_url: HttpsURL = BADGE_REDIRECT_BASE_DOMAIN + (
+                self.envs["URL_TO_REDIRECT_ON_CLICK"]
+                if self.envs["URL_TO_REDIRECT_ON_CLICK"]
+                else "{0}/{0}".format(self.envs["GITHUB_ACTOR"])
+            )  # Let's handle this one first before we attempt to do everything thard.
 
-        _presence_ctx: dict[str, Union[int, str, slice]] = self._user_ctx[
-            "activities"
-        ]  # * Append any activity if there's one. We assure that this is dict even with len() == 0.
+            _presence_ctx: dict[str, Union[int, str, slice]] = self._user_ctx[
+                "activities"
+            ]  # * Append any activity if there's one. We assure that this is dict even with len() == 0.
 
-        _contains_activities: bool = bool(len(_presence_ctx))
+            _contains_activities: bool = bool(len(_presence_ctx))
 
-        if _contains_activities:  # Does _presence_ctx really contains something?
+            if _contains_activities:  # Does _presence_ctx really contains something?
 
-            # If yes, check what activity is it so that we could process other variables by locking into it.
-            # This is were we gonna check if preferred activity exist.
+                # If yes, check what activity is it so that we could process other variables by locking into it.
+                # This is were we gonna check if preferred activity exist.
 
-            for (
-                each_cls
-            ) in (
-                PreferredActivityDisplay
-            ):  # We cannot do key to value lookup, iterate through enums instead.
-                if self.envs["PREFERRED_ACTIVITY_TO_DISPLAY"] is each_cls:
-                    if (
-                        _presence_ctx.get(each_cls.name) is not None
-                    ):  # Is activity really exists?
-                        _preferred_activity = ActivityDictName(each_cls.name)
-                        _is_preferred_exists = True
-                        break
+                for (
+                    each_cls
+                ) in (
+                    PreferredActivityDisplay
+                ):  # We cannot do key to value lookup, iterate through enums instead.
+                    if self.envs["PREFERRED_ACTIVITY_TO_DISPLAY"] is each_cls:
+                        if (
+                            _presence_ctx.get(each_cls.name) is not None
+                        ):  # Is activity really exists?
+                            _preferred_activity = ActivityDictName(each_cls.name)
+                            _is_preferred_exists = True
+                            break
 
-            if (  # We need to better handle this one.
-                not _is_preferred_exists
-            ):  # If we fail to lookup, perform exporting keys and convert them to list to use the first activity (if there's any).
-                _fallback_activity: list[str] = list(_presence_ctx.keys())
+                if (  # We need to better handle this one.
+                    not _is_preferred_exists
+                ):  # If we fail to lookup, perform exporting keys and convert them to list to use the first activity (if there's any).
+                    _fallback_activity: list[str] = list(_presence_ctx.keys())
 
-                # Do _presence_ctx contain more than one? Let's assert that.
-                if not _fallback_activity:
-                    self.logger.warn(
-                        "There's are no other activities existing, even with the preferred activity! Fallback to Basic Badge Formation."
-                    )
-                else:
-                    _preferred_activity = ActivityDictName(_fallback_activity[0])
+                    # Do _presence_ctx contain more than one? Let's assert that.
+                    if not _fallback_activity:
+                        self.logger.warn(
+                            "There's are no other activities existing, even with the preferred activity! Fallback to Basic Badge Formation."
+                        )
+                    else:
+                        _preferred_activity = ActivityDictName(_fallback_activity[0])
 
-            self.logger.info(
-                f"Preferred Activity %s %s"
-                % (
-                    self.envs["PREFERRED_ACTIVITY_TO_DISPLAY"],
-                    "exists!"
-                    if _is_preferred_exists
-                    else f"does not exists. Using other activity such as {_preferred_activity}.",
-                )
-            )
-
-        else:
-            self.logger.warning(
-                "There's no activities detected by the time it was fetched."
-            )
-
-        # Check if we should append User's State instead of Activity State in the Subject.
-        _state_string = "%s_STRING" % (
-            _preferred_activity
-            if len(_preferred_activity)
-            else "%s_STATUS" % self._user_ctx["statuses"]["status"].name.upper()
-        )
-        _subject_output = (
-            BADGE_BASE_SUBJECT
-            if not _contains_activities and self.envs["STATIC_SUBJECT_STRING"] is None
-            else (
-                self.envs[  # ! Add Static Subject String. If that is included, disabled this condition.
-                    _state_string
-                    if self.envs["STATIC_SUBJECT_STRING"] is None
-                    else "STATIC_SUBJECT_STRING"
-                ]
-            )
-        )
-
-        # ! Keep in mind that the way how this was constructed was done under 3 different inlined parts. Hard to read but less of a mess.
-        # todo: For every _x_output, we have to know document it step by step.
-        # This part is where do we need to embed the state under Subject or Status.
-
-        # There are lot more conditions to consider to this point.
-        """
-		If there's no presence ctx and there's not
-		"""
-        self.logger.debug(_preferred_activity)
-
-        _seperator = (
-            (
-                ", "
-                if self.envs["STATUS_CONTEXT_SEPERATOR"] is None
-                else " %s " % self.envs["STATUS_CONTEXT_SEPERATOR"]
-            )
-            if (
-                self.envs["PREFERRED_PRESENCE_CONTEXT"]
-                is not ContextOnSubject.CONTEXT_DISABLED
-                or self.envs["TIME_DISPLAY_OUTPUT"]
-                is not PreferredTimeDisplay.TIME_DISABLED
-            )
-            and _contains_activities
-            else ""
-        )
-
-        _status_string = (
-            (  # # Appends Activity or User's State if `STATIC_SUBJECT_STRING` is None.
-                "%s " % self.envs[_state_string]
-                if self.envs["STATIC_SUBJECT_STRING"] is not None
-                else ""
-            )
-            + (
-                (  # # Appends User's State whenever _presence_ctx is zero or otherwise, append the activity's application name.
-                    self.envs[
-                        "%s_STATUS_STRING"
-                        % self._user_ctx["statuses"]["status"].name.upper()
-                    ]
-                )
-                if not _contains_activities
-                else _presence_ctx[_preferred_activity]["name"]
-            )
-            + (  # # Append the seperator. This one is condition-hell since we have to consider two other values and the state of the badge.
-                (
-                    _seperator  # ! Seperator #1
-                    + (
-                        _presence_ctx[_preferred_activity][
-                            "state"
-                            if self.envs["PREFERRED_PRESENCE_CONTEXT"]
-                            is ContextOnSubject.STATE
-                            else "details"
-                        ]
+                self.logger.info(
+                    f"Preferred Activity %s %s"
+                    % (
+                        self.envs["PREFERRED_ACTIVITY_TO_DISPLAY"],
+                        "exists!"
+                        if _is_preferred_exists
+                        else f"does not exists. Using other activity such as {_preferred_activity}.",
                     )
                 )
-                if _preferred_activity == PreferredActivityDisplay.RICH_PRESENCE.name
-                and self.envs["PREFERRED_PRESENCE_CONTEXT"]
-                is not ContextOnSubject.CONTEXT_DISABLED
-                else ""
-            )
-        )
-
-        if (
-            self.envs["TIME_DISPLAY_OUTPUT"] is not PreferredTimeDisplay.TIME_DISABLED
-            and _contains_activities
-        ):
-            _status_string += _seperator  # ! Seperator #2
-
-            # Handle if the preferred activity exists or otherwise.
-            _has_remaining: Union[None, str] = _presence_ctx[_preferred_activity][
-                "timestamps"
-            ].get("end")
-
-            _start_time: datetime = datetime.fromtimestamp(
-                int(_presence_ctx[_preferred_activity]["timestamps"]["start"]) / 1000
-            )
-            _running_time: timedelta = datetime.now() - _start_time
-
-            # Resolve.
-            if _has_remaining:
-                _end_time = (
-                    datetime.fromtimestamp(int(_has_remaining) / 1000) - _start_time
-                )
-
-                # ! Keep note, that this one is for Unspecified Activity (Spotify) only!!!
-                # # The development of that case will be on post, since I'm still doing most of the parts.
-                # For that case, we don't need to sterilize it.
-                if (
-                    _preferred_activity
-                    == PreferredActivityDisplay.UNSPECIFIED_ACTIVITY.name
-                ):
-                    _running_time = _running_time - timedelta(
-                        microseconds=_running_time.microseconds,
-                    )
-                    _end_time = _end_time - timedelta(
-                        microseconds=_end_time.microseconds
-                    )
-
-                    _status_string += f"{_running_time} / {_end_time}"
 
             else:
-                # # We can do the MINUTES_ONLY, SECONDS_ONLY and HOURS_ONLY in the future. But for now, its not a priority and its NotImplemented.
-                _parsed_time = int(_running_time.total_seconds() / 60)
-
-                # Calculate if some left over minutes can still be converted to hours.
-                _hours = 0
-                _minutes = 0
-                _seconds = 0
-
-                # * Timedelta() only returns seconds and microseconds. Sadly we have to the computation on our own.
-                while True:
-                    if _parsed_time / 60 >= 1:
-                        _hours += 1
-                        _parsed_time -= 60
-                        continue
-
-                    break
-
-                _minutes = _parsed_time
-
-                # Resolve time strings based on numbers.
-                # ! This costs us readibility.
-                for idx, each_time_string in enumerate(TIME_STRINGS):
-                    if self.envs["TIME_DISPLAY_SHORTHAND"]:
-                        TIME_STRINGS[idx] = each_time_string[0]
-
-                    # * We have to handle if we should append postfix 's' if the value for each time is greater than 1 or not.
-                    else:
-                        TIME_STRINGS[idx] = (
-                            each_time_string[:-1]
-                            if locals()[f"_{each_time_string}"] < 1
-                            else each_time_string
-                        )
-
-                self.logger.debug(
-                    f"Resolved Time Output: {_hours} %s {_minutes} %s {_seconds} seconds."
-                    % (TIME_STRINGS[0], TIME_STRINGS[1])
+                self.logger.warning(
+                    "There's no activities detected by the time it was fetched."
                 )
 
-                is_time_displayable: bool = _hours >= 1 or _minutes >= 1
+            # Check if we should append User's State instead of Activity State in the Subject.
+            _state_string = "%s_STRING" % (
+                _preferred_activity
+                if len(_preferred_activity)
+                else "%s_STATUS" % self._user_ctx["statuses"]["status"].name.upper()
+            )
+            _subject_output = (
+                BADGE_BASE_SUBJECT
+                if not _contains_activities and self.envs["STATIC_SUBJECT_STRING"] is None
+                else (
+                    self.envs[  # ! Add Static Subject String. If that is included, disabled this condition.
+                        _state_string
+                        if self.envs["STATIC_SUBJECT_STRING"] is None
+                        else "STATIC_SUBJECT_STRING"
+                    ]
+                )
+            )
 
-                _status_string += (
+            # ! Keep in mind that the way how this was constructed was done under 3 different inlined parts. Hard to read but less of a mess.
+            # todo: For every _x_output, we have to know document it step by step.
+            # This part is where do we need to embed the state under Subject or Status.
+
+            # There are lot more conditions to consider to this point.
+            """
+            If there's no presence ctx and there's not
+            """
+            self.logger.debug(_preferred_activity)
+
+            _seperator = (
+                (
+                    ", "
+                    if self.envs["STATUS_CONTEXT_SEPERATOR"] is None
+                    else " %s " % self.envs["STATUS_CONTEXT_SEPERATOR"]
+                )
+                if (
+                    self.envs["PREFERRED_PRESENCE_CONTEXT"]
+                    is not ContextOnSubject.CONTEXT_DISABLED
+                    or self.envs["TIME_DISPLAY_OUTPUT"]
+                    is not PreferredTimeDisplay.TIME_DISABLED
+                )
+                and _contains_activities
+                else ""
+            )
+
+            _status_output = (
+                (  # # Appends Activity or User's State if `STATIC_SUBJECT_STRING` is None.
+                    "%s " % self.envs[_state_string]
+                    if self.envs["STATIC_SUBJECT_STRING"] is not None
+                    else ""
+                )
+                + (
+                    (  # # Appends User's State whenever _presence_ctx is zero or otherwise, append the activity's application name.
+                        self.envs[
+                            "%s_STATUS_STRING"
+                            % self._user_ctx["statuses"]["status"].name.upper()
+                        ]
+                    )
+                    if not _contains_activities
+                    else _presence_ctx[_preferred_activity]["name"]
+                )
+                + (  # # Append the seperator. This one is condition-hell since we have to consider two other values and the state of the badge.
                     (
-                        (f"{_hours} %s" % TIME_STRINGS[0] if _hours >= 1 else "")
-                        + (" " if _hours and _minutes else "")
-                        + (f"{_minutes} %s" % TIME_STRINGS[1] if _minutes >= 1 else "")
+                        _seperator  # ! Seperator #1
                         + (
-                            f" %s"
-                            % self.envs[
-                                "TIME_DISPLAY_%s_OVERRIDE_STRING" % "ELAPSED"
-                                if not _has_remaining
-                                else "REMAINING"
+                            _presence_ctx[_preferred_activity][
+                                "state"
+                                if self.envs["PREFERRED_PRESENCE_CONTEXT"]
+                                is ContextOnSubject.STATE
+                                else "details"
                             ]
                         )
                     )
-                    if is_time_displayable
-                    else "Just started."
-                )
-
-            self.logger.debug(
-                f"Song is currently under {_running_time} / %s." % (_end_time)
-                if _has_remaining
-                else f"The application has been opened for {_running_time}."
-            )
-
-        self.logger.debug(f"Preferred Activity Context > {_preferred_activity}")
-        self.logger.debug(f"Subject Output > {_subject_output}")
-        self.logger.debug(f"State Output > {_state_string}")
-        self.logger.debug(f"Status Output > {_status_output}")
-        self.logger.debug(f"Final Output > {_subject_output} | {_status_string}")
-        # self.logger.debug(f"State String > {_state}")
-        # ! Since we are done with the construction of the output. It's time to manage the colors.
-
-        # I know that _state_string is similar to this case. But I want more control and its reasonable to re-implement, because its main focus was to display a string.
-
-        _status_color: ColorHEX = ColorHEX(
-(            self.envs[
-                "%s_COLOR" % _state_string.removesuffix("_STRING")
-                + (
-                    ""
-                    if _preferred_activity
-                    == PreferredActivityDisplay.RICH_PRESENCE.name
-                    else "_ACTIVITY"
-                    if _contains_activities
+                    if _preferred_activity == PreferredActivityDisplay.RICH_PRESENCE.name
+                    and self.envs["PREFERRED_PRESENCE_CONTEXT"]
+                    is not ContextOnSubject.CONTEXT_DISABLED
                     else ""
                 )
-            ]) if self.envs["STATIC_SUBJECT_STRING"] is not None else "" # Or black. It depends on what's gonna be the output.
-        )
+            )
 
-        _subject_color: ColorHEX = ColorHEX(
-            self.envs[
-                "%s_COLOR"
-                % (
-                    "%s_STATUS" % self._user_ctx["statuses"]["status"].name.upper()
-                    if _contains_activities or self.envs["STATIC_SUBJECT_STRING"] is None
-                    else _state_string.removesuffix("_STRING")
+            if (
+                self.envs["TIME_DISPLAY_OUTPUT"] is not PreferredTimeDisplay.TIME_DISABLED
+                and _contains_activities
+            ):
+                _status_output += _seperator  # ! Seperator #2
+
+                # Handle if the preferred activity exists or otherwise.
+                _has_remaining: Union[None, str] = _presence_ctx[_preferred_activity][
+                    "timestamps"
+                ].get("end")
+
+                _start_time: datetime = datetime.fromtimestamp(
+                    int(_presence_ctx[_preferred_activity]["timestamps"]["start"]) / 1000
                 )
-            ]
-        )
+                _running_time: timedelta = datetime.now() - _start_time
 
-        self.logger.debug(
-            f"Status Color: {_status_color} | Subject Color: {_subject_color}."
-        )
+                # Resolve.
+                if _has_remaining:
+                    _end_time = (
+                        datetime.fromtimestamp(int(_has_remaining) / 1000) - _start_time
+                    )
 
-        if self.envs["SHIFT_STATUS_ACTIVITY_COLORS"]:
-            _status_color, _subject_color = _subject_color, _status_color
+                    # ! Keep note, that this one is for Unspecified Activity (Spotify) only!!!
+                    # # The development of that case will be on post, since I'm still doing most of the parts.
+                    # For that case, we don't need to sterilize it.
+                    if (
+                        _preferred_activity
+                        == PreferredActivityDisplay.UNSPECIFIED_ACTIVITY.name
+                    ):
+                        _running_time = _running_time - timedelta(
+                            microseconds=_running_time.microseconds,
+                        )
+                        _end_time = _end_time - timedelta(
+                            microseconds=_end_time.microseconds
+                        )
 
+                        _status_output += f"{_running_time} / {_end_time}"
 
-        # At this point, construct the badge as fully as it is.
+                else:
+                    # # We can do the MINUTES_ONLY, SECONDS_ONLY and HOURS_ONLY in the future. But for now, its not a priority and its NotImplemented.
+                    _parsed_time = int(_running_time.total_seconds() / 60)
 
-        # BADGE_BASE_MARKDOWN.format(
+                    # Calculate if some left over minutes can still be converted to hours.
+                    _hours = 0
+                    _minutes = 0
+                    _seconds = 0
 
+                    # * Timedelta() only returns seconds and microseconds. Sadly we have to the computation on our own.
+                    while True:
+                        if _parsed_time / 60 >= 1:
+                            _hours += 1
+                            _parsed_time -= 60
+                            continue
 
-        #)
+                        break
 
-        # except KeyError as Err:  # To be enabled on the next commit.
-        #     self.logger.error(
-        #         f"Environment Processing has encountered an error. Please let the developer know about the following. | Info: {Err}"
-        #     )
-        #     os._exit(-1)
+                    _minutes = _parsed_time
 
-    # self.logger.info("Badge Metadata Preparation is done. Waiting for appending Discord's Data.")
+                    # Resolve time strings based on numbers.
+                    # ! This costs us readibility.
+                    for idx, each_time_string in enumerate(TIME_STRINGS):
+                        if self.envs["TIME_DISPLAY_SHORTHAND"]:
+                            TIME_STRINGS[idx] = each_time_string[0]
+
+                        # * We have to handle if we should append postfix 's' if the value for each time is greater than 1 or not.
+                        else:
+                            TIME_STRINGS[idx] = (
+                                each_time_string[:-1]
+                                if locals()[f"_{each_time_string}"] < 1
+                                else each_time_string
+                            )
+
+                    self.logger.debug(
+                        f"Resolved Time Output: {_hours} %s {_minutes} %s {_seconds} seconds."
+                        % (TIME_STRINGS[0], TIME_STRINGS[1])
+                    )
+
+                    is_time_displayable: bool = _hours >= 1 or _minutes >= 1
+
+                    _status_output += (
+                        (
+                            (f"{_hours} %s" % TIME_STRINGS[0] if _hours >= 1 else "")
+                            + (" " if _hours and _minutes else "")
+                            + (f"{_minutes} %s" % TIME_STRINGS[1] if _minutes >= 1 else "")
+                            + (
+                                f" %s"
+                                % self.envs[
+                                    "TIME_DISPLAY_%s_OVERRIDE_STRING" % "ELAPSED"
+                                    if not _has_remaining
+                                    else "REMAINING"
+                                ]
+                            )
+                        )
+                        if is_time_displayable
+                        else "Just started."
+                    )
+
+                self.logger.debug(
+                    f"Song is currently under {_running_time} / %s." % (_end_time)
+                    if _has_remaining
+                    else f"The application has been opened for {_running_time}."
+                )
+
+            self.logger.debug(f"Preferred Activity Context > {_preferred_activity}")
+            self.logger.debug(f"Subject Output > {_subject_output}")
+            self.logger.debug(f"State Output > {_state_string}")
+            self.logger.debug(f"Status Output > {_status_output}")
+            self.logger.debug(f"Final Output > {_subject_output} | {_status_output}")
+            # self.logger.debug(f"State String > {_state}")
+            # ! Since we are done with the construction of the output. It's time to manage the colors.
+
+            # I know that _state_string is similar to this case. But I want more control and its reasonable to re-implement, because its main focus was to display a string.
+
+            _status_color: ColorHEX = ColorHEX(
+                (
+                    self.envs[
+                        "%s_COLOR" % _state_string.removesuffix("_STRING")
+                        + (
+                            ""
+                            if _preferred_activity
+                            == PreferredActivityDisplay.RICH_PRESENCE.name
+                            else "_ACTIVITY"
+                            if _contains_activities
+                            else ""
+                        )
+                    ]
+                )
+                if self.envs["STATIC_SUBJECT_STRING"] is not None or _contains_activities
+                else BADGE_NO_COLOR_DEFAULT
+            )
+
+            if _status_color.startswith("#"):
+                    _status_color = ColorHEX(_status_color[1:])
+
+            _subject_color: ColorHEX = ColorHEX(
+                self.envs[
+                    "%s_COLOR"
+                    % (
+                        "%s_STATUS" % self._user_ctx["statuses"]["status"].name.upper()
+                        if _contains_activities
+                        or self.envs["STATIC_SUBJECT_STRING"] is None
+                        else _state_string.removesuffix("_STRING")
+                    )
+                ]
+            )
+            if _subject_color.startswith("#"):
+                    _subject_color = ColorHEX(_subject_color[1:])
+
+            # Sterilization for HEX Codes.
+            for each_colors in [_status_color, _subject_color]:
+                    self.logger.debug(each_colors)
+
+            self.logger.debug(
+                f"Status Color: {_status_color} | Subject Color: {_subject_color}."
+            )
+
+            if self.envs["SHIFT_STATUS_ACTIVITY_COLORS"]:
+                _status_color, _subject_color = _subject_color, _status_color
+
+            # At this point, construct the badge as fully as it is.
+
+            constructed_url: BadgeStructure = BadgeStructure(
+                f"{BADGE_BASE_URL}{quote(_subject_output)}/{quote(_status_output)}?color={_subject_color}&labelColor={_status_color}&icon={BADGE_ICON}"
+            )
+            # status_part : BadgeStructure = BadgeStructure(BADGE_BASE_URL + quote(_subject_output) + "/" + quote(_status_output) + "?" + "color=" + "&labelColor="+ "&icon=" + BADGE_ICON)
+
+            final_output = BADGE_BASE_MARKDOWN.format(
+                "Test",
+                constructed_url,
+                _redirect_url,
+            )
+
+            self.logger.debug(f"The Badge URL is generated. Link: {final_output}")
+
+            self.logger.info("Badge Metadata Preparation is done. Waiting for appending Discord's Data.")
+
+        # todo: Remember to make exceptions beautiful.
+        except KeyError as Err:
+            self.logger.error(
+                f"Environment Processing has encountered an error. Please let the developer know about the following. | Info: {Err}"
+            )
+            os._exit(-1)

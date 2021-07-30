@@ -29,7 +29,7 @@ inputs:
     default: ${{ github.repository }}
     required: false
 
-  REDIRECT_TO_URL_ON_CLICK:
+  URL_TO_REDIRECT_ON_CLICK:
     description: "The URL to point when the badge has been clicked."
     default: ${{ github.repository }}
     required: false

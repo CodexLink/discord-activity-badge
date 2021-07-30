@@ -80,7 +80,7 @@ These inputs are required in order to run the Docker Container.
 `DISCORD_BOT_TOKEN` | `str` (**Required**) | The token of your bot from the Discord's Developer Page. Note that, you have to use your own bot! Go check [Discord Developers](https://discord.com/developers/).
 `DISCORD_USER_ID` | `int` (**Required**) | An integer ID used to identify you in Discord. This does not associate your name and discriminator, so you are fine.
 `PROFILE_REPOSITORY` | `str`: `GITHUB_ACTOR/GITHUB_ACTOR` | The repository from where the commits will be pushed. Fill this up  when you are indirectly deploying the script under different repository.
-`REDIRECT_TO_URL_ON_CLICK` | `str`: `PROFILE_REPOSITORY` value. | The URL to point when the badge has been clicked. |
+`URL_TO_REDIRECT_ON_CLICK` | `str`: `PROFILE_REPOSITORY` value. | The URL to point when the badge has been clicked. |
 `WORKFLOW_TOKEN` | `str` (**Required**) | The token of the Github Workflow Instance used to authenticate commits deployed by the script. Fill this up if you want to test locally so that you aren't going to be rate limited.
 
 > Parameters that is required has to be explicitly stated in the workflow. Not resolving these parameters will lead to an error.
@@ -100,6 +100,8 @@ The script offers extensibility and customization that allows you to render mult
 The following badges are the base structure that will be utilized when further parameters are stated as enabled.
 For every activity, there are lots of possible combinations that can be combined with the following configurations. Keep in mind that, if some badges failed to load, please reload again as the browser will cache the output on the next visit / reload. **Hard Reload** if persisting.
 
+<div align="center">
+
 [![Example Online](https://badgen.net/badge/Discord%20Activity/Currently%20Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 [![Example Idle](https://badgen.net/badge/Discord%20Activity/Currently%20Idle/yellow?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 [![Example DND](https://badgen.net/badge/Discord%20Activity/Do%20Not%20Disturb/red?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
@@ -114,6 +116,8 @@ For every activity, there are lots of possible combinations that can be combined
 [![Example BotStyle + Watching + Do-Not-Disturb + Elapsed + NotShifted + CustomColor](https://badgen.net/badge/Watching%20Data/Client%20WebSocket%20Server,%20Servicing%20People%20for%20about%201024%20Minutes!/blue?icon=discord&labelColor=green)](https://github.com/CodexLink/discord-activity-badge)
 [![Example UpTimeBot + NoCustomColor](https://badgen.net/badge/ServerClient%20Discord/Currently%20Online.%20Servicing%202019%20Servers%20for%2089%20hours!/orange?icon=discord)](https://github.com/CodexLink/discord-activity-badge) <!-- ! I'm not sure if this is possible with the Bot's Presence. Will further investigate later. -->
 [![Example Playing Game + CustomActivityColor](https://badgen.net/badge/Currently%20Playing%20Game/Honkai%20Impact%203,%206%20hours%20elapsed./CA8216?icon=discord&labelColor=green)](https://github.com/CodexLink/discord-activity-badge)
+
+</div>
 
 #### Colors and Intentions
 
@@ -202,6 +206,7 @@ Here contains a list of resources that I have used in any forms that contributed
 - https://stackoverflow.com/questions/9437726/how-to-get-the-value-of-a-variable-given-its-name-in-a-string
 - https://stackoverflow.com/a/18470628/5353223
 - https://stackoverflow.com/a/51191130/5353223
+- https://stackoverflow.com/a/65359924/5353223
 
 > This section is still incomplete. I will put more and format it later.
 
@@ -217,4 +222,4 @@ Here contains a list of resources that I have used in any forms that contributed
   http://www.apache.org/licenses/LICENSE-2.0
 ```
 
-  You may see the [LICENSE.md](https://github.com/CodexLink/discord-rich-presence-activity-badge/blob/main/LICENSE) file for more information.
+You may see the [LICENSE.md](https://github.com/CodexLink/discord-rich-presence-activity-badge/blob/main/LICENSE) file for more information.
