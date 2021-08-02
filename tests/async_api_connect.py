@@ -1,30 +1,30 @@
 import aiohttp
 import asyncio
+from typing import Coroutine
 
 async def fetch(session, url):
 	print("Getting {}...".format(url))
 
 	resp = await session.get(url)
 	text = await resp.text()
-	print(dir(resp))
-	print(resp)
 	return "{}: Got {} bytes".format(url, len(text))
 
 async def main():
-	__session = aiohttp.ClientSession()
+	session = aiohttp.ClientSession()
 
-	__endpoints = ["https://github.com", "https://badgen.net", "https://google.com", "https://facebook.com"]
-	tasks = []
+	endpoints = ["https://github.com", "https://badgen.net", "https://google.com", "https://facebook.com"]
+	tasks: list[Coroutine] = []
 
-	for each_endpoints in __endpoints:
-		tasks.append(fetch(__session, each_endpoints))
+	for each_endpoints in endpoints:
+		print("Pushed %s" % each_endpoints)
+		tasks.append(fetch(session, each_endpoints))
 
 	print(f"Tasks should contain the following: {tasks}")
 
 	for task in asyncio.as_completed(tasks):
-		print(await task)
+		print("Result > " +  await task)
 
-	await __session.close()
+	await session.close()
 
 	return "Done."
 

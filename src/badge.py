@@ -43,11 +43,12 @@ from elements.constants import (
 )
 from elements.typing import (
     ActivityDictName,
+    BadgeElements,
     BadgeStructure,
     Base64,
     ColorHEX,
     HttpsURL,
-    ResolvedHTTPResponse,
+    ResolvedClientResponse,
 )
 from base64 import b64decode, b64encode
 from urllib.parse import quote
@@ -59,8 +60,8 @@ class BadgeConstructor:
     logger: Logger
     envs: Any
     _user_ctx: DISCORD_USER_STRUCT
-
     """
+
     An async-class module that generate badge over-time.
     """
 
@@ -87,7 +88,7 @@ class BadgeConstructor:
 
         return _out
 
-    async def check_badge_identifier(self, readme_ctx: Base64) -> None:
+    async def check_and_update_badge(self, readme_ctx: Base64) -> None:
         self.logger.info("Converting README to Markdown File...")
         _readme_decode: Future = ensure_future(
             self._handle_b64(Base64Actions.DECODE_B64_TO_FILE, readme_ctx)
@@ -106,8 +107,10 @@ class BadgeConstructor:
                 )
 
                 if _match:
+                    contains_matched: bool = _match.group("badge_identifier")
                     self._is_badge_identified: bool = (
-                        _match.group("badge_identifier") is None
+                        contains_matched is None
+                        or contains_matched == self.envs["BADGE_IDENTIFIER_NAME"]
                     )
                     # # PLEASE NOTE THAT BADGE_IDENTIFIER_NAME shouldn't be required as how we handle the condition here. Evaluate the condition...
                     self.logger.info(
@@ -121,12 +124,25 @@ class BadgeConstructor:
                         % self.envs["BADGE_IDENTIFIER_NAME"]
                     )
 
+                    await wait([self.constructed_badge])
+
+
             except IndexError as Err:
                 self.logger.warn(
                     f"The RegEx can't find any badge with Identifier in README. If you think that this is a bug then please let the developer know. | Info: {Err}"
                 )
 
-    async def construct_badge(self) -> None:
+    async def _replace_content(self, constructed_badge: BadgeStructure) -> Any:
+        if not self._is_badge_identified:
+            self.logger.info(
+                "Badge is not found, will append on the top of the README.md."
+            )
+
+            # with open
+
+    async def construct_badge(
+        self,
+    ) -> None:  # todo: Do something about how we pass the data to commit it.
         """
         For every possible arguments declared in actions.yml, the output of the badge will change.
 
@@ -168,8 +184,8 @@ class BadgeConstructor:
         """
 
         # These variables shouldn't be de-alloc'd until we finish the whole function, not just from the try-except scope.
-        _subject_output: BadgeStructure = BadgeStructure("")
-        _status_output: BadgeStructure = BadgeStructure("")
+        _subject_output: Union[BadgeStructure, BadgeElements] = BadgeStructure("")
+        _status_output: Union[BadgeStructure, BadgeElements] = BadgeStructure("")
         _preferred_activity: ActivityDictName = ActivityDictName("")
         _is_preferred_exists: bool = False
 
@@ -179,6 +195,12 @@ class BadgeConstructor:
                 if self.envs["URL_TO_REDIRECT_ON_CLICK"]
                 else "{0}/{0}".format(self.envs["GITHUB_ACTOR"])
             )  # Let's handle this one first before we attempt to do everything thard.
+
+            self.logger.info("Other elements preloaded, waiting for Discord Client to finish before proceeding...")
+
+            await wait([self._discord_client_task])  # Checkpoint.
+
+            self.logger.info("Discord Client is done. Attempting to process other badge elements...")
 
             _presence_ctx: dict[str, Union[int, str, slice]] = self._user_ctx[
                 "activities"
@@ -240,7 +262,8 @@ class BadgeConstructor:
             )
             _subject_output = (
                 BADGE_BASE_SUBJECT
-                if not _contains_activities and self.envs["STATIC_SUBJECT_STRING"] is None
+                if not _contains_activities
+                and self.envs["STATIC_SUBJECT_STRING"] is None
                 else (
                     self.envs[  # ! Add Static Subject String. If that is included, disabled this condition.
                         _state_string
@@ -258,9 +281,7 @@ class BadgeConstructor:
             """
             If there's no presence ctx and there's not
             """
-            self.logger.debug(_preferred_activity)
-
-            _seperator = (
+            _seperator: BadgeElements = BadgeElements(
                 (
                     ", "
                     if self.envs["STATUS_CONTEXT_SEPERATOR"] is None
@@ -304,7 +325,8 @@ class BadgeConstructor:
                             ]
                         )
                     )
-                    if _preferred_activity == PreferredActivityDisplay.RICH_PRESENCE.name
+                    if _preferred_activity
+                    == PreferredActivityDisplay.RICH_PRESENCE.name
                     and self.envs["PREFERRED_PRESENCE_CONTEXT"]
                     is not ContextOnSubject.CONTEXT_DISABLED
                     else ""
@@ -312,7 +334,8 @@ class BadgeConstructor:
             )
 
             if (
-                self.envs["TIME_DISPLAY_OUTPUT"] is not PreferredTimeDisplay.TIME_DISABLED
+                self.envs["TIME_DISPLAY_OUTPUT"]
+                is not PreferredTimeDisplay.TIME_DISABLED
                 and _contains_activities
             ):
                 _status_output += _seperator  # ! Seperator #2
@@ -323,7 +346,8 @@ class BadgeConstructor:
                 ].get("end")
 
                 _start_time: datetime = datetime.fromtimestamp(
-                    int(_presence_ctx[_preferred_activity]["timestamps"]["start"]) / 1000
+                    int(_presence_ctx[_preferred_activity]["timestamps"]["start"])
+                    / 1000
                 )
                 _running_time: timedelta = datetime.now() - _start_time
 
@@ -347,7 +371,7 @@ class BadgeConstructor:
                             microseconds=_end_time.microseconds
                         )
 
-                        _status_output += f"{_running_time} / {_end_time}"
+                        _status_output += f"{_running_time} of {_end_time}"
 
                 else:
                     # # We can do the MINUTES_ONLY, SECONDS_ONLY and HOURS_ONLY in the future. But for now, its not a priority and its NotImplemented.
@@ -394,7 +418,11 @@ class BadgeConstructor:
                         (
                             (f"{_hours} %s" % TIME_STRINGS[0] if _hours >= 1 else "")
                             + (" " if _hours and _minutes else "")
-                            + (f"{_minutes} %s" % TIME_STRINGS[1] if _minutes >= 1 else "")
+                            + (
+                                f"{_minutes} %s" % TIME_STRINGS[1]
+                                if _minutes >= 1
+                                else ""
+                            )
                             + (
                                 f" %s"
                                 % self.envs[
@@ -409,21 +437,22 @@ class BadgeConstructor:
                     )
 
                 self.logger.debug(
-                    f"Song is currently under {_running_time} / %s." % (_end_time)
+                    f"Application is identified to be running with remaining time. And is currently under {_running_time} / %s."
+                    % (_end_time)
                     if _has_remaining
-                    else f"The application has been opened for {_running_time}."
+                    else f"The application is running endless and has been opened for {_running_time}."
                 )
 
-            self.logger.debug(f"Preferred Activity Context > {_preferred_activity}")
+            self.logger.debug(
+                f"Activity Context (Chosen or Preferred) > {_preferred_activity}"
+            )
             self.logger.debug(f"Subject Output > {_subject_output}")
             self.logger.debug(f"State Output > {_state_string}")
             self.logger.debug(f"Status Output > {_status_output}")
             self.logger.debug(f"Final Output > {_subject_output} | {_status_output}")
-            # self.logger.debug(f"State String > {_state}")
+
             # ! Since we are done with the construction of the output. It's time to manage the colors.
-
-            # I know that _state_string is similar to this case. But I want more control and its reasonable to re-implement, because its main focus was to display a string.
-
+            # * I know that _state_string is similar to this case. But I want more control and its reasonable to re-implement, because its main focus was to display a string.
             _status_color: ColorHEX = ColorHEX(
                 (
                     self.envs[
@@ -431,19 +460,18 @@ class BadgeConstructor:
                         + (
                             ""
                             if _preferred_activity
-                            == PreferredActivityDisplay.RICH_PRESENCE.name
-                            else "_ACTIVITY"
-                            if _contains_activities
+                            == PreferredActivityDisplay.RICH_PRESENCE.name or _contains_activities
                             else ""
                         )
                     ]
                 )
-                if self.envs["STATIC_SUBJECT_STRING"] is not None or _contains_activities
+                if self.envs["STATIC_SUBJECT_STRING"] is not None
+                or _contains_activities
                 else BADGE_NO_COLOR_DEFAULT
             )
 
             if _status_color.startswith("#"):
-                    _status_color = ColorHEX(_status_color[1:])
+                _status_color = ColorHEX(_status_color[1:])
 
             _subject_color: ColorHEX = ColorHEX(
                 self.envs[
@@ -457,11 +485,7 @@ class BadgeConstructor:
                 ]
             )
             if _subject_color.startswith("#"):
-                    _subject_color = ColorHEX(_subject_color[1:])
-
-            # Sterilization for HEX Codes.
-            for each_colors in [_status_color, _subject_color]:
-                    self.logger.debug(each_colors)
+                _subject_color = ColorHEX(_subject_color[1:])
 
             self.logger.debug(
                 f"Status Color: {_status_color} | Subject Color: {_subject_color}."
@@ -471,25 +495,21 @@ class BadgeConstructor:
                 _status_color, _subject_color = _subject_color, _status_color
 
             # At this point, construct the badge as fully as it is.
-
             constructed_url: BadgeStructure = BadgeStructure(
                 f"{BADGE_BASE_URL}{quote(_subject_output)}/{quote(_status_output)}?color={_subject_color}&labelColor={_status_color}&icon={BADGE_ICON}"
             )
-            # status_part : BadgeStructure = BadgeStructure(BADGE_BASE_URL + quote(_subject_output) + "/" + quote(_status_output) + "?" + "color=" + "&labelColor="+ "&icon=" + BADGE_ICON)
 
             final_output = BADGE_BASE_MARKDOWN.format(
-                "Test",
+                self.envs["BADGE_IDENTIFIER_NAME"],
                 constructed_url,
                 _redirect_url,
             )
 
-            self.logger.debug(f"The Badge URL is generated. Link: {final_output}")
-
-            self.logger.info("Badge Metadata Preparation is done. Waiting for appending Discord's Data.")
+            self.logger.info(f"The Badge URL has been generated. Link: {final_output}")
 
         # todo: Remember to make exceptions beautiful.
         except KeyError as Err:
             self.logger.error(
-                f"Environment Processing has encountered an error. Please let the developer know about the following. | Info: {Err}"
+                f"Environment Processing has encountered an error. Please let the developer know about the following. | Info: {Err} at line {Err.__traceback__.tb_lineno}."
             )
             os._exit(-1)

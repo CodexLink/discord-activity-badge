@@ -207,6 +207,11 @@ Here contains a list of resources that I have used in any forms that contributed
 - https://stackoverflow.com/a/18470628/5353223
 - https://stackoverflow.com/a/51191130/5353223
 - https://stackoverflow.com/a/65359924/5353223
+- https://stackoverflow.com/questions/33128325/how-to-set-class-attribute-with-await-in-init.
+- https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
+- https://blog.baeke.info/2021/04/09/building-a-github-action-with-docker/
+- https://dev.to/dtinth/caching-docker-builds-in-github-actions-which-approach-is-the-fastest-a-research-18ei
+- https://github.com/dtinth/github-actions-docker-layer-caching-poc
 
 > This section is still incomplete. I will put more and format it later.
 

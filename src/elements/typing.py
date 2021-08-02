@@ -22,11 +22,14 @@ if __name__ == "__main__":
 
 from typing import NewType as _N
 
+ActivityDictName = _N("ActivityDictName", str)
+BadgeElements = _N("BadgeElements", str)
+BadgeStructure = _N("BadgeStructure", str)
+Base64 = _N("Base64", str)
+ClientResponseOK = _N("ClientResponseOK", bool)
+ClientResponseStatus = _N("ClientResponseStatus", int)
+ColorHEX = _N("ColorHEX", str)
 HttpsURL = _N("HttpsURL", str)
 HttpsURLPath = _N("HttpsURLPath", str)
-Base64 = _N("Base64", str)
-ResolvedHTTPResponse = _N("ResolvedHTTPResponse", dict)
-BadgeStructure = _N("BadgeStructure", str)
 RegExp = _N("RegExp", str)
-ColorHEX = _N("ColorHEX", str)
-ActivityDictName = _N("ActivityDictName", str)
+ResolvedClientResponse = _N("ResolvedClientResponse", dict)

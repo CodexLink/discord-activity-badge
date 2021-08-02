@@ -24,33 +24,31 @@ if __name__ == "__main__":
     raise IsolatedExecNotAllowed
 
 from datetime import datetime
-from enum import Enum, auto, IntEnum, unique
+from enum import Enum, IntEnum, auto, unique
+from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from time import strftime
 from typing import Any, Final, TypedDict, Union
 
 from discord import Intents, Status
 
-from .typing import BadgeStructure, HttpsURL, RegExp, ColorHEX
-
-# # Argument Class Container Metadata
-ARG_PLAIN_CONTAINER_NAME: Final[str] = "ArgumentsContainer"
+from .typing import BadgeElements, BadgeStructure, ColorHEX, HttpsURL, RegExp
 
 # # Badge Generator Constants
 BADGE_BASE_URL: Final[HttpsURL] = HttpsURL("https://badgen.net/badge/")
 BADGE_REDIRECT_BASE_DOMAIN: Final[HttpsURL] = HttpsURL("https://github.com/")
-BADGE_ICON: Final[str] = "discord"
-BADGE_BASE_SUBJECT: Final[str] = "Discord User"
-BADGE_REGEX_STRUCT_IDENTIFIER: Final[RegExp] = RegExp(
-    r"(?P<Delimiter>\[\!\[)(?P<badge_identifier>([a-zA-Z0-9_()-]+(\s|\b)){1,6})\]\((?P<badge_url>https://[a-z]+.[a-z]{2,4})/(?P<entrypoint>\w+)/(?P<subject_badge>[^...]+\b)/(?P<status_badge>[^?]+)\?(?P<params>[^)]+)\)\]\((?P<redirect_url>https://[a-z]+.[a-z]{2,4}/[^)]+)\)"
-)
 BADGE_NO_COLOR_DEFAULT: Final[ColorHEX] = ColorHEX("#434343")
+BADGE_ICON: Final[BadgeElements] = BadgeElements("discord")
+BADGE_BASE_SUBJECT: Final[BadgeElements] = BadgeElements("Discord User")
+
 BADGE_BASE_MARKDOWN: BadgeStructure = BadgeStructure(
     "[![{0}]({1})]({2})"
 )  # todo: Document this one later.
 
+BADGE_REGEX_STRUCT_IDENTIFIER: Final[RegExp] = RegExp(
+    r"(?P<Delimiter>\[\!\[)(?P<badge_identifier>([a-zA-Z0-9_()-]+(\s|\b)){1,6})\]\((?P<badge_url>https://[a-z]+.[a-z]{2,4})/(?P<entrypoint>\w+)/(?P<subject_badge>[^...]+\b)/(?P<status_badge>[^?]+)\?(?P<params>[^)]+)\)\]\((?P<redirect_url>https://[a-z]+.[a-z]{2,4}/[^)]+)\)"
+)
+
 # # Base64 Actions and Related Classiications
-
-
 @unique
 class Base64Actions(IntEnum):
     DECODE_B64_TO_FILE = auto()
@@ -60,7 +58,7 @@ class Base64Actions(IntEnum):
 B64_ACTION_FILENAME: str = "._temp"
 
 # # Classified Arguments Information
-ARG_CONSTANTS: Final[dict[str, str]] = {  # Cannot evaluate less.
+ARG_CONSTANTS: Final[dict[str, str]] = {
     "ENTRY_PARSER_DESC": "An application that runs under workflow to evaluate User's Discord Activity Presence to Displayable Badge for their README.md.",
     "ENTRY_PARSER_EPILOG": "The use of arguments are intended for debugging purposes only. Please be careful.",
     "HELP_DESC_DRY_RUN": "Runs the whole script without commiting changes to external involved factors (ie. README.md)",
@@ -75,6 +73,34 @@ ARG_CONSTANTS: Final[dict[str, str]] = {  # Cannot evaluate less.
 _date_on_exec: datetime = datetime.now()
 _eval_date_on_exec: str = _date_on_exec.strftime("%m/%d/%y — %I:%M:%S %p")
 MAXIMUM_RUNTIME_SECONDS = 10
+
+# # Enumerations
+@unique
+class ContextOnSubject(IntEnum):
+    CONTEXT_DISABLED = auto()
+    DETAILS = auto()
+    STATE = auto()
+
+class ExitReturnCodes(IntEnum): # todo: Add exception that can weak refer to EXIT_SUCCESS despite different return code.
+    EXCEPTION_EXIT = -1
+    EXIT_HELP = 0
+    EXIT_SUCCESS = 0
+
+@unique
+class GithubRunnerActions(IntEnum):
+    TEST_CONN_APIS = auto()
+    FETCH_README = auto()
+    UPDATE_README = auto()
+    COMMIT_CHANGES = auto()
+
+
+@unique
+class LoggerLevelCoverage(IntEnum):
+    DEBUG = DEBUG
+    INFO = INFO
+    WARNING = WARNING
+    ERROR = ERROR
+    CRITICAL = CRITICAL
 
 
 @unique
@@ -96,13 +122,14 @@ class PreferredTimeDisplay(IntEnum):
 
 
 @unique
-class ContextOnSubject(IntEnum):
-    CONTEXT_DISABLED = auto()
-    DETAILS = auto()
-    STATE = auto()
+class ResponseTypes(IntEnum):
+    RESPONSE = 0
+    RESPONSE_STATUS = 1
+    IS_OKAY = 2
 
 
 """
+    # Map Structure
     The following constants is a mapped dictionary structure. It will be used to evaluate environment variable's values
     and serialize as they respect the `expected_type` per fields. A `fallback_value` will be used if a certain function fails
     to serialize a certain value. Keep in mind that fallback is supported for optional inputs only! Required inputs will error
@@ -305,8 +332,7 @@ ENV_STRUCT_CONSTRAINTS: Final[
     },
 }
 
-# # Discord Client Container Metadata
-DISCORD_DATA_CONTAINER: Final[str] = "UserStatusContainer"
+# # Discord User Client Structure
 
 
 class DISCORD_USER_STRUCT(TypedDict):
@@ -347,22 +373,6 @@ LOGGER_FILENAME: Final[str] = (
 LOGGER_OUTPUT_FORMAT: Final[
     str
 ] = "[%(relativeCreated)d ms, %(levelname)s\t]\tat %(module)s.py:%(lineno)d -> %(message)s"
-
-# # REST Classifications in Enum
-@unique
-class ResponseTypes(IntEnum):
-    RESPONSE = 0
-    RESPONSE_STATUS = 1
-    IS_OKAY = 2
-
-
-@unique
-class GithubRunnerActions(IntEnum):
-    TEST_CONN_APIS = auto()
-    AUTH_GITHUB_API = auto()
-    FETCH_README = auto()
-    UPDATE_README = auto()
-    COMMIT_CHANGES = auto()
 
 
 # # Time Constants

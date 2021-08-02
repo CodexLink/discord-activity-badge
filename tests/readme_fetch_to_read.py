@@ -2,18 +2,17 @@ import aiohttp
 import asyncio
 import os
 from dotenv import find_dotenv, load_dotenv
-from elements.constants import ROOT_LOCATION, ENV_FILENAME
 async def main():
 
 	load_dotenv(
 		find_dotenv(
-				filename=ROOT_LOCATION + ENV_FILENAME,
+				filename="../.env",
 				raise_error_if_not_found=True,
 		)
 	)
 
 	session = aiohttp.ClientSession()
-	base_auth = await session.get('https://api.github.com/', auth=aiohttp.BasicAuth("CodexLink", os.environ["INPUT_WORKFLOW_TOKEN"]))
+	base_auth = await session.get('https://api.github.com/', **{"auth": aiohttp.BasicAuth("CodexLink", os.environ["INPUT_WORKFLOW_TOKEN"])})
 
 	print("%s Left to Rate Limited." % base_auth.headers["X-RateLimit-Remaining"])
 	print(f"%s of Requests Max." % base_auth.headers["X-RateLimit-Limit"], end="\n\n")
@@ -46,18 +45,18 @@ async def main():
 
 	# # Make Changes by Identifying `identifier in the badge`
 	# ! Keep note that, we can only modify atleast one of the badge if ever this is one existing. First Come, First Serve.
-	from re import compile, MULTILINE
-	from elements.constants import BADGE_REGEX_STRUCT_IDENTIFIER
+	# from re import compile, MULTILINE
+	# from src.elements.constants import BADGE_REGEX_STRUCT_IDENTIFIER
 
-	compiled_regex = compile(BADGE_REGEX_STRUCT_IDENTIFIER) # Match() will be used to get only the beginning. We wouldn't want to match it per line. Single Occurence only.
+	# compiled_regex = compile(BADGE_REGEX_STRUCT_IDENTIFIER) # Match() will be used to get only the beginning. We wouldn't want to match it per line. Single Occurence only.
 
-	with open("base64_output.md", "r") as _:
-		__ = _.read()
-		print("Open Output > ", __)
-		pattern_matched = compiled_regex.search(__, MULTILINE)
-		print("Regex Pattern > ", pattern_matched)
+	# with open("base64_output.md", "r") as _:
+	# 	__ = _.read()
+	# 	print("Open Output > ", __)
+	# 	pattern_matched = compiled_regex.search(__, MULTILINE)
+	# 	print("Regex Pattern > ", pattern_matched)
 
-	await session.close()
+	# await session.close()
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

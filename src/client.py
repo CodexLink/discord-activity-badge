@@ -20,7 +20,7 @@ if __name__ == "__main__":
     raise IsolatedExecNotAllowed
 
 import os
-from asyncio import ensure_future
+from asyncio import create_task, ensure_future
 from typing import Any, TypedDict, cast, List, Optional, Union
 
 from discord import Activity, ActivityType, ClientUser, Member, Streaming
@@ -34,7 +34,6 @@ from discord.user import User
 from elements.constants import (
     BLUEPRINT_INIT_VALUES,
     DISCORD_CLIENT_INTENTS,
-    DISCORD_DATA_CONTAINER,
     DISCORD_USER_STRUCT,
     PreferredActivityDisplay,
 )
@@ -72,29 +71,13 @@ class DiscordClientHandler(DiscordClient):
                         (3.b) The use of asyncio.gather() or Queue() won't work here because we need to wait for the inner scope function to finish first. Can't do asynchronously on this space.
 
         """
-        # ensure_future(super().__ainit__())  # * ?? [a, b], Subject to change later.
+
+
         self.logger.debug(
-            f"Is WebSocket currently ratelimited??? > {self.is_ws_ratelimited()}"
+            f"Connection to Discord via WebSocket is success! | Rate-Limited: self.is_ws_ratelimited()"
         )
 
-        self.logger.info(
-            f"Discord Client {self.user} is ready for evaluation of user's activity presence."
-        )
-
-        # I cannot do reference by variable of this blank blueprint because TypedDict and other elements associated to it is complaining about it.
-        self._user_ctx: DISCORD_USER_STRUCT = (
-            BLUEPRINT_INIT_VALUES
-            # {
-            #     "user": {},
-            #     "id": 0,
-            #     "name": "",
-            #     "discriminator": "",
-            #     "status": {},
-            #     "activities": {},
-            # }
-        )
-
-        ensure_future(
+        create_task(
             (
                 self.change_presence(
                     status=Status.online,
@@ -104,9 +87,20 @@ class DiscordClientHandler(DiscordClient):
                 )
             )
         )  # * (2)
+
         self.logger.info(
             f"Pushed Rich Presence Context Discord API to Display {self.user}'s status."
         )
+
+        self.logger.info(
+            f"Discord Client {self.user} is ready for evaluation of user's activity presence."
+        )
+
+        # I cannot do reference by variable of this blank blueprint because TypedDict and other elements associated to it is complaining about it.
+        self._user_ctx: DISCORD_USER_STRUCT = (
+            BLUEPRINT_INIT_VALUES
+        )
+
 
         self.logger.info(f"Fetching Discord User's Data.")  # todo: Annotate this later.
 
@@ -225,7 +219,7 @@ class DiscordClientHandler(DiscordClient):
                 # * (3)
                 for idx, each_activities in enumerate(_fetched_member.activities):
                     self.logger.debug(
-                        f"Activity #{idx + 1} of {len(_fetched_member.activities)} | {each_activities}"
+                        f"Activity {idx + 1} of {len(_fetched_member.activities)} | {each_activities}"
                     )
 
                     if not each_activities.__class__.__name__ in _activity_picked:
@@ -234,10 +228,8 @@ class DiscordClientHandler(DiscordClient):
                         )
 
                         # ! I can't type `__activity_ctx` for because BaseActivity and Spotify doesn't have `to_dict` function.
-                        __activity_ctx: dict[Union[str, dict[Any, Any]], Any] = each_activities.to_dict() # type: ignore
-                        __cls_name: str = (
-                            each_activities.__class__.__name__
-                        )
+                        __activity_ctx: dict[Union[str, dict[Any, Any]], Any] = each_activities.to_dict()  # type: ignore
+                        __cls_name: str = each_activities.__class__.__name__
 
                         __resolved_activity_name = (
                             PreferredActivityDisplay.CUSTOM_ACTIVITY.name
@@ -281,7 +273,7 @@ class DiscordClientHandler(DiscordClient):
                 "Step 2 of 2 | Finished fetching discord user's rich presence and other activities."
             )
             self.logger.debug(
-                f"Client container ({DISCORD_DATA_CONTAINER}) now contains the following: {self._user_ctx}"
+                f"User Context Container now contains the following: {self._user_ctx}"
             )
 
     async def __exit_client_on_error(self, err_message: str) -> None:
