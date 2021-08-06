@@ -20,7 +20,7 @@ if __name__ == "__main__":
     raise IsolatedExecNotAllowed
 
 import os
-from asyncio import ensure_future, Future, sleep as asyncio_sleep, wait
+from asyncio import create_task, ensure_future, Future, sleep as asyncio_sleep, wait
 from re import compile, Match, MULTILINE, Pattern
 from typing import Any, Optional, Union
 from datetime import datetime, timedelta
@@ -37,6 +37,7 @@ from elements.constants import (
     BADGE_BASE_MARKDOWN,
     ContextOnSubject,
     DISCORD_USER_STRUCT,
+    GithubRunnerActions,
     PreferredActivityDisplay,
     PreferredTimeDisplay,
     TIME_STRINGS,
@@ -45,9 +46,12 @@ from elements.typing import (
     ActivityDictName,
     BadgeElements,
     BadgeStructure,
-    Base64,
+    Base64Bytes,
+    Base64String,
     ColorHEX,
     HttpsURL,
+    READMEContent,
+    READMERawContent,
     ResolvedClientResponse,
 )
 from base64 import b64decode, b64encode
@@ -66,32 +70,35 @@ class BadgeConstructor:
     """
 
     async def _handle_b64(
-        self, action: Base64Actions, base64_str: Base64
-    ) -> Union[Any, None]:  # To be annotated later.
-        if action is Base64Actions.DECODE_B64_TO_FILE:
-            try:
+        self,
+        action: Base64Actions,
+        ctx_inout: Union[Base64String, READMERawContent],
+    ) -> Union[Base64Bytes, Base64String]:  # To be annotated later.
 
-                _out: bytes = b64decode(base64_str)
+        type_assert: bool = ctx_inout is Base64String(ctx_inout) or ctx_inout is READMERawContent(ctx_inout) # type: ignore. Subject to change.
 
-                with open(B64_ACTION_FILENAME, "w", errors="ignore") as _:
-                    _.write(_out.decode("ascii", errors="replace"))
-                    await asyncio_sleep(0.001)
+        # todo: To be revised.
+        if action is Base64Actions.DECODE_B64_TO_FILE and type_assert:
+            self.logger.debug(
+                "Convertion from Base64 to README Markdown Format is done!"
+            )
 
-                self.logger.debug(
-                    "Convertion from Base64 to README Markdown Format is done!"
-                )
+            return Base64String(str(b64decode(ctx_inout)))
 
-            except Exception as Err:
-                self.logger.error(
-                    f"Something happened while writing the file from Base64. Exceptions are not documented by this part. Maybe in the future. | More Info: {Err}"
-                )
+        elif action is Base64Actions.ENCODE_BUFFER_TO_B64 and type_assert:
+            return Base64Bytes(b64encode(bytes(ctx_inout, encoding="utf-8")))
 
-        return _out
+        else:
+            self.logger.critical(f"Passed `action` parameter is not a {Base64Actions}! Please contact the developer if this issue occured in Online Runner.")
+            exit()
 
-    async def check_and_update_badge(self, readme_ctx: Base64) -> None:
+
+    async def check_and_update_badge(self, readme_ctx: Base64String) -> Base64String:
         self.logger.info("Converting README to Markdown File...")
-        _readme_decode: Future = ensure_future(
-            self._handle_b64(Base64Actions.DECODE_B64_TO_FILE, readme_ctx)
+
+        _readme_decode: Future = create_task(
+            self._handle_b64(Base64Actions.DECODE_B64_TO_FILE, readme_ctx),
+            name="READMEContents_Decode",
         )
 
         self._re_pattern: Pattern = compile(BADGE_REGEX_STRUCT_IDENTIFIER)
@@ -100,36 +107,56 @@ class BadgeConstructor:
         await wait([_readme_decode])
         self.logger.info("Identifying the badge inside README.md...")
 
-        with open(B64_ACTION_FILENAME, "r") as _:
-            try:
-                _match: Optional[Match[Any]] = self._re_pattern.search(
-                    _.read(), MULTILINE
+        try:
+            is_matched: bool = False
+
+            while not is_matched:
+
+                line_ctx: Union[READMERawContent] = _readme_decode.result()
+
+                match: Optional[Match[Any]] = self._re_pattern.search(line_ctx)
+
+                self.logger.debug(
+                    f"Match Result: {match}"
                 )
 
-                if _match:
-                    contains_matched: bool = _match.group("badge_identifier")
-                    self._is_badge_identified: bool = (
-                        contains_matched is None
-                        or contains_matched == self.envs["BADGE_IDENTIFIER_NAME"]
-                    )
-                    # # PLEASE NOTE THAT BADGE_IDENTIFIER_NAME shouldn't be required as how we handle the condition here. Evaluate the condition...
+                if match:
+
+                    is_matched = True
+                    identifier_name: str = match.group("badge_identifier")
+
+                    is_badge_identified: bool = identifier_name == self.envs["BADGE_IDENTIFIER_NAME"]
+
                     self.logger.info(
                         (
-                            "Badge with identifier (%s) found!."
-                            % _match.group("badge_identifier")
+                            f"Badge with Identifier {identifier_name} found! Substituting the old badge."
                         )
-                        if self.envs["BADGE_IDENTIFIER_NAME"]
-                        == _match.group("badge_identifier")
-                        else "Badge with identifier (%s) not found! Will attempt to append the badge on the top of the contents of README.md. Please fix this later!"
+                        if self.envs["BADGE_IDENTIFIER_NAME"] == identifier_name
+                        else "Badge with Identifier (%s) not found! New badge will append on the top of the contents of README.md. Please arrange/move the badge once changes has been pushed!"
                         % self.envs["BADGE_IDENTIFIER_NAME"]
                     )
 
-                    await wait([self.constructed_badge])
+                    await wait([self.badge_task])
+
+                    constructed_badge: BadgeStructure = self.badge_task.result()
+
+                    self.logger.debug(
+                        f"Badge Output from Badge Construction Function (construct_badge) (for Replacement) | {constructed_badge}"
+                    )
+
+                    line_ctx = line_ctx.replace(match.group(0), constructed_badge) if is_badge_identified else f"{constructed_badge}\n\n{line_ctx}"
+
+                    self.logger.debug(f"README Contents with Changes Reflected |> {line_ctx}")
+                    break
 
 
-            except IndexError as Err:
-                self.logger.warn(
-                    f"The RegEx can't find any badge with Identifier in README. If you think that this is a bug then please let the developer know. | Info: {Err}"
+                # At this point, we do the substitution here and run the b64_action for encoding then back.
+
+            return await self._handle_b64(Base64Actions.ENCODE_BUFFER_TO_B64, line_ctx)
+
+        except IndexError as Err:
+            self.logger.warn(
+                f"The RegEx can't find any badge with Identifier in README. If you think that this is a bug then please let the developer know. | Info: {Err}"
                 )
 
     async def _replace_content(self, constructed_badge: BadgeStructure) -> Any:
@@ -142,7 +169,7 @@ class BadgeConstructor:
 
     async def construct_badge(
         self,
-    ) -> None:  # todo: Do something about how we pass the data to commit it.
+    ) -> BadgeStructure:  # todo: Do something about how we pass the data to commit it.
         """
         For every possible arguments declared in actions.yml, the output of the badge will change.
 
@@ -196,11 +223,15 @@ class BadgeConstructor:
                 else "{0}/{0}".format(self.envs["GITHUB_ACTOR"])
             )  # Let's handle this one first before we attempt to do everything thard.
 
-            self.logger.info("Other elements preloaded, waiting for Discord Client to finish before proceeding...")
+            self.logger.info(
+                "Other elements preloaded, waiting for Discord Client to finish before proceeding..."
+            )
 
             await wait([self._discord_client_task])  # Checkpoint.
 
-            self.logger.info("Discord Client is done. Attempting to process other badge elements...")
+            self.logger.info(
+                "Discord Client is done. Attempting to process other badge elements..."
+            )
 
             _presence_ctx: dict[str, Union[int, str, slice]] = self._user_ctx[
                 "activities"
@@ -460,7 +491,8 @@ class BadgeConstructor:
                         + (
                             ""
                             if _preferred_activity
-                            == PreferredActivityDisplay.RICH_PRESENCE.name or _contains_activities
+                            == PreferredActivityDisplay.RICH_PRESENCE.name
+                            or _contains_activities
                             else ""
                         )
                     ]
@@ -506,6 +538,8 @@ class BadgeConstructor:
             )
 
             self.logger.info(f"The Badge URL has been generated. Link: {final_output}")
+
+            return final_output
 
         # todo: Remember to make exceptions beautiful.
         except KeyError as Err:

@@ -212,6 +212,9 @@ Here contains a list of resources that I have used in any forms that contributed
 - https://blog.baeke.info/2021/04/09/building-a-github-action-with-docker/
 - https://dev.to/dtinth/caching-docker-builds-in-github-actions-which-approach-is-the-fastest-a-research-18ei
 - https://github.com/dtinth/github-actions-docker-layer-caching-poc
+- https://sodocumentation.net/regex/topic/9852/substitutions-with-regular-expressions
+- https://stackoverflow.com/questions/14007545/python-regex-instantly-replace-groups
+- https://stackoverflow.com/questions/15340582/python-extract-pattern-matches
 
 > This section is still incomplete. I will put more and format it later.
 

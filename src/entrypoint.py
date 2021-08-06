@@ -37,6 +37,7 @@ from typing import Any, Generator, Iterable, Set, Type, Union
 from api import AsyncGithubAPI
 from badge import BadgeConstructor
 from client import DiscordClientHandler
+from elements.typing import Base64String, ResolvedClientResponse
 from utils import UtilityFunctions
 from elements.constants import (
     ENV_FILENAME,
@@ -94,20 +95,25 @@ class ActivityBadgeServices(
             name="Classes_AsyncGithubAPI_Child_Initialization",
         )
 
+        # These two tasks are seperated for a reason. IT was due to referencing and static async mechanism.
         self._discord_client_task: Task = create_task(
             self.start(self.envs["DISCORD_BOT_TOKEN"]),
             name="DiscordClient_UserFetching",
         )  # * (4)
 
-        readme_data = create_task(
+        self.readme_data: Union[Any, ResolvedClientResponse, Base64String] = create_task(
             self.exec_api_actions(GithubRunnerActions.FETCH_README),
             name="GithubAPI_README_Fetching"
         )
 
-        badge_task: Task = create_task(self.construct_badge(), name="BadgeConstructor_Construct")
+        self.badge_task: Task = create_task(self.construct_badge(), name="BadgeConstructor_Construct") # This relies to self._discord_client_task
 
-        await wait({badge_task})
-        # create_task(self.exec_api_actions(GithubRunnerActions.COMMIT_CHANGES))
+        await wait({self.readme_data}) # Implicitly declare this wait instead inside of the function. There's nothing much to do while we wait to fetch README data.
+
+        badge_updater: Task = create_task(self.check_and_update_badge(self.readme_data.result()), name="README_BadgeChecker_Updater")
+
+        await wait({badge_updater}) # This may be invoked inside of this function and waits inside with self!
+        create_task(self.exec_api_actions(GithubRunnerActions.COMMIT_CHANGES, data=badge_updater.result())) # No need for variable reference since it's the last step.
 
         await self.__end__()
         """
@@ -191,7 +197,7 @@ class ActivityBadgeServices(
             except TypeError:
                 prev_tasks = tasks
 
-            await asyncio_sleep(0.4)
+            await asyncio_sleep(0)
 
 
 # # Entrypoint Code

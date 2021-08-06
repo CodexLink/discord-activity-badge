@@ -74,7 +74,7 @@ class DiscordClientHandler(DiscordClient):
 
 
         self.logger.debug(
-            f"Connection to Discord via WebSocket is success! | Rate-Limited: self.is_ws_ratelimited()"
+            f"Connection to Discord via WebSocket is success! | Rate-Limited: {self.is_ws_ratelimited()}."
         )
 
         create_task(
@@ -130,7 +130,7 @@ class DiscordClientHandler(DiscordClient):
         """
 
         self.logger.info(
-            "Step 1.a of 2 | Attempting to fetch discord user's info for validation use."
+            "Step 1 of 2 | Attempting to fetch discord user's info for validation use."
         )
 
         try:
@@ -140,7 +140,7 @@ class DiscordClientHandler(DiscordClient):
             self._user_ctx["name"] = _user_info.name
             self._user_ctx["discriminator"] = _user_info.discriminator
 
-            self.logger.info("Step 1.b of 2 | Finished fetching user information.")
+            self.logger.info("Step 1 of 2 | Finished fetching user information.")
 
         except NotFound as Err:
             await self.__exit_client_on_error(

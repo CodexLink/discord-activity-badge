@@ -52,7 +52,7 @@ BADGE_REGEX_STRUCT_IDENTIFIER: Final[RegExp] = RegExp(
 @unique
 class Base64Actions(IntEnum):
     DECODE_B64_TO_FILE = auto()
-    ENCODE_B64_TO_FILE = auto()
+    ENCODE_BUFFER_TO_B64 = auto()
 
 
 B64_ACTION_FILENAME: str = "._temp"
@@ -88,9 +88,7 @@ class ExitReturnCodes(IntEnum): # todo: Add exception that can weak refer to EXI
 
 @unique
 class GithubRunnerActions(IntEnum):
-    TEST_CONN_APIS = auto()
     FETCH_README = auto()
-    UPDATE_README = auto()
     COMMIT_CHANGES = auto()
 
 
@@ -368,7 +366,7 @@ RET_DOTENV_NOT_FOUND: Final[int] = -1
 ROOT_LOCATION: Final[str] = "../"
 ENV_FILENAME: Final[str] = ".env"
 LOGGER_FILENAME: Final[str] = (
-    ROOT_LOCATION + strftime("%m%d%Y-%H%M-") + "discord-activity-badge.log"
+    strftime("%m%d%Y-%H%M-") + "discord-activity-badge.log"
 )
 LOGGER_OUTPUT_FORMAT: Final[
     str

@@ -37,7 +37,7 @@ from asyncio import (
 )
 from base64 import b64decode, b64encode
 from json import load as JSON_SERIALIZE
-from typing import Any, Coroutine, Optional, Union
+from typing import Any, Coroutine, Optional, Tuple, Union
 
 from aiohttp import BasicAuth, ClientResponse, ClientSession
 
@@ -52,7 +52,8 @@ from elements.exceptions import (
 )
 from elements.typing import (
     BadgeStructure,
-    Base64,
+    Base64Bytes,
+    Base64String,
     ClientResponseOK,
     ClientResponseStatus,
     HttpsURL,
@@ -96,8 +97,10 @@ class AsyncGithubAPI:
     async def exec_api_actions(
         self,
         action: GithubRunnerActions,
-        data: Optional[BadgeStructure] = None,  # ! I don't know if this should be okay.
-    ) -> Union[Any, ResolvedClientResponse]:
+        data: Union[
+            Optional[BadgeStructure], Optional[Base64String]
+        ] = None,  # ! I don't know if this should be okay.
+    ) -> Union[Any, ResolvedClientResponse, Base64Bytes]:
 
         # TODO: Check what to try-catch here.
 
@@ -110,46 +113,58 @@ class AsyncGithubAPI:
         # ! Starting at this point, until EOF, changes may be done during post-development.
         # ! I'm taking so much time to see the difference about these two and how to adjust other async tasks.
 
-        if action is GithubRunnerActions.FETCH_README:
+        if action in GithubRunnerActions:
+            user_repo = (
+                "{0}/{0}".format(self.envs["GITHUB_ACTOR"])
+                if self.envs["PROFILE_REPOSITORY"] is None
+                else "{0}".format(self.envs["PROFILE_REPOSITORY"])
+            )
+            repo_path: HttpsURL = HttpsURL(
+                "{0}/repos/{1}/{2}".format(
+                    self.envs["GITHUB_API_URL"],
+                    user_repo,
+                    "readme" if action is GithubRunnerActions.FETCH_README else "contents/",
+                )
+            )
+
             while True:
-                user_repo = (
-                    "{0}/{0}".format(self.envs["GITHUB_ACTOR"])
-                    if self.envs["PROFILE_REPOSITORY"] is None
-                    else "{0}".format(self.envs["PROFILE_REPOSITORY"])
-                )
-                repo_path: HttpsURL = HttpsURL(
-                    "{0}/repos/{1}/readme".format(
-                        self.envs["GITHUB_API_URL"], user_repo
-                    )
-                )
+                http_request: ClientResponse = await self._request(repo_path, action)
 
                 try:
-                    http_request: ClientResponse = await self._request(repo_path, action)
-
                     if http_request.ok:
-                        # * Give user an option whether we want to decode the b64 or not.
-                        __read_resp: bytes = http_request.content.read_nowait()
-                        __serialized_resp: dict = literal_eval(
-                            __read_resp.decode("utf-8")
-                        )
 
-                        __sresp_content: Base64 = __serialized_resp["content"].replace(
-                            "\n", ""
-                        )
+                        if action is GithubRunnerActions.FETCH_README:
+                            # * Give user an option whether we want to decode the b64 or not.
+                            __read_resp: bytes = http_request.content.read_nowait()
+                            __serialized_resp: dict = literal_eval(
+                                __read_resp.decode("utf-8")
+                            )
 
-                        self.logger.info(
-                            f"Github Profile ({user_repo}) README has been fetched."
-                        )
+                            __sresp_content: Base64String = __serialized_resp[
+                                "content"
+                            ].replace("\n", "")
 
-                        return __sresp_content
+                            self.logger.info(
+                                f"Github Profile ({user_repo}) README has been fetched."
+                            )
+
+                            return __sresp_content
+
+                        elif action is GithubRunnerActions.COMMIT_CHANGES and data is Base64String(data):  # type: ignore
+                            pass
+
+                    else:
+                        self.logger.warn(
+                            "Conditions not met, continuing again after 3 seconds (as a penalty)."
+                        )
+                        await asyncio_sleep(0.6)
 
                 except SyntaxError as RecvCtx:
                     self.logger.error(
-                        "Received Data (from README) is malformed. Retrying to fetch again..."
+                        f"Fetched Data is either incomplete or malformed. Attempting to re-fetch... | Info: {RecvCtx}"
                     )
-                    self.logger.debug(
-                        "Technical Error on Malformed Data: %s" % (RecvCtx)
-                    )
+
+                    await asyncio_sleep(0.6)
                     continue
 
                 except KeyError as RecvCtx:  # todo: Create an exception for this one. GithubAPIRateLimited
@@ -157,12 +172,13 @@ class AsyncGithubAPI:
                         "API rate limit exceeded"
                     ):
                         self.logger.critical(
-                            f"You are probably rate limited by Github API. Did you keep on retrying or you are over-committing changes? | More Info: {RecvCtx}"
+                            f"Request accepted but you are probably rate-limited by Github API. Did you keep on retrying or you are over-committing changes? | More Info: {RecvCtx}"
                         )
                         exit(-1)
 
-        elif action is GithubRunnerActions.COMMIT_CHANGES:
-            pass
+        else:  # todo: Annotate this later.
+            self.logger.critical(f"action is {action.name}")
+            exit(0)
 
     async def _request(
         self,
@@ -174,25 +190,30 @@ class AsyncGithubAPI:
     ]:
         if rest_response in GithubRunnerActions:
             self.logger.info(
-                f"Attempting to Fetch README on %s/%s from Github API ({url})"
-                % (self.envs["GITHUB_ACTOR"], self.envs["GITHUB_ACTOR"])
-                if rest_response is GithubRunnerActions.FETCH_README
-                else None
-            )
-
-            auth_contents: dict = (
-                {
-                    "auth": BasicAuth(
-                        self.envs["GITHUB_ACTOR"], self.envs["WORKFLOW_TOKEN"]
+                (
+                    "Attempting to Fetch README on {0}/{0} from Github API ({1})".format(
+                        self.envs["GITHUB_ACTOR"], url
                     )
-                }
-                if not self.is_auth
-                else {}
+                    if rest_response is GithubRunnerActions.FETCH_README
+                    else "Attempting to Commit Changes of README from Github API >>> {0}/{0} ({1})".format(
+                        self.envs["GITHUB_ACTOR"], url
+                    )
+                )
+                if GithubRunnerActions.COMMIT_CHANGES
+                else "This might be invalid!"
             )
 
-            http_request: ClientResponse = await self._api_session.get(
-                url, allow_redirects=False, **auth_contents
-            )
+            extra_contents: dict[str, Union[dict[str, str], BasicAuth]] = {
+                "headers": {"Accept": "application/vnd.github.v3+json"},
+                "auth": BasicAuth(
+                    self.envs["GITHUB_ACTOR"], self.envs["WORKFLOW_TOKEN"]
+                ),
+            }
+
+            http_request: ClientResponse = await getattr(
+                self._api_session,
+                "get" if rest_response is GithubRunnerActions.FETCH_README else "put",
+            )(url, allow_redirects=True, **extra_contents)
 
             req_cost: str = "Requests Left over Rate Limit: {0}/{1}".format(
                 http_request.headers["X-RateLimit-Remaining"],
@@ -201,9 +222,7 @@ class AsyncGithubAPI:
 
             if not self.is_auth:
                 if http_request.ok:
-                    self.logger.info(
-                        "Authenticated in Github API! %s." % req_cost
-                    )
+                    self.logger.info("Authenticated in Github API! %s." % req_cost)
 
                     if http_request.headers["Vary"].__contains__(
                         "Authorization"
@@ -221,13 +240,16 @@ class AsyncGithubAPI:
         if (
             not http_request.ok
         ):  # todo: Make this clarified or confirmed. We don't have a case to where we can see this in action.
-            self.logger.critical(http_request.status, http_request.content)
+
+            # ! Sometimes, we can exceed the rate-limit request per time. We have to handle the display error instead from the receiver of this request.
+
             _resp_raw: ClientResponse = http_request  # Supposed to be ClientResponse
-            _resp_ctx: dict = literal_eval(
-                str(_resp_raw)
-            )  # Explicitly invoke str since the value is str.
+            _resp_ctx: dict = literal_eval(str(_resp_raw))
+
+            self.logger.debug(_resp_ctx)
             # raise SessionRequestStatusAssertFailed(_http_request.response)
 
+        # ! These returns are implemented for future projects.
         if should_return is ResponseTypes.IS_OKAY:
             return [url, ClientResponseOK(http_request.ok)]
 

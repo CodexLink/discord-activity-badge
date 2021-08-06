@@ -25,13 +25,19 @@ async def main():
 	# # GET README — Importing to Runtime to Modify.
 	while True:
 		try:
-			repo_container = await session.get('https://api.github.com/repos/CodexLink/CodexLink/readme', headers={"accept": "application/vnd.github.v3.text"})
+			repo_container = await session.get('https://api.github.com/repos/CodexLink/CodexLink/readme', headers={"accept": "application/vnd.github.v3.text"}, **{"auth": aiohttp.BasicAuth("CodexLink", os.environ["INPUT_WORKFLOW_TOKEN"])})
 
 			from ast import literal_eval
 			from base64 import b64decode
 
+			print(repo_container)
+
 			readme_file = repo_container.content.read_nowait()
+			print(readme_file)
+
 			data_decoded = literal_eval(readme_file.decode("utf-8"))
+			print(data_decoded)
+
 			data_sterilized = data_decoded["content"].replace("\n", "")
 			break
 		except Exception as Err:
