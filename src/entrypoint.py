@@ -109,11 +109,10 @@ class ActivityBadgeServices(
         self.badge_task: Task = create_task(self.construct_badge(), name="BadgeConstructor_Construct") # This relies to self._discord_client_task
 
         await wait({self.readme_data}) # Implicitly declare this wait instead inside of the function. There's nothing much to do while we wait to fetch README data.
-
-        badge_updater: Task = create_task(self.check_and_update_badge(self.readme_data.result()), name="README_BadgeChecker_Updater")
+        badge_updater: Task = create_task(self.check_and_update_badge(self.readme_data.result()[1]), name="README_BadgeChecker_Updater")
 
         await wait({badge_updater}) # This may be invoked inside of this function and waits inside with self!
-        create_task(self.exec_api_actions(GithubRunnerActions.COMMIT_CHANGES, data=badge_updater.result())) # No need for variable reference since it's the last step.
+        create_task(self.exec_api_actions(GithubRunnerActions.COMMIT_CHANGES, data=[self.readme_data.result()[0], badge_updater.result()])) # No need for variable reference since it's the last step.
 
         await self.__end__()
         """

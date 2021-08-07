@@ -17,9 +17,6 @@ limitations under the License.
 # This is potential rewrite for PyGithub, which makes it async.
 """
 
-# For Commiting the Changes: https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
-# For Fetching the File:
-
 if __name__ == "__main__":
     from elements.exceptions import IsolatedExecNotAllowed
 
@@ -59,6 +56,7 @@ from elements.typing import (
     HttpsURL,
     HttpsURLPath,
     ResolvedClientResponse,
+    ResponseJson,
 )
 from logging import Logger
 
@@ -78,16 +76,11 @@ class AsyncGithubAPI:
     async def __ainit__(self) -> None:
 
         self._api_session: ClientSession = ClientSession()
-        self.is_auth: bool = False
-        self._request_iterator: list[
-            Any
-        ] = []  # # Subject for removal in Post-Development.
-
         self.logger.info("ClientSession for API Requests has been instantiated.")
 
         super().__init__()
         self.logger.info(
-            f"Instantiatied Discord Client with the following intents={DISCORD_CLIENT_INTENTS=}"
+            f"Discord Client Instantiatied with intents={DISCORD_CLIENT_INTENTS=}"
         )
 
         self.logger.info(
@@ -97,9 +90,7 @@ class AsyncGithubAPI:
     async def exec_api_actions(
         self,
         action: GithubRunnerActions,
-        data: Union[
-            Optional[BadgeStructure], Optional[Base64String]
-        ] = None,  # ! I don't know if this should be okay.
+        data: list[str, Union[Optional[BadgeStructure], Optional[Base64String]]] = None,
     ) -> Union[Any, ResolvedClientResponse, Base64Bytes]:
 
         # TODO: Check what to try-catch here.
@@ -123,35 +114,48 @@ class AsyncGithubAPI:
                 "{0}/repos/{1}/{2}".format(
                     self.envs["GITHUB_API_URL"],
                     user_repo,
-                    "readme" if action is GithubRunnerActions.FETCH_README else "contents/",
+                    "readme"
+                    if action is GithubRunnerActions.FETCH_README
+                    else "contents/README.md",  # # !A
                 )
             )
 
             while True:
-                http_request: ClientResponse = await self._request(repo_path, action)
+                http_request: ClientResponse = await self._request(
+                    repo_path, action, data=data if data is not None else None
+                )
 
                 try:
                     if http_request.ok:
 
+                        suffix_req_cost: str = "Request Used over Remaining (%s/%s)" % (
+                            http_request.headers["X-RateLimit-Remaining"],
+                            http_request.headers["X-RateLimit-Limit"],
+                        )
                         if action is GithubRunnerActions.FETCH_README:
                             # * Give user an option whether we want to decode the b64 or not.
                             __read_resp: bytes = http_request.content.read_nowait()
+
                             __serialized_resp: dict = literal_eval(
                                 __read_resp.decode("utf-8")
                             )
 
-                            __sresp_content: Base64String = __serialized_resp[
-                                "content"
-                            ].replace("\n", "")
-
                             self.logger.info(
-                                f"Github Profile ({user_repo}) README has been fetched."
+                                f"Github Profile ({user_repo}) README has been fetched. | {suffix_req_cost}"
                             )
 
-                            return __sresp_content
+                            return [
+                                __serialized_resp["sha"],
+                                Base64String(
+                                    __serialized_resp["content"].replace("\n", "")
+                                ),
+                            ]  # todo: Change the return type of the function later!
 
                         elif action is GithubRunnerActions.COMMIT_CHANGES and data is Base64String(data):  # type: ignore
-                            pass
+                            self.logger.info(
+                                f"README Changes from ({user_repo}) has been pushed through! | {suffix_req_cost}"
+                            )
+                            break
 
                     else:
                         self.logger.warn(
@@ -183,18 +187,18 @@ class AsyncGithubAPI:
     async def _request(
         self,
         url: HttpsURL,
-        rest_response: GithubRunnerActions,
-        should_return: ResponseTypes = ResponseTypes.RESPONSE,
+        action_type: GithubRunnerActions,
+        data: Optional[list[Union[Base64String, str]]] = None,
     ) -> Union[
         list[Union[HttpsURL, ClientResponseOK, ClientResponseStatus]], ClientResponse
     ]:
-        if rest_response in GithubRunnerActions:
+        if action_type in GithubRunnerActions:
             self.logger.info(
                 (
                     "Attempting to Fetch README on {0}/{0} from Github API ({1})".format(
                         self.envs["GITHUB_ACTOR"], url
                     )
-                    if rest_response is GithubRunnerActions.FETCH_README
+                    if action_type is GithubRunnerActions.FETCH_README
                     else "Attempting to Commit Changes of README from Github API >>> {0}/{0} ({1})".format(
                         self.envs["GITHUB_ACTOR"], url
                     )
@@ -210,30 +214,28 @@ class AsyncGithubAPI:
                 ),
             }
 
-            http_request: ClientResponse = await getattr(
-                self._api_session,
-                "get" if rest_response is GithubRunnerActions.FETCH_README else "put",
-            )(url, allow_redirects=True, **extra_contents)
-
-            req_cost: str = "Requests Left over Rate Limit: {0}/{1}".format(
-                http_request.headers["X-RateLimit-Remaining"],
-                http_request.headers["X-RateLimit-Limit"],
+            data_context: Union[HttpsURL, ResponseJson] = (
+                {
+                    "content": data[1].decode("utf-8") if data is not None else None,
+                    "message": self.envs["COMMIT_MESSAGE"],
+                    "sha": data[0] if data is not None else None,
+                    "committer": {
+                        "name": "Discord Activity Badge",
+                        "email": "discord_activity@discord_bot.com",
+                    },
+                }
+                if action_type is GithubRunnerActions.COMMIT_CHANGES
+                else {}
             )
 
-            if not self.is_auth:
-                if http_request.ok:
-                    self.logger.info("Authenticated in Github API! %s." % req_cost)
-
-                    if http_request.headers["Vary"].__contains__(
-                        "Authorization"
-                    ) and bool(http_request.headers.get("X-OAuth-Scopes")):
-                        self.is_auth = True
-                else:
-                    self.logger.debug(req_cost)
+            http_request: ClientResponse = await getattr(
+                self._api_session,
+                "get" if action_type is GithubRunnerActions.FETCH_README else "put",
+            )(url, json=data_context, allow_redirects=False, **extra_contents)
 
         else:
             self.logger.critical(
-                f"Enums invoked ({rest_response.name}) is invalid. Please report this to the developer."
+                f"Enums invoked ({action_type.name}) is invalid. Please report this to the developer."
             )
             exit(-1)
 
@@ -249,18 +251,5 @@ class AsyncGithubAPI:
             self.logger.debug(_resp_ctx)
             # raise SessionRequestStatusAssertFailed(_http_request.response)
 
-        # ! These returns are implemented for future projects.
-        if should_return is ResponseTypes.IS_OKAY:
-            return [url, ClientResponseOK(http_request.ok)]
-
-        elif should_return is ResponseTypes.RESPONSE_STATUS:
-            return [url, ClientResponseStatus(http_request.status)]
-
-        elif should_return is ResponseTypes.RESPONSE:
-            return http_request
-
         else:
-            self.logger.critical(
-                "Specified `should_return` is invalid or haven't implemented yet. Please check the function for more information."
-            )
-            exit(-1)
+            return http_request

@@ -215,6 +215,7 @@ Here contains a list of resources that I have used in any forms that contributed
 - https://sodocumentation.net/regex/topic/9852/substitutions-with-regular-expressions
 - https://stackoverflow.com/questions/14007545/python-regex-instantly-replace-groups
 - https://stackoverflow.com/questions/15340582/python-extract-pattern-matches
+- https://stackoverflow.com/a/606199/5353223
 
 > This section is still incomplete. I will put more and format it later.
 

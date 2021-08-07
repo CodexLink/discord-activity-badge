@@ -51,7 +51,7 @@ BADGE_REGEX_STRUCT_IDENTIFIER: Final[RegExp] = RegExp(
 # # Base64 Actions and Related Classiications
 @unique
 class Base64Actions(IntEnum):
-    DECODE_B64_TO_FILE = auto()
+    DECODE_B64_TO_BUFFER = auto()
     ENCODE_BUFFER_TO_B64 = auto()
 
 

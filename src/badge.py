@@ -78,12 +78,12 @@ class BadgeConstructor:
         type_assert: bool = ctx_inout is Base64String(ctx_inout) or ctx_inout is READMERawContent(ctx_inout) # type: ignore. Subject to change.
 
         # todo: To be revised.
-        if action is Base64Actions.DECODE_B64_TO_FILE and type_assert:
+        if action is Base64Actions.DECODE_B64_TO_BUFFER and type_assert:
             self.logger.debug(
                 "Convertion from Base64 to README Markdown Format is done!"
             )
 
-            return Base64String(str(b64decode(ctx_inout)))
+            return Base64String(str(b64decode(ctx_inout), encoding="utf-8"))
 
         elif action is Base64Actions.ENCODE_BUFFER_TO_B64 and type_assert:
             return Base64Bytes(b64encode(bytes(ctx_inout, encoding="utf-8")))
@@ -97,7 +97,7 @@ class BadgeConstructor:
         self.logger.info("Converting README to Markdown File...")
 
         _readme_decode: Future = create_task(
-            self._handle_b64(Base64Actions.DECODE_B64_TO_FILE, readme_ctx),
+            self._handle_b64(Base64Actions.DECODE_B64_TO_BUFFER, readme_ctx),
             name="READMEContents_Decode",
         )
 
@@ -106,6 +106,7 @@ class BadgeConstructor:
 
         await wait([_readme_decode])
         self.logger.info("Identifying the badge inside README.md...")
+
 
         try:
             is_matched: bool = False
@@ -146,7 +147,7 @@ class BadgeConstructor:
 
                     line_ctx = line_ctx.replace(match.group(0), constructed_badge) if is_badge_identified else f"{constructed_badge}\n\n{line_ctx}"
 
-                    self.logger.debug(f"README Contents with Changes Reflected |> {line_ctx}")
+                    self.logger.debug(f"README Contents with Changes Reflected!")
                     break
 
 

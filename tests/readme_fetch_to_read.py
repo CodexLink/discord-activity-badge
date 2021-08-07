@@ -17,7 +17,6 @@ async def main():
 	print("%s Left to Rate Limited." % base_auth.headers["X-RateLimit-Remaining"])
 	print(f"%s of Requests Max." % base_auth.headers["X-RateLimit-Limit"], end="\n\n")
 
-	print(base_auth)
 
 	# Once we got login. Get the repository README.
 	# Display, make changes and then push it.
@@ -25,12 +24,16 @@ async def main():
 	# # GET README — Importing to Runtime to Modify.
 	while True:
 		try:
-			repo_container = await session.get('https://api.github.com/repos/CodexLink/CodexLink/readme', headers={"accept": "application/vnd.github.v3.text"}, **{"auth": aiohttp.BasicAuth("CodexLink", os.environ["INPUT_WORKFLOW_TOKEN"])})
+			repo_container = await session.get('https://api.github.com/repos/CodexLink/CodexLink/readme', headers={"accept": "application/vnd.github.v3.text"})
+
+
+			print("%s Left to Rate Limited." % repo_container.headers["X-RateLimit-Remaining"])
+			print(f"%s of Requests Max." % repo_container.headers["X-RateLimit-Limit"], end="\n\n")
 
 			from ast import literal_eval
 			from base64 import b64decode
 
-			print(repo_container)
+			print("From the repo container > ", repo_container)
 
 			readme_file = repo_container.content.read_nowait()
 			print(readme_file)
