@@ -21,286 +21,186 @@ if __name__ != "__main__":
 
     raise EntryImportNotAllowed
 
-import logging
-import os
+from os import _exit as exit
 from asyncio import (
     AbstractEventLoop,
-    Future,
     Task,
     all_tasks,
-    ensure_future,
-    gather,
+    create_task,
+    current_task,
     get_event_loop,
-    sleep as asyncio_sleep,
 )
-
-from sys import stdout
+from asyncio import sleep as asyncio_sleep, gather, wait
 from time import time as curr_exec_time
+from typing import Any, Generator, Iterable, Set, Type, Union
 
-from typing import Any, Generator, Optional, Tuple, Set
-from discord.errors import LoginFailure
-
-from args import ArgumentResolver
+from api import AsyncGithubAPI
 from badge import BadgeConstructor
 from client import DiscordClientHandler
+from elements.typing import Base64String, ResolvedClientResponse
+from utils import UtilityFunctions
 from elements.constants import (
     ENV_FILENAME,
-    LOGGER_FILENAME,
-    LOGGER_OUTPUT_FORMAT,
-    RET_DOTENV_NOT_FOUND,
-    ROOT_LOCATION,
+    ENV_STRUCT_CONSTRAINTS,
+    LoggerLevelCoverage,
     MAXIMUM_RUNTIME_SECONDS,
+    GithubRunnerActions,
 )
-from elements.exceptions import DotEnvFileNotFound
+
 
 class ActivityBadgeServices(
-    ArgumentResolver, DiscordClientHandler, BadgeConstructor
+    UtilityFunctions, AsyncGithubAPI, DiscordClientHandler, BadgeConstructor
 ):
-    """The start of everything. This is the core from initializing the workflow to generating the badge."""
-
-    # # Special Methods.
-    def __repr__(self) -> str:
-        return f"<Activity Badge Service, ???>"
+    """The heart of the Discord Activity Badge. Everything runs in Object-Oriented Approach. Please check each functions for the progress."""
 
     def __await__(self) -> Generator:
         return self.__start__().__await__()
 
-    async def __start__(self, *args: list[Any], **kwargs: dict[Any, Any]) -> Any:
+    async def __start__(self) -> None:
         """
-        Step 0.1 | Instantiates all subclasses to prepare the module for the process.
-
+        Instantiates all subclasses and runs other necessary functions (both async and non-async) for the whole process.
         Notes:
-                (1.a) Let's load the logger first to enable backtracking incase if there's anything happened wrong. [If explicitly stated to run based on arguments.]
-                (1.b) We migh want to shield this async function to avoid corruption. We don't want a malformed output.
-                (2) Await the first super().__ainit__() which instantiates ArgumentResolver, this is required before we do tasking since we need to evaluate the given arguments.
-                (3.a) Instantiate the super().__init__(intents) which belongs to DiscordClientHandler. This is required to load other properties that is required by its methods.
-                (3.b) We cannot await this one because discord.__init__ is not a coroutine. And it shouldn't be, which is right.
-                (4) And once we load the properties, we can now asynchronously load discord in task. Do not await this task!
-                (5) There will be another task that is gathered into one so that it is distinguishly different than other await functions. They are quite important under same context.
 
-        Credits:
-                (1) https://stackoverflow.com/questions/33128325/how-to-set-class-attribute-with-await-in-init.
-                (2) https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/55583282#55583282
+            1. Resolve Arguments first.
+            2. Then call Avoid raising error by using getattr(). This mechanism is similar to resolve_envs() in self.initialize().
+
+            From 1 to 2. Theses functions should be faster enough.
+
+            Anything that is being called by super() in this case is pointed to class `UtilityFunctions`.
         """
 
-        self.time_on_hit = curr_exec_time()  # * ???
-        self.__last_n_task: int = 0  # todo: Annotate these later.
+        super().resolve_args()  # * (1)
 
-        await self._init_logger(
-            level_coverage=logging.DEBUG,
-            log_to_file=False,
-            out_to_console=True,
-            # verbose_client=True
-        )  # * (1) [a,b]
+        super().init_logger(  # * (2)
+            level_coverage=LoggerLevelCoverage.DEBUG,  # todo: Handle this one after we fix all confirmed parameters in resolve_args.
+            log_to_file=getattr(self.args, "no_file"),
+            out_to_console=getattr(self.args, "log_to_console"),
+            verbose_client=getattr(self.args, "verbose_client"),
+        )
 
-        await super().__ainit__()  # * (2)
-        await self._check_dotenv()
+        if not isinstance(ENV_STRUCT_CONSTRAINTS, dict):  # * (3)
+            self.logger.critical(
+                f"Constraint Structure `ENV_STRUCT_CONSTRAINTS` is not a {type(dict)}! Please contact the developer if this script is executed under Github Actions."
+            )
+            exit(-1)
 
-        self.discord_client_task: Task = ensure_future(
-            self.start(os.environ.get("INPUT_DISCORD_BOT_TOKEN"))
-        )  # * (4), start while we check something else
+        (super().check_dotenv(), super().resolve_envs()) if getattr(  # * (4)
+            self.args, "local"
+        ) else self.logger.info(
+            f"Running local mode invocation detected. Skipping checks for '{ENV_FILENAME}'."
+        )
 
-        self.constraint_checkers: Task = self.prereq()  # * (5)
+        self._cascade_init_cls: Task = create_task(  # (5)
+            super().__ainit__(),
+            name="Classes_AsyncGithubAPI_Child_Initialization",
+        )
 
-        # await self.constraint_checkers # Not sure of this one.
+        # These two tasks are seperated for a reason. IT was due to referencing and static async mechanism.
+        self._discord_client_task: Task = create_task(
+            self.start(self.envs["DISCORD_BOT_TOKEN"]),
+            name="DiscordClient_UserFetching",
+        )  # * (4)
 
-        self.logger.info("Entrypoint: Done loading all tasks. Reaching Endpoint...")
+        self.readme_data: Union[Any, ResolvedClientResponse, Base64String] = create_task(
+            self.exec_api_actions(GithubRunnerActions.FETCH_README),
+            name="GithubAPI_README_Fetching"
+        )
+
+        self.badge_task: Task = create_task(self.construct_badge(), name="BadgeConstructor_Construct") # This relies to self._discord_client_task
+
+        await wait({self.readme_data}) # Implicitly declare this wait instead inside of the function. There's nothing much to do while we wait to fetch README data.
+        badge_updater: Task = create_task(self.check_and_update_badge(self.readme_data.result()[1]), name="README_BadgeChecker_Updater")
+
+        await wait({badge_updater}) # This may be invoked inside of this function and waits inside with self!
+        create_task(self.exec_api_actions(GithubRunnerActions.COMMIT_CHANGES, data=[self.readme_data.result()[0], badge_updater.result()])) # No need for variable reference since it's the last step.
+
         await self.__end__()
+        """
+        A function that prepares any modules and functions to load before the process.
 
-    # # User Space Functions
-    async def prereq(self) -> Any:
-        # Step 0.4a | Checking of parameters before doing anything.
-        # 1.1 | Parameter Key Validatation.
-        # 1.2 | README Checking Indicators.
-        # Step 0.4b | Evaluation of Parameters from Discord to Args.
-        pass
+        Basically, it (1) checks for parameter values, (2) checks for a file that should be existing under script directory (ie. README.md) right after being able to fetch the repository.
+        This function has to run without any exceptions before being able to instantiate other functions that may start the proess of whatever this is.
 
-    # Wrapper of other steps.
-    async def process(self) -> None:
-        # Step 3 | Discord Accessing and Caching of Data.
-        # Step 4 | Badge Generation.
-        # Step 5 | Submit changes.
-        # ! If we can invoke the workflow credentials here. Then we can push this functionality.
-        # * Or else, we have to make the steps in the workflow (yaml) to push the changes.
+        Note:
+                        (n) Validate the arguments given in the secrets. If they aren'
+                        (n) Fetch the repository first. Error whenever there's a process that can't be done via Exception.
+                        (1) Check if the key from ENV_STRUCT_CONSTRAINTS is valid by checking them in os.environ.
+                        (2) If they dont have a value or does not exist, are they optional?
+                        (3) If optional, assigned value (with respect to the type) and push those to self.envs.
+                        (4) If not optional, then proceed with emitting error, telling to the runner that it should be filled by the user.
+                        (5) If they have a value that it isn't None and has a value for any type then try to resolve that value with respect to type().
 
-        pass
+        Note:
+                        This does not resolve the value to the point that it will be valid from other functions that needs it. I just want to make them less of a burden
+                        without explicitly convering and calling them during run time. I want it prepared before proceeding anything.
+
+        """
+        """
+        Notes:
+        1.Authenticate first before we do something.
+
+        todo: Create error when it was unable to connect or the README does not exist.
+
+        todo: Annotate better to feel the seperation of two intention code here.
+        """
 
     async def __end__(self) -> None:
         """
         An end-part of the entrypoint functionality. This contains handler for when to end the script and display logs when it can't.
         It should wait 0.5 sec for every changes. Anything below 0.5 will cause the log to be unreadable.
         """
+
+        self.logger.info("Done loading modules and necessary elements for the process.")
+
+        __timeout_start = curr_exec_time()
+        prev_tasks: Set[Any] = set({})
+
         while True:
-            __this_time = curr_exec_time() - self.time_on_hit
+            this_time = curr_exec_time() - __timeout_start
 
-            if __this_time >= MAXIMUM_RUNTIME_SECONDS:
+            if (this_time >= MAXIMUM_RUNTIME_SECONDS) and not getattr(
+                self.args, "local"
+            ):
                 self.logger.critical(
-                    "Time's up! We are taking too much time. Somethign is wrong... Terminating the script..."
-                )
-                os._exit(-1)
+                    "The script took longer to finish than the expected time of 5 seconds. This may be due to connection to Discord Gateway API not responding or your connection is not stable enough if you are running in local. If this issue occured in Github Runner, please try again. If persisting, contact (CodexLink) the developer."
+                )  # ! Keep an extra information in README.md where you can check the connection by going through any voice channel and see the status of your connection.
+                exit(-1)
 
-            self.logger.debug(
-                f"Current Time Execution: {__this_time} | Constraint Set: {MAXIMUM_RUNTIME_SECONDS} seconds."
-            )
-
-            if len(all_tasks()) <= 1:
+            if (
+                len(all_tasks()) <= 1
+            ):  # todo: Add timeout before we process this code-block.
                 self.logger.info(
-                    "No other tasks were detected aside from Main Event Loop. Closing some sessions."
+                    "No other tasks detected. Cleaning up..."
                 )
 
-                self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Awating.")
-                await self.request_session.close()
-                self.logger.info("Closing Sessions (2 of 2) | aiohttp -> Done.")
-
-                if not self.is_closed():
-                    self.logger.info(
-                        "Discord Client WebSocket is still open. Re-issuing Closing Session -> Awaiting."
-                    )
-
-                    try:
-                        await self.discord_client_task
-
-                    # todo: TRY TO CREATE A FUNCTION DOES THIS IN ENTRYPOINT OR SOMEWHERE ELSE. SEE CLIENT HANDLING OF ERROR WHICH IS THE SAME AS THIS.
-                    except AttributeError as Err:
-                        self.logger.critical(
-                            f"The referred Env Variable is missing which results to NoneType. This is a developer's fault, please issue this problem to the author's repository. | Info: {Err}"
-                        )
-                        os._exit(-1)
-
-                    except LoginFailure:
-                        self.logger.critical(
-                            "The provided DISCORD_BOT_TOKEN is malformed. Please copy and replace your secret token and try again."
-                        )
-                        os._exit(-1)
-
-                    self.logger.info(
-                        "Discord Client WebSocket is still open. Re-issuing Closing Session -> Done."
-                    )
+                await gather(self.close(), self._api_session.close())
+                self.logger.info("Sessions closed. (Github API and Discord Client)")
 
                 break
 
-            else:
-                __tasks: Set[Task] = all_tasks()
+            tasks: Set[Task] = all_tasks()
+            n_tasks: int = len(tasks)
 
-                if self.__last_n_task != len(__tasks):
-                    self.__last_n_task = len(__tasks)
-
+            try:
+                if prev_tasks != tasks:
                     self.logger.info(
-                        f"Waiting for other {self.__last_n_task} tasks to finish."
+                        f"{n_tasks} tasks left to finish the loop. | Time Execution: {this_time:.2f}/{MAXIMUM_RUNTIME_SECONDS}s."
                     )
-                    self.logger.debug(f"Tasks -> {__tasks}")
+                    prev_tasks = tasks
 
-                await asyncio_sleep(0.5)
+                    # self.logger.debug(
+                    #     f"Current Tasks: {current_task()} | All Tasks in Queue | {all_tasks()}"
+                    # )
 
-    # # Utility Functions
-    async def _init_logger(
-        self,
-        level_coverage: Optional[int] = logging.DEBUG,
-        log_to_file: Optional[bool] = False,
-        out_to_console: Optional[bool] = False,
-        verbose_client: Optional[bool] = False,
-    ) -> None:
-        """
-        Step 0.3 | Loads the logger for all associated modules.
 
-        Args:
-                level_coverage (Optional[int], optional): Sets the level (and above) to cover it in the logs or in stream. Defaults to logging.DEBUG.
-                log_to_file (Optional[bool], optional): Creates a file and logs the data if set to True, or otherwise. Defaults to False.
-                out_to_console (Optional[bool], optional): Output the log reports in the console, if enabled. Defaults to False.
-                verbose_client (Optional[bool], optional): Bind discord to the logger to log other events that is out of scope of entrypoint.
-        Summary: todo.
-        """
+            except TypeError:
+                prev_tasks = tasks
 
-        __levels__ = [
-            logging.DEBUG,
-            logging.INFO,
-            logging.WARNING,
-            logging.ERROR,
-            logging.CRITICAL,
-        ]
+            await asyncio_sleep(0)
 
-        # Expressed Statements
-        __LOGGER_HANDLER_FORMATTER: Optional[logging.Formatter] = logging.Formatter(
-            LOGGER_OUTPUT_FORMAT
-        )
-        __LOGGER_LEVEL_COVERAGE: int = (
-            level_coverage if level_coverage in __levels__ else logging.DEBUG
-        )
 
-        self.logger = logging.getLogger(
-            __name__ if not verbose_client else "discord"
-        )
-        self.logger.setLevel(__LOGGER_LEVEL_COVERAGE)
-
-        if log_to_file:
-            file_handler = logging.FileHandler(
-                filename=LOGGER_FILENAME, encoding="utf-8", mode="w"
-            )
-            file_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
-            self.logger.addHandler(file_handler)
-
-        if out_to_console:
-            console_handler = logging.StreamHandler(stdout)
-            console_handler.setFormatter(__LOGGER_HANDLER_FORMATTER)
-            self.logger.addHandler(console_handler)
-
-        if not level_coverage in __levels__:
-            self.logger.warning(
-                "Argument level_coverage is invalid from any of the list in __level__. setLevel() will use a default value (logging.DEBUG) instead."
-            )
-
-        else:
-            self.logger.info(
-                f"Logger Coverage Level was set to {level_coverage}."
-            )  # todo: Make it enumerated to show the name.
-
-        self.logger.info("The logger has been loaded.")
-
-    async def _check_dotenv(self) -> None:
-        """
-        Step 0.2 | Prepare the .env file to load in this script.
-        If function "find_dotenv" raise an error, the script won't run.
-        Or else, run Step 0.2.
-
-        Pre-req: Argument -rl or --run-locally. Or otherwise, will not run this function.
-        """
-        if self.args_container.running_on_local:
-            try:
-                from dotenv import find_dotenv, load_dotenv
-
-            except ModuleNotFoundError:
-                self.logger.critical(
-                    "Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies."
-                )
-
-            self.logger.info(
-                "Argument -rl / --running-on-local is invoked. Checking for '.env' file."
-            )
-
-            try:
-                load_dotenv(
-                    find_dotenv(
-                        filename=ROOT_LOCATION + ENV_FILENAME,
-                        raise_error_if_not_found=True,
-                    )
-                )
-                self.logger.info(
-                    "File exists and is indeed valid. Loaded in the script."
-                )
-
-            except IOError:
-                self.logger.critical(
-                    "File '.env' is either malformed or does not exists!"
-                )
-                raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
-
-        else:
-            self.logger.info(
-                "Argument -rl / --running-on-local is not invoked. Skipping '.env' checking... (at self.__check_dotenv)"
-            )
-
+# # Entrypoint Code
 loop_instance: AbstractEventLoop = get_event_loop()
 entry_instance: AbstractEventLoop = loop_instance.run_until_complete(
     ActivityBadgeServices()
 )
-loop_instance.stop()

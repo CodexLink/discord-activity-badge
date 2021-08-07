@@ -12,18 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Containerization | Discord Rich Presence Activity Badge
+name: Script Containerization
 
 on:
   push:
-    paths:
-      - "src/**"
-      - ".github/workflows/*.yml"
-      - "Dockerfile"
-      - "*.toml"
-      - "action.yml"
-
-  pull_request:
     paths:
       - "src/**"
       - ".github/workflows/*.yml"

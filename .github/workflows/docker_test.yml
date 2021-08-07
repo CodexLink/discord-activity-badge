@@ -24,19 +24,13 @@ on:
       - "*.toml"
       - "action.yml"
 
+  workflow_dispatch:
 
-  pull_request:
-    paths:
-      - "src/**"
-      - ".github/workflows/*.yml"
-      - "Dockerfile"
-      - "*.toml"
-      - "action.yml"
 
   workflow_run:
-    workflows: ["Containerization | Discord Rich Presence Activity Badge"]
-    types:
-      - completed
+    workflows: ["Script Containerization"]
+    branches: [dev]
+    types: [completed]
 
 jobs:
   DockerTester:
@@ -45,9 +39,8 @@ jobs:
 
     steps:
       - name: Container Dry Run
-        uses: CodexLink/discord-rich-presence-activity-badge@main
+        uses: CodexLink/discord-rich-presence-activity-badge@dev
         with:
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          WORKFLOW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IS_DRY_RUN: true
