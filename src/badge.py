@@ -25,7 +25,7 @@ from datetime import datetime, timedelta
 from logging import Logger
 from os import _exit as terminate
 from re import Match, Pattern, compile
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union
 from urllib.parse import quote
 
 from elements.constants import (
@@ -37,6 +37,7 @@ from elements.constants import (
     BADGE_REDIRECT_BASE_DOMAIN,
     BADGE_REGEX_STRUCT_IDENTIFIER,
     DISCORD_USER_STRUCT,
+    GithubRunnerLevelMessages,
     TIME_STRINGS,
     Base64Actions,
     ContextOnSubject,
@@ -59,10 +60,12 @@ from elements.typing import (
 class BadgeConstructor:
     # * The following variables are declared for weak reference since there's no hint-typing inheritance.
 
+    args: Any
     badge_task: Task
     discord_client_task: Task
     envs: Any
     logger: Logger
+    print_exception: Callable
     user_ctx: DISCORD_USER_STRUCT
 
     """
@@ -101,14 +104,16 @@ class BadgeConstructor:
                 return Base64Bytes(b64encode(bytes(str(ctx_inout), encoding="utf-8")))
 
             else:
-                self.logger.critical(
-                    f"Passed `action` parameter is not a {Base64Actions}! Please contact the developer if this issue occured in Online Runner."
-                )
+                msg: str = f"Passed `action` parameter is not a {Base64Actions}! Please contact the developer if this issue occured in Online Runner."
+                self.logger.critical(msg)
+
+                self.print_exception(GithubRunnerLevelMessages.ERROR, msg, None)
                 terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
         else:
-            self.logger.error(
-                f"The given value in `ctx_inout` parameter is not a {Base64String.__name__}! Please contact the developer about this issue."
-            )
+            msg = f"The given value in `ctx_inout` parameter is not a {Base64String.__name__}! Please contact the developer about this issue."
+            self.logger.error(msg)
+
+            self.print_exception(GithubRunnerLevelMessages.ERROR, msg, None)
             terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
 
     async def check_and_update_badge(self, readme_ctx: Base64String) -> Base64Bytes:
@@ -175,13 +180,26 @@ class BadgeConstructor:
                         if is_badge_identified
                         else f"{constructed_badge}\n\n{line_ctx}"
                     )
-                    self.logger.debug(f"README Contents with Changes Reflected!")
+
+                    # Check if the README Content is the same as before, it that would be the case DO-NOT-COMMIT, or otherwise, commit changes.
+
+                    if line_ctx == readme_decode.result():
+                        self.logger.info(
+                            "There are content changes with the recent README. Allowing to reflect changes!"
+                        )
+                    else:
+                        self.logger.warning(
+                            "There are no current changes to commit since the content was the same as the recent README. Do-not-commit!"
+                        )
+                        setattr(self.args, "do_not_commit", True)
+
                     break
 
         except IndexError as e:
-            self.logger.warn(
-                f"The RegEx can't find any badge with Identifier in README. If you think that this is a bug then please let the developer know. | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
-            )
+            msg: str = f"The RegEx can't find any badge with Identifier in README. If you think that this is a bug then please let the developer know. | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
+            self.logger.warning(msg)
+
+            self.print_exception(GithubRunnerLevelMessages.WARNING, msg, e)
 
         return await self._handle_b64(Base64Actions.ENCODE_BUFFER_TO_B64, line_ctx)  # type: ignore # Will check this one in the future since I can't explicitly invoke or typecast NewType -> Base64Bytes.
 
@@ -283,9 +301,11 @@ class BadgeConstructor:
                 )
 
             else:
-                self.logger.warning(
-                    "There's no activity detected by the time it was fetched!"
-                )
+
+                msg: str = "There's no activity detected by the time it was fetched!"
+                self.logger.warning(msg)
+
+                self.print_exception(GithubRunnerLevelMessages.WARNING, msg, None)
 
             # # Badge Construction
             """
@@ -578,7 +598,8 @@ class BadgeConstructor:
             return final_output
 
         except KeyError as e:
-            self.logger.error(
-                f"Environment Processing has encountered an error. Please let the developer know about the following. | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
-            )
+            msg: str = f"Environment Processing has encountered an error. Please let the developer know about the following. | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
+            self.logger.error(msg)
+
+            self.print_exception(GithubRunnerLevelMessages.ERROR, msg, e)
             terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)

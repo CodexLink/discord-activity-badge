@@ -23,7 +23,7 @@ from argparse import Namespace
 from asyncio import create_task
 from logging import Logger
 from os import _exit as terminate
-from typing import Any, List, NoReturn, Optional, Union
+from typing import Any, Callable, List, NoReturn, Optional, Union
 
 from discord import Streaming  # To be used soon.
 from discord import Activity, ActivityType, Client, ClientUser, Member, Status
@@ -37,6 +37,7 @@ from elements.constants import (
     DISCORD_CLIENT_INTENTS,
     DISCORD_USER_STRUCT,
     ExitReturnCodes,
+    GithubRunnerLevelMessages,
     PreferredActivityDisplay,
 )
 
@@ -47,6 +48,7 @@ class DiscordClientHandler(Client):
     args: Namespace
     envs: Any
     logger: Logger
+    print_exception: Callable
     user: ClientUser
 
     """
@@ -250,9 +252,11 @@ class DiscordClientHandler(Client):
             )
 
         else:
-            self.logger.error(
-                "The requested user -> member (from the guild) does not exists! This was already asserted on the previous methods which means this shoudn't happen in the first place. Please contact the developer about this issue, if persists."
-            )
+
+            msg: str = "The requested user -> member (from the guild) does not exists! This was already asserted on the previous methods which means this shoudn't happen in the first place. Please contact the developer about this issue, if persists."
+            self.logger.error(msg)
+
+            self.print_exception(GithubRunnerLevelMessages.ERROR, msg, None)
             terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
 
     async def _exit_client_on_error(
@@ -277,9 +281,12 @@ class DiscordClientHandler(Client):
                 "Argument -dna / --do-not-alert has been invoked. DM process is supressed."
             )
 
-        self.logger.error(
+        msg: str = (
             f"Discord Client Handler encountered a problem! | Info: {err_message}"
         )
+        self.logger.error(msg)
+
+        self.print_exception(GithubRunnerLevelMessages.ERROR, msg)
 
         await self.close()
         terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)

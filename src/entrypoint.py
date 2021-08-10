@@ -117,7 +117,9 @@ class DiscordActivityBadge(
                     data=[self.readme_data.result()[0], badge_updater.result()],
                 )
             )
-        ) if not getattr(self.args, "do_not_commit") and not self.envs["IS_DRY_RUN"] else self.logger.warning(
+        ) if not getattr(self.args, "do_not_commit") and not self.envs[
+            "IS_DRY_RUN"
+        ] else self.logger.warning(
             "Argument -dnc / --do-not-commit was invoked, will skip updating README."
         )
 
@@ -131,15 +133,21 @@ class DiscordActivityBadge(
         self.logger.info("Done loading modules and necessary elements for the process.")
         prev_tasks: Set[Any] = set({})
 
-        while True: # We do infinite loop while we wait for other tasks to finish.
+        while True:  # We do infinite loop while we wait for other tasks to finish.
 
-            if len(all_tasks()) <= 1: # If thre are no other tasks aside from the loop (it's considered a task) then end the loop by closing other sessions.
+            if (
+                len(all_tasks()) <= 1
+            ):  # If thre are no other tasks aside from the loop (it's considered a task) then end the loop by closing other sessions.
                 self.logger.info(
                     "All tasks successfully finished! Closing Client Sessions..."
                 )
 
-                await gather(self.close(), self._api_session.close()) # Discord API and aiohttp.ClientSession.
-                self.logger.info("Connection Sessions were successfully closed. (Discord Client and Github API)")
+                await gather(
+                    self.close(), self._api_session.close()
+                )  # Discord API and aiohttp.ClientSession.
+                self.logger.info(
+                    "Connection Sessions were successfully closed. (Discord Client and Github API)"
+                )
 
                 break
 
@@ -148,7 +156,9 @@ class DiscordActivityBadge(
             n_tasks: int = len(tasks)
 
             try:
-                if prev_tasks != tasks: # * We also check by the context of all_tasks() if they were in the same length as before but different context, inevitably display it redundantly.
+                if (
+                    prev_tasks != tasks
+                ):  # * We also check by the context of all_tasks() if they were in the same length as before but different context, inevitably display it redundantly.
                     self.logger.info(
                         f"{n_tasks} task/s left to finish the runtime process."
                     )
@@ -159,7 +169,9 @@ class DiscordActivityBadge(
             except TypeError:
                 prev_tasks = tasks
 
-            await sleep(0) # We don't need await for certain n of time, we just let other tasks do their own job without disruption from this sleep.
+            await sleep(
+                0
+            )  # We don't need await for certain n of time, we just let other tasks do their own job without disruption from this sleep.
 
 
 # # Entrypoint Code

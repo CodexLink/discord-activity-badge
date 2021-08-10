@@ -23,7 +23,7 @@ from ast import literal_eval
 from asyncio import sleep
 from logging import Logger
 from os import _exit as terminate
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from aiohttp import BasicAuth, ClientResponse, ClientSession
 
@@ -33,6 +33,7 @@ from elements.constants import (
     REQUEST_HEADER,
     ExitReturnCodes,
     GithubRunnerActions,
+    GithubRunnerLevelMessages,
 )
 from elements.typing import (
     Base64String,
@@ -48,6 +49,7 @@ class AsyncGithubAPILite:
 
     envs: Any
     logger: Logger
+    print_exception: Callable
 
     """
     This child class is a scratch implementation based from Github API. It was supposed to be a re-write implementation of PyGithub for async,
@@ -156,8 +158,8 @@ class AsyncGithubAPILite:
 
                 # Same for this case, but we assert that the data received is malformed.
                 except SyntaxError as e:
-                    self.logger.error(
-                        f"Fetched Data is either incomplete or malformed. Attempting to re-fetch... | Info: {e} at line {e.__traceback__.tb_lineno}." # type: ignore
+                    self.logger.warning(
+                        f"Fetched Data is either incomplete or malformed. Attempting to re-fetch... | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
                     )
 
                     await sleep(0.6)
@@ -169,15 +171,18 @@ class AsyncGithubAPILite:
                     if serialized_response["message"].startswith(
                         "API rate limit exceeded"
                     ):
-                        self.logger.critical(
-                            f"Request accepted but you are probably rate-limited by Github API. Did you keep on retrying or you are over-committing changes? | More Info: {e} at line {e.__traceback__.tb_lineno}." # type: ignore
-                        )
+                        msg: str = f"Request accepted but you are probably rate-limited by Github API. Did you keep on retrying or you are over-committing changes? | More Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
+                        self.logger.critical(msg)
+
+                        self.print_exception(GithubRunnerLevelMessages.ERROR, msg, e)
                         terminate(ExitReturnCodes.RATE_LIMITED_EXIT)
 
         else:
-            self.logger.critical(
-                f"The given value on `action` parameter is invalid! Ensure that the `action` is `{GithubRunnerActions}`!"
-            )
+
+            msg = f"The given value on `action` parameter is invalid! Ensure that the `action` is `{GithubRunnerActions}`!"
+            self.logger.critical(msg)
+
+            self.print_exception(GithubRunnerLevelMessages.ERROR, msg)
             terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
 
     async def _request(
@@ -263,7 +268,9 @@ class AsyncGithubAPILite:
                 terminate(ExitReturnCodes.EXCEPTION_EXIT)
 
         else:
-            self.logger.critical(
-                f"An Enum invoked on `action` parameter ({action_type.name}) is invalid! This is probably an issue from the developer, please contact the developer as possible."
-            )
+
+            msg: str = f"An Enum invoked on `action` parameter ({action_type.name}) is invalid! This is probably an issue from the developer, please contact the developer as possible."
+            self.logger.critical(msg)
+
+            self.print_exception(GithubRunnerLevelMessages.ERROR, msg, None)
             terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)

@@ -105,61 +105,66 @@ BLUEPRINT_INIT_VALUES: DISCORD_USER_STRUCT = {
 # # Enumerations
 @unique
 class ContextOnSubject(IntEnum):
-    CONTEXT_DISABLED = auto()
-    DETAILS = auto()
-    STATE = auto()
+    CONTEXT_DISABLED: int = auto()
+    DETAILS: int = auto()
+    STATE: int = auto()
 
 
 class ExitReturnCodes(IntEnum):
-    RATE_LIMITED_EXIT = -1
-    EXCEPTION_EXIT = -1
-    NO_CONDITION_IMPLEMENTED_EXIT = -1
-    ILLEGAL_CONDITION_EXIT = -1
-    ILLEGAL_IMPORT_EXIT = -1
-    ENV_KEY_DOES_NOT_EXISTS_ON_DICT = -1
-    ENV_KEY_DOES_NOT_EXISTS_ON_MACHINE = -1
-    EXIT_HELP = 0
-    EXIT_SUCCESS = 0
+    EXIT_HELP: Final[int] = 0
+    ENV_KEY_DOES_NOT_EXISTS_ON_DICT: Final[int] = 1
+    ENV_KEY_DOES_NOT_EXISTS_ON_MACHINE: Final[int] = 1
+    EXCEPTION_EXIT: Final[int] = 1
+    ILLEGAL_CONDITION_EXIT: Final[int] = 1
+    ILLEGAL_IMPORT_EXIT: Final[int] = 1
+    NO_CONDITION_IMPLEMENTED_EXIT: Final[int] = 1
+    RATE_LIMITED_EXIT: Final[int] = 1
 
 
 @unique
 class GithubRunnerActions(IntEnum):
-    FETCH_README = auto()
-    COMMIT_CHANGES = auto()
+    FETCH_README: int = auto()
+    COMMIT_CHANGES: int = auto()
+
+
+@unique
+class GithubRunnerLevelMessages(Enum):
+    WARNING: Final[str] = "warning"
+    ERROR: Final[str] = "error"
 
 
 @unique
 class LoggerLevelCoverage(IntEnum):
-    DEBUG = DEBUG
-    INFO = INFO
-    WARNING = WARNING
-    ERROR = ERROR
-    CRITICAL = CRITICAL
+    DEBUG: Final[int] = DEBUG
+    INFO: Final[int] = INFO
+    WARNING: Final[int] = WARNING
+    ERROR: Final[int] = ERROR
+    CRITICAL: Final[int] = CRITICAL
 
 
 @unique
 class LoggerRootLevel(Enum):
-    SCRIPT_LEVEL = "__main__"
-    SCRIPT_PLUS_DISCORD = "discord"
-    LOOP_LEVEL = "asyncio"
+    SCRIPT_LEVEL: Final[str] = "__main__"
+    SCRIPT_PLUS_DISCORD: Final[str] = "discord"
+    LOOP_LEVEL: Final[str] = "asyncio"
 
 
 @unique
 class PreferredActivityDisplay(IntEnum):
-    CUSTOM_ACTIVITY = auto()
-    GAME_ACTIVITY = auto()
-    RICH_PRESENCE = auto()
-    STREAM_ACTIVITY = auto()
-    UNSPECIFIED_ACTIVITY = auto()
+    CUSTOM_ACTIVITY: int = auto()
+    GAME_ACTIVITY: int = auto()
+    RICH_PRESENCE: int = auto()
+    STREAM_ACTIVITY: int = auto()
+    UNSPECIFIED_ACTIVITY: int = auto()
 
 
 @unique
 class PreferredTimeDisplay(IntEnum):
-    TIME_DISABLED = auto()
-    HOURS = auto()
-    HOURS_MINUTES = auto()
-    MINUTES = auto()
-    SECONDS = auto()
+    TIME_DISABLED: int = auto()
+    HOURS: int = auto()
+    HOURS_MINUTES: int = auto()
+    MINUTES: int = auto()
+    SECONDS: int = auto()
 
 
 # # HTTPS Request Header Dictionary Structure

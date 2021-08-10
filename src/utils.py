@@ -21,7 +21,7 @@ from logging import FileHandler, Formatter, Logger, StreamHandler, getLogger
 from os import _exit as terminate
 from os import environ as env
 from sys import stdout
-from typing import Any, Type
+from typing import Any, Type, Union
 
 from elements.constants import (
     ARG_CONSTANTS,
@@ -32,6 +32,7 @@ from elements.constants import (
     ROOT_LOCATION,
     ContextOnSubject,
     ExitReturnCodes,
+    GithubRunnerLevelMessages,
     LoggerLevelCoverage,
     LoggerRootLevel,
     PreferredActivityDisplay,
@@ -70,15 +71,18 @@ class UtilityFunctions:
                 f"`dotenv` file ({ROOT_LOCATION + ENV_FILENAME}) was loaded in runtime."
             )
 
-        except ModuleNotFoundError:
-            self.logger.critical(
-                "Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies and try again."
-            )
+        # todo: Investigate if they contain_traceback.
+        except ModuleNotFoundError as e:
+            msg: str = "Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies and try again."
+            self.logger.critical(msg)
+
+            self.print_exception(GithubRunnerLevelMessages.ERROR, msg, e)
 
         except IOError as e:
-            self.logger.critical(
-                f"File {ENV_FILENAME} at {ROOT_LOCATION} is malformed or does not exists! | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
-            )
+            msg: str = f"File {ENV_FILENAME} at {ROOT_LOCATION} is malformed or does not exists! | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
+            self.logger.critical(msg)
+
+            self.print_exception(GithubRunnerLevelMessages.ERROR, msg, e)
 
     def init_logger(
         self,
@@ -278,15 +282,17 @@ class UtilityFunctions:
 
             # ! This except block expects only Dictionary Errors. If you think there's something else to consider, please let me know.
             except KeyError as e:
-                self.logger.critical(
-                    f"Dictionary Key doesn't exists under `constants.py`. This is a bug or a left-out problem, please report this to the developer! | Info: {e} in line {e.__traceback__.tb_lineno}." # type: ignore
-                )
+                msg: str = f"Dictionary Key doesn't exists under `constants.py`. This is a bug or a left-out problem, please report this to the developer! | Info: {e} in line {e.__traceback__.tb_lineno}."  # type: ignore
+                self.logger.critical(msg)
+
+                self.print_exception(GithubRunnerLevelMessages.ERROR, msg, e)
                 terminate(ExitReturnCodes.ENV_KEY_DOES_NOT_EXISTS_ON_DICT)
 
             except TypeError as e:
-                self.logger.critical(
-                    f"Environment Variable {env_key} cannot be found. Are you running on local? Check if you invoked -rol / --running-on-local otherwise it won't run in local. If persisting, check your environment file. If this was deployed, please report this issue to the developer. | Info: {e} in line {e.__traceback__.tb_lineno}." # type: ignore
-                )
+                msg: str = f"Environment Variable {env_key} cannot be found. Are you running on local? Check if you invoked -rol / --running-on-local otherwise it won't run in local. If persisting, check your environment file. If this was deployed, please report this issue to the developer. | Info: {e} in line {e.__traceback__.tb_lineno}."  # type: ignore
+                self.logger.critical(msg)
+
+                self.print_exception(GithubRunnerLevelMessages.ERROR, msg, e)
                 terminate(ExitReturnCodes.ENV_KEY_DOES_NOT_EXISTS_ON_MACHINE)
 
             # !!! At this point, the environment must assert that it contains data! If codeblock still hits with an exception, there will be an improvment later on.
@@ -330,10 +336,10 @@ class UtilityFunctions:
 
                 # If they are required (is_required -> False) then terminate the script.
                 else:
-                    self.logger.critical(
-                        f"::error file={__file__},line=336,col=21::[{idx + 1}] Env. Var. {env_key} does not exist in local environment file or the repository secret does not exists or invalid! To the developer: Please fill up the required fields (in constants.py) to be able to use this script."
-                    )
-                    # print(f"::error file={__file__},line=336,col=21::[{idx + 1}] Env. Var. {env_key} does not exist in local environment file or the repository secret does not exists or invalid!")
+                    msg = f"Env. Var. {env_key} does not exist in local environment file or the repository secret does not exists or invalid! To the developer: Please fill up the required fields (in constants.py) to be able to use this script."
+                    self.logger.critical(msg)
+
+                    self.print_exception(GithubRunnerLevelMessages.ERROR, msg, None)
                     terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
 
             # ! If the Environment Variable has a value, then we will check their `expected_type` and evaluate them with respect to their type.
@@ -363,9 +369,11 @@ class UtilityFunctions:
                         "fallback_value"
                     ]
                     self.envs[env_cleaned_name] = fallback_bool_val
-                    self.logger.warning(
-                        f"Env. Var. {env_key} has an invalid key that can't be serialized to boolean. Using a fallback value {fallback_bool_val} instead."
-                    )
+
+                    msg = f"Env. Var. {env_key} has an invalid key that can't be serialized to boolean. Using a fallback value {fallback_bool_val} instead."
+                    self.logger.warning(msg)
+
+                    self.print_exception(GithubRunnerLevelMessages.WARNING, msg, None)
 
             elif issubclass(ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"], Enum):
                 # Handling Enums and resolving them is such a pain in the [...].
@@ -409,12 +417,62 @@ class UtilityFunctions:
                     )
 
             else:
-                self.logger.critical(
-                    f"Env. Var. '{enum_case_env_val}' cannot be resolved / serialized due to its `expected_type` not a candidate for serialization. Please contact the developer about this for more information."
-                )
+                msg = f"Env. Var. '{enum_case_env_val}' cannot be resolved / serialized due to its `expected_type` not a candidate for serialization. Please contact the developer about this for more information."
+                self.logger.critical(msg)
+
+                self.print_exception(GithubRunnerLevelMessages.ERROR, msg, None)
                 terminate(ExitReturnCodes.NO_CONDITION_IMPLEMENTED_EXIT)
 
         self.logger.info(
             f"Environment Variables stored in-memory are successfully resolved!"
         )
         self.logger.debug(f"Env. Serialization Context -> {self.envs}")
+
+    def print_exception(
+        self,
+        message_type: GithubRunnerLevelMessages,
+        error_message: str,
+        traceback_info: Union[
+            Union[Exception, IOError, KeyError, ModuleNotFoundError, TypeError], None
+        ],
+    ) -> None:
+        """
+        A utility function that utilizes the error and warning display messages for every runner instance. Quite redundant to be honest...
+
+        Args:
+            message_type (GithubRunnerLevelMessages): The level or severity of the message, warning or error. Debug is not used since we don't debug in Runner.
+            error_message (str): The message to send in the runner, typically used by the ones who utilizes the logger.
+            traceback_info (Union[Type[Exception], None]): The exception that contains the traceback. Usually sent by loggers that is in except code blocks.
+        """
+
+        line_no: int = 1  # By default, if traceback_info weren't given.
+
+        if not getattr(
+            self.args, "running_on_local"
+        ):  # Ensure that we don't display this in local since it destroys logging display consistency.
+            if message_type is GithubRunnerLevelMessages:
+
+                if traceback_info is not None:
+                    # if isinstance(traceback_info, Exception):
+                    # if isinstance(traceback_info, (Exception, IOError, KeyError, ModuleNotFoundError, TypeError)):
+                    self.logger.warning(
+                        "Traceback information were not provided for this exception. Displaying filename instead."
+                    )
+                    line_no = (
+                        traceback_info.__traceback__.tb_lineno  # type: ignore # ! Investigate this later.
+                    )  # Get that last line number :3
+
+                # Then print it, Github Action runner typically resolves or understand this print.
+                print(
+                    f"::{message_type.value} file={__file__},line={line_no},col=1::{error_message}. %s"
+                    % "Please refer to the logs for more information about the exception!"
+                    if traceback_info is None
+                    else ""
+                )  # ! Keep note that, we can't get the exact infromation in terms of displaying the line. For column, this seems to be not supported.
+
+            else:
+                msg: str = f"Given Enum (message_type) is not a {GithubRunnerLevelMessages}! This isn't supposed to happen, please contact the developer by reporting this issue."
+                self.logger.warning(msg)
+                print(
+                    f"::warning file={__file__}, line=480,col=1::{msg}"
+                )  # Have to call this manual, can't call this function alone or we will hit infinite loop.
