@@ -148,6 +148,13 @@ inputs:
     description: "The character/s that seperates the context of every status elements."
     required: false
 
+  # # Development Parameters
+  IS_DRY_RUN:
+    description: "Runs the usual process except it doesn't commit changes."
+    required: false
+
+
+
 runs:
   using: "docker"
   image: "docker://codexlink/discord-activity-badge:latest"

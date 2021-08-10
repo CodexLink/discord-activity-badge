@@ -129,12 +129,12 @@ class DiscordClientHandler(Client):
 
         except NotFound as e:
             await self._exit_client_on_error(
-                f"The user cannot be found. Did you input your Discord ID properly? | Info: {e} on line {e.__traceback__.tb_lineno}"  # type: ignore
+                f"The user cannot be found. Did you input your Discord ID properly? | Info: {e} on line {e.__traceback__.tb_lineno}."  # type: ignore
             )
 
         except HTTPException as e:
             await self._exit_client_on_error(
-                f"Failed to make a request due to malformed data given under `DISCORD_USER_ID` key. Which results to: {e} on line {e.__traceback__.tb_lineno} | This can be a developer's fault upon assigning non-existent Env Key, please make an issue about this problem."  # type: ignore
+                f"Failed to make a request due to malformed data given under `DISCORD_USER_ID` key. Which results to: {e} on line {e.__traceback__.tb_lineno}. | This can be a developer's fault upon assigning non-existent Env Key, please make an issue about this problem."  # type: ignore
             )
 
         return user_info

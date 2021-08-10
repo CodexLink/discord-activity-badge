@@ -77,7 +77,7 @@ class UtilityFunctions:
 
         except IOError as e:
             self.logger.critical(
-                f"File {ENV_FILENAME} at {ROOT_LOCATION} is malformed or does not exists! | Info: {e} at line {e.__traceback__.tb_lineno}"  # type: ignore
+                f"File {ENV_FILENAME} at {ROOT_LOCATION} is malformed or does not exists! | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
             )
 
     def init_logger(
@@ -279,13 +279,13 @@ class UtilityFunctions:
             # ! This except block expects only Dictionary Errors. If you think there's something else to consider, please let me know.
             except KeyError as e:
                 self.logger.critical(
-                    f"Dictionary Key doesn't exists under `constants.py`. This is a bug or a left-out problem, please report this to the developer! | Info: {e} in line {e.__traceback__.tb_lineno}" # type: ignore
+                    f"Dictionary Key doesn't exists under `constants.py`. This is a bug or a left-out problem, please report this to the developer! | Info: {e} in line {e.__traceback__.tb_lineno}." # type: ignore
                 )
                 terminate(ExitReturnCodes.ENV_KEY_DOES_NOT_EXISTS_ON_DICT)
 
             except TypeError as e:
                 self.logger.critical(
-                    f"Environment Variable {env_key} cannot be found. Are you running on local? Check if you invoked -rol / --running-on-local otherwise it won't run in local. If persisting, check your environment file. If this was deployed, please report this issue to the developer. | Info: {e} in line {e.__traceback__.tb_lineno}" # type: ignore
+                    f"Environment Variable {env_key} cannot be found. Are you running on local? Check if you invoked -rol / --running-on-local otherwise it won't run in local. If persisting, check your environment file. If this was deployed, please report this issue to the developer. | Info: {e} in line {e.__traceback__.tb_lineno}." # type: ignore
                 )
                 terminate(ExitReturnCodes.ENV_KEY_DOES_NOT_EXISTS_ON_MACHINE)
 

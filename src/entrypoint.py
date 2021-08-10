@@ -117,7 +117,7 @@ class DiscordActivityBadge(
                     data=[self.readme_data.result()[0], badge_updater.result()],
                 )
             )
-        ) if not getattr(self.args, "do_not_commit") else self.logger.warning(
+        ) if not getattr(self.args, "do_not_commit") and not self.envs["IS_DRY_RUN"] else self.logger.warning(
             "Argument -dnc / --do-not-commit was invoked, will skip updating README."
         )
 

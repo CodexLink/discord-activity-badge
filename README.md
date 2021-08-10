@@ -36,7 +36,7 @@ jobs:
 
     steps:
       - name: Update README Discord Badge to Latest Upstream
-      - uses: CodexLink/discord-activity-badge@main
+      - uses: CodexLink/discord-activity-badge@latest
 
         with:
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}

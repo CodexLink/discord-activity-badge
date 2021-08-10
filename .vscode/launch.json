@@ -8,10 +8,37 @@
 			"name": "Python: Current File + Internals",
 			"type": "python",
 			"request": "launch",
+			"program": "src/entrypoint.py",
+			"console": "integratedTerminal",
+			"justMyCode": false,
+			"args": ["-ll", "DEBUG", "-nl", "-l"]
+		}
+		{
+			"name": "Python: Current File + Internals",
+			"type": "python",
+			"request": "launch",
 			"program": "${file}",
 			"console": "integratedTerminal",
 			"justMyCode": false,
-			"args": ["-lc", "-nl", "-l"]
+			"args": ["-ll", "DEBUG", "-nl", "-l"]
+		}
+		{
+			"name": "Python: Current File + Internals",
+			"type": "python",
+			"request": "launch",
+			"program": "${file}",
+			"console": "integratedTerminal",
+			"justMyCode": false,
+			"args": ["-ll", "DEBUG", "-nl", "-l"]
+		}
+		{
+			"name": "Python: Current File + Internals",
+			"type": "python",
+			"request": "launch",
+			"program": "${file}",
+			"console": "integratedTerminal",
+			"justMyCode": false,
+			"args": ["-ll", "DEBUG", "-nl", "-l"]
 		}
 	]
 }

@@ -157,7 +157,7 @@ class AsyncGithubAPILite:
                 # Same for this case, but we assert that the data received is malformed.
                 except SyntaxError as e:
                     self.logger.error(
-                        f"Fetched Data is either incomplete or malformed. Attempting to re-fetch... | Info: {e} at line {e.__traceback__.tb_lineno}" # type: ignore
+                        f"Fetched Data is either incomplete or malformed. Attempting to re-fetch... | Info: {e} at line {e.__traceback__.tb_lineno}." # type: ignore
                     )
 
                     await sleep(0.6)
@@ -170,7 +170,7 @@ class AsyncGithubAPILite:
                         "API rate limit exceeded"
                     ):
                         self.logger.critical(
-                            f"Request accepted but you are probably rate-limited by Github API. Did you keep on retrying or you are over-committing changes? | More Info: {e} at line {e.__traceback__.tb_lineno}" # type: ignore
+                            f"Request accepted but you are probably rate-limited by Github API. Did you keep on retrying or you are over-committing changes? | More Info: {e} at line {e.__traceback__.tb_lineno}." # type: ignore
                         )
                         terminate(ExitReturnCodes.RATE_LIMITED_EXIT)
 

@@ -180,7 +180,7 @@ class BadgeConstructor:
 
         except IndexError as e:
             self.logger.warn(
-                f"The RegEx can't find any badge with Identifier in README. If you think that this is a bug then please let the developer know. | Info: {e} at line {e.__traceback__.tb_lineno}"  # type: ignore
+                f"The RegEx can't find any badge with Identifier in README. If you think that this is a bug then please let the developer know. | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
             )
 
         return await self._handle_b64(Base64Actions.ENCODE_BUFFER_TO_B64, line_ctx)  # type: ignore # Will check this one in the future since I can't explicitly invoke or typecast NewType -> Base64Bytes.
