@@ -110,15 +110,11 @@ inputs:
     description: "Overrides the status color when the user is in Offline state."
     required: False
 
-  STATUS_SUBJECT_STRING:
+  STATIC_SUBJECT_STRING:
     description: "Statically declare a certain string to display on the subject. If declared, []_ACTIVITY_STRING and []_STATUS_STRING will be ignored."
     required: False
 
   # # Optional Parameters — Context
-  TIME_DISPLAY_SHORTHAND:
-    description: "Displays the time with hours and minutes shorthanded to h and m."
-    required: false
-
   PREFERRED_PRESENCE_CONTEXT:
     description: "Overrides additional information to append in the badge. So far, only `DETAILS`, and `STATE` are allowed to be appended since it shows the other context of the application."
     required: false
@@ -135,6 +131,10 @@ inputs:
     description: "Overrides the string appended whenever the time is displayed for remaining. This is effective only when `SHOW_TIME_DURATION` is `True`."
     required: false
 
+  TIME_DISPLAY_SHORTHAND:
+    description: "Displays the time with hours and minutes shorthanded to h and m."
+    required: false
+
   # # Optional Parameters — Preferences
   PREFERRED_ACTIVITY_TO_DISPLAY:
     description: "Renders a particular activity as a prioritized activity. If the preferred activity does not exist, it will render any activity by default."
@@ -146,11 +146,6 @@ inputs:
 
   STATUS_CONTEXT_SEPERATOR:
     description: "The character/s that seperates the context of every status elements."
-    required: false
-
-  # # Development Parametersf
-  IS_DRY_RUN:
-    description: "Runs the usual process except it doesn't commit changes."
     required: false
 
 runs:

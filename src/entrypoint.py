@@ -70,7 +70,7 @@ class DiscordActivityBadge(
         super().check_dotenv() if getattr(  # * (4)
             self.args, "running_on_local"
         ) else self.logger.info(
-            f"Running local mode invocation detected. Skipping checks for '{ENV_FILENAME}'."
+            f"Running local mode invocation not detected. Skipping checks for '{ENV_FILENAME}'."
         )
 
         # Once the extra step is done or skipped, evaluate the envs for other modules to use.

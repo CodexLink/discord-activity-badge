@@ -16,16 +16,7 @@ name: Container Tester
 
 on:
 
-  push:
-    paths:
-      - "src/**"
-      - ".github/workflows/*.yml"
-      - "Dockerfile"
-      - "*.toml"
-      - "action.yml"
-
   workflow_dispatch:
-
 
   workflow_run:
     workflows: ["Script Containerization"]

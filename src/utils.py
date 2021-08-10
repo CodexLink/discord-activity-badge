@@ -252,7 +252,7 @@ class UtilityFunctions:
 
         for idx, (env_key, _) in enumerate(
             ENV_STRUCT_CONSTRAINTS.items()
-        ):  # We don't need their value, just the key.
+        ):  # We don't need the value, just the key.
 
             try:
                 # * Attempt to fetch the parameter (3.a) and remove any unnecessary from the environment variable name (3.b).
@@ -279,13 +279,13 @@ class UtilityFunctions:
             # ! This except block expects only Dictionary Errors. If you think there's something else to consider, please let me know.
             except KeyError as e:
                 self.logger.critical(
-                    f"Dictionary Key doesn't exists under `constants.py`. This is a bug or a left-out problem, please report this to the developer! | Info: {e}"
+                    f"Dictionary Key doesn't exists under `constants.py`. This is a bug or a left-out problem, please report this to the developer! | Info: {e} in line {e.__traceback__.tb_lineno}" # type: ignore
                 )
                 terminate(ExitReturnCodes.ENV_KEY_DOES_NOT_EXISTS_ON_DICT)
 
             except TypeError as e:
                 self.logger.critical(
-                    f"Environment Variable {env_key} cannot be found. Are you running on local? Check if you invoked -rol / --running-on-local otherwise it won't run in local. If persisting, check your environment file. If this was deployed, please report this issue to the developer. | Info: {e}"
+                    f"Environment Variable {env_key} cannot be found. Are you running on local? Check if you invoked -rol / --running-on-local otherwise it won't run in local. If persisting, check your environment file. If this was deployed, please report this issue to the developer. | Info: {e} in line {e.__traceback__.tb_lineno}" # type: ignore
                 )
                 terminate(ExitReturnCodes.ENV_KEY_DOES_NOT_EXISTS_ON_MACHINE)
 
@@ -318,7 +318,7 @@ class UtilityFunctions:
                         else None
                     )
 
-                    self.logger.info(
+                    self.logger.debug(
                         "Env. Var. %s has now a resolved value of %s! (with type %s)"
                         % (
                             env_key,
