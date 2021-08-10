@@ -1,10 +1,8 @@
-name: "Discord Rich Presence Activity Badge"
-description: "A containerized action that bridges the Discord User's Rich Presence to a Presentable Badge on their Special Repository (Github Profile). Powered by <b>Python + Asnycio + discord.py"
+name: "Discord Activity Badge"
+description: "Bridge your Discord Activities and Rich Presence to a Representable Badge on your repository to show your status. Powered by Docker and AsyncIO Python."
 author: "Janrey 'CodexLink' Licas"
 
-
-# ! Are you looking for the default values? Please check src/elements/constants.py or the README.md for more information.
-# ! It was placed on that certain file because of the resolve over invalid value functionality.
+# ! Are you looking for the default values of these parameters? Please check src/elements/constants.py or the README.md for more information.
 
 inputs:
   # # Required Parameters
@@ -150,11 +148,11 @@ inputs:
     description: "The character/s that seperates the context of every status elements."
     required: false
 
-  # # Development Parameters
+  # # Development Parametersf
   IS_DRY_RUN:
     description: "Runs the usual process except it doesn't commit changes."
     required: false
 
 runs:
   using: "docker"
-  image: "docker://codexlink/discord-rich-presence-activity-badge:latest"
+  image: "docker://codexlink/discord-activity-badge:latest"

@@ -29,17 +29,17 @@ on:
 
   workflow_run:
     workflows: ["Script Containerization"]
-    branches: [dev]
+    branches: [latest]
     types: [completed]
 
 jobs:
   DockerTester:
-    name: Dry Test | Pull Container and Run
+    name: Dry Test | Fetch Container and Execute
     runs-on: ubuntu-latest
 
     steps:
-      - name: Container Dry Run
-        uses: CodexLink/discord-rich-presence-activity-badge@dev
+      - name: Container Dry Run in `latest`
+        uses: CodexLink/discord-rich-presence-activity-badge@latest
         with:
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
