@@ -194,7 +194,7 @@ Here contains a list of resources that I have used in any forms that contributed
 - https://stackoverflow.com/questions/36342899/asyncio-ensure-future-vs-baseeventloop-create-task-vs-simple-coroutine
 - https://stackoverflow.com/questions/66381035/docker-buildx-error-rpc-error-code-unknown-desc-server-message-insuffici
 - https://stackoverflow.com/a/41766306/5353223
-- https://stackoverflow.com/questions/41351346/python-asyncio-task-list-generation-without-executing-the-function (Helped me understand more of the use of as_completed.)
+- https://stackoverflow.com/questions/41351346/python-asyncio-task-list-generation-without-executing-the-method (Helped me understand more of the use of as_completed.)
 - https://stackoverflow.com/a/49710946/5353223 (After knowing the O of Time for `match()` vs `search()`)
 - https://stackoverflow.com/questions/3603502/prevent-creating-new-attributes-outside-init
 - https://material.io/design/color/the-color-system.html#tools-for-picking-colors
@@ -216,6 +216,8 @@ Here contains a list of resources that I have used in any forms that contributed
 - https://stackoverflow.com/questions/14007545/python-regex-instantly-replace-groups
 - https://stackoverflow.com/questions/15340582/python-extract-pattern-matches
 - https://stackoverflow.com/a/606199/5353223
+- https://stackoverflow.com/a/27529806/5353223
+- https://stackoverflow.com/a/22636121/5353223
 
 > This section is still incomplete. I will put more and format it later.
 

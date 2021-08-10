@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import logging
 from argparse import ArgumentParser
 from distutils.util import strtobool
-from enum import Enum, IntEnum
-from os import _exit as exit
+from enum import Enum
+from logging import FileHandler, Formatter, Logger, StreamHandler, getLogger
+from os import _exit as terminate
 from os import environ as env
 from sys import stdout
-from typing import Any, Optional, Type, Union
+from typing import Any, Type
 
 from elements.constants import (
     ARG_CONSTANTS,
@@ -29,9 +29,11 @@ from elements.constants import (
     ENV_STRUCT_CONSTRAINTS,
     LOGGER_FILENAME,
     LOGGER_OUTPUT_FORMAT,
-    LoggerLevelCoverage,
     ROOT_LOCATION,
     ContextOnSubject,
+    ExitReturnCodes,
+    LoggerLevelCoverage,
+    LoggerRootLevel,
     PreferredActivityDisplay,
     PreferredTimeDisplay,
 )
@@ -39,27 +41,24 @@ from elements.constants import (
 
 class UtilityFunctions:
     """
-    A class designed to be a child class to the superclass. (ActivityBadgeServices)
+    A child class designed to store and handle every utility methods. (used by superclass, DiscordActivityBadge)
     """
 
     def check_dotenv(self) -> None:
         """
-        Prepares the .env file to loaded in this script instance.
+        Prepares the .env file to be loaded on runtime.
 
-        If function "find_dotenv" raise an error, the script won't run.
-
-        Pre-req: Argument -l or --local. Or otherwise, this function will not run.
+        This requires Argument -l or --local. Or otherwise, this method will not run.
+        ! Note: If method "find_dotenv" raise an error, the script will raise an Exception (ModuleNotFoundError | DotenvFileNotFound).
         """
+
         try:
-            self.logger.info(f"Invoked -l / --local, importing `dotenv` packages.")
             from dotenv import find_dotenv, load_dotenv
 
-        except ModuleNotFoundError:
-            self.logger.critical(
-                "Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies."
+            self.logger.info(
+                f"Argument --rol / --running-on-local detected, `dotenv` packages were imported."
             )
 
-        try:
             self.logger.info(f"Attempting to locate {ROOT_LOCATION}/{ENV_FILENAME}...")
             load_dotenv(
                 find_dotenv(
@@ -68,154 +67,207 @@ class UtilityFunctions:
                 )
             )
             self.logger.info(
-                f"Env File at {ROOT_LOCATION + ENV_FILENAME} was validated."
+                f"`dotenv` file ({ROOT_LOCATION + ENV_FILENAME}) was loaded in runtime."
             )
 
-        except IOError:
+        except ModuleNotFoundError:
             self.logger.critical(
-                f"File {ENV_FILENAME} at {ROOT_LOCATION} is malformed or does not exists!"
+                "Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies and try again."
             )
 
-            # todo: I don't know about this one.
-            # raise DotEnvFileNotFound(RET_DOTENV_NOT_FOUND)
+        except IOError as e:
+            self.logger.critical(
+                f"File {ENV_FILENAME} at {ROOT_LOCATION} is malformed or does not exists! | Info: {e} at line {e.__traceback__.tb_lineno}"  # type: ignore
+            )
 
     def init_logger(
         self,
-        level_coverage: IntEnum,
-        log_to_file: Optional[bool] = False,
-        out_to_console: Optional[bool] = False,
-        verbose_client: Optional[bool] = False,
+        level_coverage: LoggerLevelCoverage,
+        root_level: LoggerRootLevel,
+        log_to_file: bool,
+        out_to_console: bool,
     ) -> None:
         """
-        Step 0.3 | Loads the logger for all associated modules.
+        Loads the logger to be used and referred by all associated classes in superclass (DiscordActivityBadge).
 
         Args:
-                level_coverage (Optional[int], optional): Sets the level (and above) to cover it in the logs or in stream. Defaults to logging.DEBUG.
-                log_to_file (Optional[bool], optional): Creates a file and logs the data if set to True, or otherwise. Defaults to False.
-                out_to_console (Optional[bool], optional): Output the log reports in the console, if enabled. Defaults to False.
-                verbose_client (Optional[bool], optional): Bind discord to the logger to log other events that is out of scope of entrypoint.
-        Summary: todo.
+            level_coverage: Sets the level of the log coverage. | Defaults to logging.INFO (LoggerLevelCoverage.INFO).
+            root_level: Sets the root level coverage in a module. Top module covers all other modules that needs logging. | Defaults to LoggerLevelCoverage.SCRIPT_LEVEL.
+            log_to_file: Creates a file and logs the data if set to True, or otherwise. | Defaults to False.
+            out_to_console: Output the log reports in the console, if enabled. | Defaults to True.
         """
 
-        # Expressed Statements
-        LOGGER_HANDLER_FORMATTER: Optional[logging.Formatter] = logging.Formatter(
-            LOGGER_OUTPUT_FORMAT
-        )
-        LOGGER_LEVEL_COVERAGE: IntEnum = (
-            level_coverage if level_coverage in LoggerLevelCoverage else LoggerLevelCoverage.DEBUG
+        LOGGER_HANDLER_FORMATTER: Formatter = Formatter(LOGGER_OUTPUT_FORMAT)
+
+        # Since we invoke Enums in Environment Variables, we have to resolve them here to get the true value of Logger Level.
+        self.logger: Logger = getLogger(
+            __name__
+            if root_level is LoggerRootLevel.SCRIPT_LEVEL
+            else LoggerRootLevel.SCRIPT_PLUS_DISCORD.name
+            if root_level is LoggerRootLevel.SCRIPT_PLUS_DISCORD
+            else LoggerRootLevel.LOOP_LEVEL.name
+            if root_level is LoggerRootLevel.LOOP_LEVEL
+            else None
         )
 
-        self.logger: logging.Logger = logging.getLogger(
-            # todo: This is not intended.
-            __name__ if not verbose_client else "discord"
-            # "discord"
+        # This asserts that the LoggerLevel is fetched from an Enum, not by natural value. If invalid, it will automatically set to LoggerLevelCoverage.INFO.
+        LOGGER_LEVEL_COVERAGE: LoggerLevelCoverage = (
+            level_coverage
+            if level_coverage in LoggerLevelCoverage
+            else LoggerLevelCoverage.INFO
         )
-
         self.logger.setLevel(LOGGER_LEVEL_COVERAGE.value)
 
         if log_to_file:
-            file_handler = logging.FileHandler(
+            file_handler = FileHandler(
                 filename=LOGGER_FILENAME, encoding="utf-8", mode="w"
             )
             file_handler.setFormatter(LOGGER_HANDLER_FORMATTER)
             self.logger.addHandler(file_handler)
-            self.logger.debug(f"Log to file has been enabled. Expect log file to be rendered in {LOGGER_FILENAME}.")
+            self.logger.debug(
+                f"Log to file has been enabled. Expect log file to be rendered in {LOGGER_FILENAME}."
+            )
 
         if out_to_console:
-            console_handler = logging.StreamHandler(stdout)
+            console_handler = StreamHandler(stdout)
             console_handler.setFormatter(LOGGER_HANDLER_FORMATTER)
             self.logger.addHandler(console_handler)
-            self.logger.debug(f"Out to Console (Render Log to Console) has been enabled. Expect more outputs here.")
+            self.logger.debug(
+                f"Out to Console (Render Log to Console) has been enabled. Expect more outputs here."
+            )
 
-
-        self.logger.info(f"The logger has been loaded with Coverage Level {level_coverage.value}. ({level_coverage.name})")
+        self.logger.info(
+            f"The logger has been loaded with Coverage Level {level_coverage.value}. ({level_coverage.name})"
+        )
 
     def resolve_args(self) -> None:
-        _parser = ArgumentParser(
-            description=str(ARG_CONSTANTS["ENTRY_PARSER_DESC"]),
-            epilog=str(ARG_CONSTANTS["ENTRY_PARSER_EPILOG"]),
+        # Resolves the arguments given to which was handled by ArgumentParser.
+
+        # Two of the choices require immediate evaluation of values to Enum, thus, we programmatically load it in the script.
+        _ll_choices: dict = {}
+        _v_choices: dict = {}
+
+        # Each dictionary (_ll_choices and _v_choices) will contain all of their Enum elements, respectively.
+        # This will help me adjust the enums and have their possible values assigned correctly.
+        for each_enum in [LoggerLevelCoverage, LoggerRootLevel]:
+            for each_element in each_enum:
+                locals()[
+                    ("_ll" if each_element in LoggerLevelCoverage else "_v")
+                    + "_choices"
+                ][each_element.name] = each_element
+
+        parser = ArgumentParser(
+            prog=ARG_CONSTANTS["ENTRY_PARSER_PROG"],
+            description=ARG_CONSTANTS["ENTRY_PARSER_DESC"],
+            epilog=ARG_CONSTANTS["ENTRY_PARSER_EPILOG"],
         )
 
-        _parser.add_argument(
-            "-dr",
-            "--dry-run",
+        parser.add_argument(
+            "-dna",
+            "--do-not-alert",
             action="store_true",
-            help=ARG_CONSTANTS["HELP_DESC_DRY_RUN"],
-        )  # todo: This is conflicting with the other way to enable dry run. To be evaluated later.
-
-        _parser.add_argument(
-            "-lc",
-            "--log-to-console",
-            action="store_true",
-            help=ARG_CONSTANTS["HELP_DESC_LOG_TO_CONSOLE"],
+            help=ARG_CONSTANTS["HELP_DESC_NO_ALERT_LOCAL_USR"],
             required=False,
         )
-
-        _parser.add_argument(
-            "-dn",
-            "--do-not-alert-user",
+        parser.add_argument(
+            "-dnc",
+            "--do-not-commit",
             action="store_true",
-            help=ARG_CONSTANTS["HELP_DESC_NO_ALERT_USR"],
+            help=ARG_CONSTANTS["HELP_DESC_DONT_COMMIT"],
             required=False,
         )
-
-        _parser.add_argument(
-            "-nl",
-            "--no-file",
+        parser.add_argument(
+            "-glf",
+            "--generate-log-file",
             action="store_true",
-            help=ARG_CONSTANTS["HELP_DESC_NO_LOG_TO_FILE"],
+            help=ARG_CONSTANTS["HELP_DESC_GENERATE_LOG_FILE"],
             required=False,
         )
-
-        _parser.add_argument(
-            "-l",
-            "--local",
+        parser.add_argument(
+            "-ncl",
+            "--no-console-log",
+            action="store_false",
+            help=ARG_CONSTANTS["HELP_DESC_DONT_LOG_TO_CONSOLE"],
+            required=False,
+        )
+        parser.add_argument(
+            "-rol",
+            "--running-on-local",
             action="store_true",
             help=ARG_CONSTANTS["HELP_DESC_RUNNING_LOCALLY"],
             required=False,
         )
-
-        _parser.add_argument(
-            "-vc",
-            "--verbose-client",
-            action="store_true",
-            help=ARG_CONSTANTS["HELP_DESC_VERBOSE_CLIENT"],
+        parser.add_argument(
+            "-ll",
+            "--logger-level",
+            choices=_ll_choices.keys(),
+            default=LoggerLevelCoverage.INFO,
+            help=ARG_CONSTANTS["HELP_DESC_LOGGER_LEVEL"],
+            required=False,
+        )
+        parser.add_argument(
+            "-v",
+            "--verbosity",
+            choices=_v_choices.keys(),
+            default=LoggerRootLevel.SCRIPT_LEVEL,
+            help=ARG_CONSTANTS["HELP_DESC_VERBOSITY"],
             required=False,
         )
 
         try:
-            self.args = _parser.parse_args()  # todoL Annotate this one.
+            # Once we add arguments, we parse the sys.argv by default here. (assumption)
+            self.args = parser.parse_args()
+
+            # Ever since `parser.add_arguments()` don't have the extensibility to invoke a function when it receives a value, we will do it after parsing them.
+            for args_to_resolve in [
+                "logger_level",
+                "verbosity",
+            ]:  # Get the arguments to resolve.
+
+                arg = getattr(self.args, args_to_resolve)  # Assign their value here.
+
+                for each_enum in [LoggerLevelCoverage, LoggerRootLevel]:
+                    for each_elem in each_enum:
+                        if arg == each_elem.name:
+                            setattr(
+                                self.args, args_to_resolve, each_elem
+                            )  # As the values given by the user matched the name of Enum elements, we use setAttr() as we loop to those Enums.
+                            break
 
         #  ArgumentParser invoke raising SystemExit by default. Catching this exception will ensure that there will be no exceptions shown upon exit.
-        # I assume that this one emits only when -h is invoked in the terminal or for when this script has been launched.
         except SystemExit:
-            exit(0)  # todo: Annotate this code.
+            terminate(ExitReturnCodes.EXIT_HELP)
 
     def resolve_envs(self) -> None:
         """
-        This function resolves everything that is exists under Environment Variables by Loop (2). Keep note that, it only tracks certain variables
-        declared under constants.py (ENV_STRUCT_CONSTRAINTS).
+        This method resolves Environment Variables by Loop.
+        ! Keep note that, it only tracks certain variables declared under constants.py (ENV_STRUCT_CONSTRAINTS) because of its capability of assigning fallback values.
 
-        Once we resolved those environment variables, they can be placed under `self.envs` (1), which is going to be used by any other modules.
-        This was done so that the references are more clear and less redundant from keeping at calling os.environ.get().
+        Once we resolved those environment variables, they can be placed under `self.envs`, which is going to be used by any other modules.
 
+        This is intentional so that other modules won't need to evaluate them individually. And also to keep the user inputs serialized respectively.
         """
-        self.envs: dict[str, Any] = {}  # * (1)
 
-        for idx, (env_key, _) in enumerate(ENV_STRUCT_CONSTRAINTS.items()):  # * (2)
+        self.envs: dict[str, Any] = {}  # Setup our container here.
+
+        for idx, (env_key, _) in enumerate(
+            ENV_STRUCT_CONSTRAINTS.items()
+        ):  # We don't need their value, just the key.
 
             try:
                 # * Attempt to fetch the parameter (3.a) and remove any unnecessary from the environment variable name (3.b).
-                _env_literal_val: Any = env.get(env_key)  # * 3.a
-                _env_cleaned_name: str = env_key.removeprefix("INPUT_")  # 3.b
+                env_literal_val: Any = env.get(env_key)
+                env_cleaned_name: str = env_key.removeprefix(
+                    "INPUT_"
+                )  # Since, the script will run in Github Runner, we expect that every environment variable has a pre-fix of "INPUT", so we remove them here.
 
-                # * Attempt to display it in the Console to see if it would emit errors before the other code-blocks do.
+                # * Assert the existance of environment variables by displaying it in the Console.
                 self.logger.debug(
                     "[%i] Env. Var. %s contains %s to be evaluated in %s."
                     % (
                         idx + 1,
                         env_key,
-                        _env_literal_val if len(_env_literal_val) else "None",
+                        env_literal_val if len(env_literal_val) else "None",
                         ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"]
                         if not hasattr(
                             ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"], "__call__"
@@ -225,124 +277,141 @@ class UtilityFunctions:
                 )
 
             # ! This except block expects only Dictionary Errors. If you think there's something else to consider, please let me know.
-            except KeyError as Err:
+            except KeyError as e:
                 self.logger.critical(
-                    f"Dictionary Key doesn't exists under `constants.py`. This is a bug or a left-out problem, please report this to the developer! | Info: {Err}"
+                    f"Dictionary Key doesn't exists under `constants.py`. This is a bug or a left-out problem, please report this to the developer! | Info: {e}"
                 )
-                exit(-1)
+                terminate(ExitReturnCodes.ENV_KEY_DOES_NOT_EXISTS_ON_DICT)
 
-            try:
-                if not len(
-                    _env_literal_val
-                ):  # The value seemes None (""). Are they optional environments?
+            except TypeError as e:
+                self.logger.critical(
+                    f"Environment Variable {env_key} cannot be found. Are you running on local? Check if you invoked -rol / --running-on-local otherwise it won't run in local. If persisting, check your environment file. If this was deployed, please report this issue to the developer. | Info: {e}"
+                )
+                terminate(ExitReturnCodes.ENV_KEY_DOES_NOT_EXISTS_ON_MACHINE)
 
+            # !!! At this point, the environment must assert that it contains data! If codeblock still hits with an exception, there will be an improvment later on.
+            if not len(
+                env_literal_val
+            ):  # * The value seemes None (""). Are they optional environments?
+
+                self.logger.debug(
+                    f"Env. Var. {env_key} doesn't have any value but exists. Checking if they are `required`."
+                )
+
+                # We handle some Environment Variables that is not required (is_required -> False).
+                if not ENV_STRUCT_CONSTRAINTS[env_key]["is_required"]:
                     self.logger.debug(
-                        f"Env. Var. {env_key} doesn't have any value but exists. Checking if they are `required`."
+                        "Fallback Value of %s for Optional | %s (is None?) -> %s"
+                        % (
+                            env_key,
+                            ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"] is None,
+                            ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],
+                        )
                     )
 
-                    if not ENV_STRUCT_CONSTRAINTS[env_key]["is_required"]:
-                        self.logger.debug(
-                            "Fallback Value for Optional | %s (is None?) -> %s"
-                            % (
-                                ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]
-                                is None,
-                                ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],
-                            )
-                        )
-                        self.envs[_env_cleaned_name] = (
-                            ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"](
-                                ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]
-                            )
-                            if ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]
-                            is not None
-                            else None
-                        )
-
-                        self.logger.info(
-                            "Env. Var. %s has now a resolved value of %s! (with type %s)"
-                            % (
-                                env_key,
-                                ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],
-                                type(ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]),
-                            )
-                        )
-                        continue
-
-                    else:
-                        self.logger.critical(
-                            f"[{idx + 1}] Env. Var. {env_key} does not exist or does not have a supplied value! Please fill up the required fields (in constants.py) to be able to use this script."
-                        )
-                        exit(-1)
-
-                if ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] in [int, str]:
-                    self.envs[_env_cleaned_name] = (
+                    # Do they have fallback_value assigne> Then typecast their expected_type to the actual value to ensure type-safe.
+                    self.envs[env_cleaned_name] = (
                         ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"](
-                            _env_literal_val
+                            ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]
                         )
-                        if len(_env_literal_val)
-                        else ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]
+                        if ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"] is not None
+                        else None
                     )
 
-                elif ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] is bool:
-                    try:
-                        self.envs[_env_cleaned_name] = bool(
-                            strtobool((_env_literal_val))
+                    self.logger.info(
+                        "Env. Var. %s has now a resolved value of %s! (with type %s)"
+                        % (
+                            env_key,
+                            ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],
+                            type(ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]),
                         )
-                    except ValueError:
-                        _fallback_bool_val: bool = ENV_STRUCT_CONSTRAINTS[env_key][
-                            "fallback_value"
-                        ]
-                        self.envs[_env_cleaned_name] = _fallback_bool_val
-                        self.logger.warning(
-                            f"Env. Var. {env_key} has an invalid key that can't be serialized to boolean. Using a fallback value {_fallback_bool_val} instead."
-                        )
+                    )
+                    continue
 
-                elif issubclass(ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"], Enum):
-                    _enum_candidates: list[Type[Enum]] = [
-                        ContextOnSubject,
-                        PreferredActivityDisplay,
-                        PreferredTimeDisplay,
+                # If they are required (is_required -> False) then terminate the script.
+                else:
+                    self.logger.critical(
+                        f"[{idx + 1}] Env. Var. {env_key} does not exist or does not have a supplied value! To the developer: Please fill up the required fields (in constants.py) to be able to use this script."
+                    )
+                    terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
+
+            # ! If the Environment Variable has a value, then we will check their `expected_type` and evaluate them with respect to their type.
+
+            if ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] in [int, str]:
+                """
+                Type cast the given value with the `expected_type` or else assign the `fallback_value` with typecast of `expected_type`
+                This ensures that the output will be the respected type.
+                """
+
+                self.envs[env_cleaned_name] = (
+                    ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"](env_literal_val)
+                    if len(env_literal_val)
+                    else ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"](
+                        ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]
+                    )
+                )
+
+            elif ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] is bool:
+                # For the case of boolean values, we have to use the distutils.util.strtobool to evalute them.
+                # If the utility method can't serialize it, then we have to use the fallback_value instead.
+
+                try:
+                    self.envs[env_cleaned_name] = bool(strtobool(env_literal_val))
+                except ValueError:
+                    fallback_bool_val: bool = ENV_STRUCT_CONSTRAINTS[env_key][
+                        "fallback_value"
                     ]
+                    self.envs[env_cleaned_name] = fallback_bool_val
+                    self.logger.warning(
+                        f"Env. Var. {env_key} has an invalid key that can't be serialized to boolean. Using a fallback value {fallback_bool_val} instead."
+                    )
 
-                    is_valid: Union[None, bool] = None
+            elif issubclass(ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"], Enum):
+                # Handling Enums and resolving them is such a pain in the [...].
 
-                    # Since all enums are declared in upper case. User might intend to apply values in non-case-sensitive form. Hence, we gonna explicitly uppercase them.
-                    _enum_case_env_val: str = _env_literal_val.upper()
+                enum_candidates: list[Type[Enum]] = [
+                    ContextOnSubject,
+                    PreferredActivityDisplay,
+                    PreferredTimeDisplay,
+                ]  # * We have to fetch these Enums and iterate through them as we try to match the user input's to the names of those Enum elements.
 
-                    if len(_enum_case_env_val):
-                        for each_enums in _enum_candidates:  # This is gonna hurt.
-                            for _each_cls in each_enums:
-                                is_valid = _enum_case_env_val == _each_cls.name
-                                self.envs[_env_cleaned_name] = (
-                                    _each_cls
-                                    if _enum_case_env_val == _each_cls.name
-                                    else ENV_STRUCT_CONSTRAINTS[env_key][
-                                        "fallback_value"
-                                    ]
-                                )
+                # is_valid: Union[None, bool] = None
 
-                                if is_valid:
-                                    break
+                # Since all enums are declared in upper case. User might intend to apply values in non-case-sensitive form. Hence, we gonna explicitly uppercase them.
+                enum_case_env_val: str = env_literal_val.upper()
+
+                if len(enum_case_env_val):
+                    for each_enums in enum_candidates:
+                        for each_cls in each_enums:
+                            # `is_valid` will be used to break
+                            is_valid: bool = bool(
+                                enum_case_env_val == each_cls.name
+                            )  # If the name matches, then set to `True` or otherwise.
+
+                            self.envs[env_cleaned_name] = (
+                                each_cls
+                                if enum_case_env_val == each_cls.name
+                                else ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]
+                            )
+
                             if is_valid:
                                 break
 
-                        self.logger.info(
-                            (f"Env. Var. {env_key} now has a value of %s!" % _each_cls)
-                            if is_valid
-                            else f"Env. Var. {env_key} was unable to resolve the given argument ({_enum_case_env_val}). Reverting to %s..."
-                            % (ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])
-                        )
+                        if is_valid:
+                            break
 
-                else:
-                    self.logger.critical(
-                        f"Env. Var. '{_enum_case_env_val}' cannot be resolved / serialized due to its expected_type not a candidate for serialization. Please contact the developer about this for more information."
+                    self.logger.info(
+                        (f"Env. Var. {env_key} now has a value of %s!" % each_cls)
+                        if is_valid
+                        else f"Env. Var. {env_key} was unable to resolve the given argument ({enum_case_env_val}). Reverting to %s..."
+                        % (ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])
                     )
 
-            except Exception as Err:  # We can't catch <class 'NoneType'> here. Use Exception instead.
+            else:
                 self.logger.critical(
-                    f"Environment Variable {env_key} cannot be found. Are you running on local? Invoke --local if that would be the case. If persisting, check your environment file. If this was deployed, please report this issue to the developer. | Info: {Err}"
+                    f"Env. Var. '{enum_case_env_val}' cannot be resolved / serialized due to its `expected_type` not a candidate for serialization. Please contact the developer about this for more information."
                 )
-                exit(-1)
+                terminate(ExitReturnCodes.NO_CONDITION_IMPLEMENTED_EXIT)
 
         self.logger.info(
             f"Environment Variables stored in-memory are successfully resolved!"

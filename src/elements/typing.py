@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 if __name__ == "__main__":
     from .exceptions import IsolatedExecNotAllowed
 
@@ -27,13 +26,9 @@ BadgeElements = _N("BadgeElements", str)
 BadgeStructure = _N("BadgeStructure", str)
 Base64Bytes = _N("Base64Bytes", bytes)
 Base64String = _N("Base64String", str)
-ClientResponseOK = _N("ClientResponseOK", bool)
-ClientResponseStatus = _N("ClientResponseStatus", int)
 ColorHEX = _N("ColorHEX", str)
 HttpsURL = _N("HttpsURL", str)
-HttpsURLPath = _N("HttpsURLPath", str)
 RegExp = _N("RegExp", str)
-ResolvedClientResponse = _N("ResolvedClientResponse", dict)
-READMERawContent = _N("READMERawContent" , bytes)
+READMERawContent = _N("READMERawContent", bytes)
 READMEContent = _N("READMEContent", str)
-ResponseJson = _N("ResponseJson", dict)
+READMEIntegritySHA = _N("READMEIntegritySHA", str)

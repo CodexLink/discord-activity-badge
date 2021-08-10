@@ -14,20 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# todo: Whenever as possible, do DRY principles here.
+from .constants import ExitReturnCodes
 
 if __name__ != "__main__":
     from typing import Final
 
-    # # Discord Exceptions
-    class MutualGuildsNotFound(Exception):
-        """Cannot find a guild where the bot is residing with the user who requests for presence badge.
-
-        Args:
-                Exception (Subclass): Inherits Exception Class.
-        """
-
-        pass
+    # The following inherited `Exception` classes are the only ones retained. Other Exception implementations may take time and thurs, inlined along with the methods instead.
 
     class IsolatedExecNotAllowed(Exception):
         """The use of modules under isolation is not allowed; hence, raising this error."""
@@ -47,24 +39,6 @@ if __name__ != "__main__":
             ] = "The use of entrypoint for other use (importing to other package) is not allowed."
             super().__init__(messages)
 
-    class DotEnvFileNotFound(Exception):
-        """An exception that expands the capabilities of exception SystemExit by adding message and the return code + name."""
 
-        def __init__(self, *args) -> None:
-            messages: Final[
-                str
-            ] = f"Error Code: {args[0]=} | Dotenv File cannot be found. Please check your specified path or the name of the file and try again."
-
-            super().__init__(messages)
-
-    class GithubRateLimitedError(Exception):
-        pass
-
-    class SessionStatusNotOkay(Exception):
-        pass
-
-    class SessionRequestHTTPError(Exception):
-        pass
-
-    class SessionRequestStatusAssertFailed(Exception):
-        pass
+else:
+    exit(ExitReturnCodes.ILLEGAL_IMPORT_EXIT.value)

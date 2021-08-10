@@ -19,13 +19,14 @@ if __name__ == "__main__":
 
     raise IsolatedExecNotAllowed
 
-import os
-from asyncio import create_task, ensure_future
-from typing import Any, TypedDict, cast, List, Optional, Union
+from argparse import Namespace
+from asyncio import create_task
+from logging import Logger
+from os import _exit as terminate
+from typing import Any, List, NoReturn, Optional, Union
 
-from discord import Activity, ActivityType, ClientUser, Member, Streaming
-from discord import Client as DiscordClient
-from discord import Status
+from discord import Streaming  # To be used soon.
+from discord import Activity, ActivityType, Client, ClientUser, Member, Status
 from discord.activity import Activity, CustomActivity, Game
 from discord.errors import HTTPException, NotFound
 from discord.guild import Guild
@@ -35,49 +36,42 @@ from elements.constants import (
     BLUEPRINT_INIT_VALUES,
     DISCORD_CLIENT_INTENTS,
     DISCORD_USER_STRUCT,
+    ExitReturnCodes,
     PreferredActivityDisplay,
 )
-from logging import Logger
 
 
-class DiscordClientHandler(DiscordClient):
-    logger: Logger  # * Declared since there's no typing hint inheritance.
+class DiscordClientHandler(Client):
+    # * The following variables are declared for weak reference since there's no hint-typing inheritance.
+
+    args: Namespace
     envs: Any
+    logger: Logger
     user: ClientUser
 
     """
-    A DiscordClient Async Wrapper for handling request of user's related activities for badge processing.
+    A Client Wrapper Child Class that extracts Discord User's Activities from Rich Presence to Activity Status.
 
     Args:
-        DiscordClient (object): The class "Client" that is normally used to instantiate from a variable.
+        Client (object): The subclass that is actually the DiscordClient.
     """
 
     def __init__(self) -> None:
-        """
-        A constructor that initializes another constructor, which is directly referring to DiscordClient (known as discord.Client) to instantiate resources.
-        """
+        # A constructor that initializes another constructor, which is directly referring to DiscordClient (known as discord.Client) to instantiate resources.
+
         super().__init__(intents=DISCORD_CLIENT_INTENTS)
 
     async def on_ready(self) -> None:
         """
-        An entrypoint function to load attributes and properties to be used in the latter process.
+        A called method from a dispatch method when everything is ready. This means of WebSocket must be on and everything must be loaded (cached).
         This is the part where discord.py takes awhile to initialize because of Discord's API Rules.
-
-        Notes:
-                        (1.a) Creates an object container (class) that contains necessarity information user and it's activity/ies.
-                        (1.b) The following class contains a dict() that maps the user's status and its activity later. For more information, go check elements.constants | Discord Client Container Metadata.
-                        (2) Instantiates Presence Activity in the Bot, this was done just for an indicator. So it's not a big deal at all.
-                        (3.a) Two-stacked awaitable functions are done in order to ensure that we have the user's context first, and then we get the status and its activity via outer scope function.
-                        (3.b) The use of asyncio.gather() or Queue() won't work here because we need to wait for the inner scope function to finish first. Can't do asynchronously on this space.
-
         """
-
 
         self.logger.debug(
             f"Connection to Discord via WebSocket is success! | Rate-Limited: {self.is_ws_ratelimited()}."
         )
 
-        create_task(
+        create_task(  # This is optional, but I made it so that we can see if the Bot was active.
             (
                 self.change_presence(
                     status=Status.online,
@@ -86,25 +80,21 @@ class DiscordClientHandler(DiscordClient):
                     ),
                 )
             )
-        )  # * (2)
-
-        self.logger.info(
-            f"Pushed Rich Presence Context Discord API to Display {self.user}'s status."
         )
 
         self.logger.info(
-            f"Discord Client {self.user} is ready for evaluation of user's activity presence."
+            f"Changed / Pushed Rich Presence to display {self.user}'s status."
         )
 
-        # I cannot do reference by variable of this blank blueprint because TypedDict and other elements associated to it is complaining about it.
-        self._user_ctx: DISCORD_USER_STRUCT = (
-            BLUEPRINT_INIT_VALUES
-        )
+        # I ! cannot do reference by variable of this blank blueprint because TypedDict and other elements associated to it is complaining about it.
+        self.user_ctx: DISCORD_USER_STRUCT = BLUEPRINT_INIT_VALUES
 
+        # Perform two async actions with one on top of it as an input from the outer method.
+        # ! We cannot create_tasks for them since one of them is a dependency and there's no room for more actions.
+        await self._get_activities_via_guild(
+            await self._get_discord_user()
+        )  # * 3 [a, b]
 
-        self.logger.info(f"Fetching Discord User's Data.")  # todo: Annotate this later.
-
-        await self.get_activities_via_guild(await self.get_discord_user())  # * 3 [a, b]
         self.logger.info(
             "Discord Client is finished fetching data and is saved for badge processing."
         )
@@ -114,57 +104,49 @@ class DiscordClientHandler(DiscordClient):
 
         # We might wanna catch it here to provide accurate information about the possible occurence of the error.
 
-    async def get_discord_user(self) -> User:
+    async def _get_discord_user(self) -> User:
         """
-        Obtains Discord User's Basic Information and returns it as a "discord.user.User".
-
-        The obtained information will be used to find the user in the guild to get the "Activity" of the user.
-        Sadly, we can't just do it directly with User. It's the Discord's API limitation, as far as I know.
-
-        Notes:
-            (1) The implementation of variable assignments is quite uncommon in this case. The self._client_container.user is non-existent
-            (1) unless instantiated. Please refer to elements.constants | Discord Client Container Metadata to see the elements that is mypy unable to find.
+        A private method that obtains Discord User's Information for further query with the Mutual Guilds.
+        This is required ever since direct access to User's information is not included with the API, so we have to make some extra steps to obtain it.
 
         Returns:
-            User: Contains information of the user encapsulated in <class 'discord.user.Users'>.
+            User: Contains information of the user.
         """
 
-        self.logger.info(
-            "Step 1 of 2 | Attempting to fetch discord user's info for validation use."
-        )
+        self.logger.info("Fetching Discord User's info...")
 
         try:
-            _user_info = await self.fetch_user(self.envs["DISCORD_USER_ID"])
+            user_info = await self.fetch_user(self.envs["DISCORD_USER_ID"])
 
-            self._user_ctx["id"] = _user_info.id
-            self._user_ctx["name"] = _user_info.name
-            self._user_ctx["discriminator"] = _user_info.discriminator
+            self.user_ctx["id"] = user_info.id
+            self.user_ctx["name"] = user_info.name
+            self.user_ctx["discriminator"] = user_info.discriminator
 
-            self.logger.info("Step 1 of 2 | Finished fetching user information.")
-
-        except NotFound as Err:
-            await self.__exit_client_on_error(
-                f"The user cannot be found. Did you input your Discord ID properly? | Result: {Err}"
+            self.logger.info(
+                "Discord User %s Fetched."
+                % (self.user_ctx["name"] + self.user_ctx["discriminator"])
             )
 
-        except HTTPException as Err:
-            await self.__exit_client_on_error(
-                f"Failed to make request due to malformed data given under DISCORD_USER_ID key. Which results to: {Err} | This can be a developer's fault upon assigning non-existent Env Key, please make an issue about this problem."
+        except NotFound as e:
+            await self._exit_client_on_error(
+                f"The user cannot be found. Did you input your Discord ID properly? | Info: {e} on line {e.__traceback__.tb_lineno}"  # type: ignore
             )
 
-        return _user_info
+        except HTTPException as e:
+            await self._exit_client_on_error(
+                f"Failed to make a request due to malformed data given under `DISCORD_USER_ID` key. Which results to: {e} on line {e.__traceback__.tb_lineno} | This can be a developer's fault upon assigning non-existent Env Key, please make an issue about this problem."  # type: ignore
+            )
 
-    async def get_activities_via_guild(self, fetched_user: User) -> None:
+        return user_info
+
+    async def _get_activities_via_guild(self, fetched_user: User) -> None:
         """
-        Retrieves User Activities by accessing a (Mutual) Guild with the Bot.
+        Retrieves User Activities by accessing a Mutual Guild with the Bot.
 
         Args:
-            _fetched_user (User): The context of the inner scope function, which should contain the User's Information.
+            fetched_user (User): Discord User's Information, which is the inner scope method returned.
 
         Notes:
-            (1.1.a) Before we get the guild, check if we have the bot and the user reside on a certain guilds (ie. mutual guilds).
-            (1.1.b) If ever there will be a context, ensure that the types we are seeing is a type of <class 'discord.guild.Guild'>
-            (2) Fetch the guild from the user and fetch it as a member from that guild.
             (3) Fetch all activities from the user and serialize it in a way where it can be contained in self.__client_container under key "presence" (self.__client_container["presence"])
             (3) Every attributes can be a dict() by calling to_dict() that is embedded from the activity.
             (3) Each Activity Type will be renamed to accomodate the lower-case, underscore-space key and consistency.
@@ -172,112 +154,132 @@ class DiscordClientHandler(DiscordClient):
             (4) The discord.user.User itself doesn't provide much information of the user in real-time. I have to go through Guilds to see what's their current status.
             (4) This is the exact reason of why this scope is not included to the DiscordClientHandler.__get_user() context.
 
-        Concept Notes:
-            (3) Keep in note that the loop only fetch the first object of a certain type of the activity. This means that, at the end of the loop, for every n has their distinct types.
-            (3) They cannot have more than 1 but should be exactly 1. This is similar to first-in, first-out.
-
         """
 
-        self.logger.info(
-            "Step 2 of 2 | Attempting to fetch guild context from where the bot also resides."
-        )
+        self.logger.info("Fetching mutual guild from the cached instance client...")
 
-        # * (1.1.a)
+        # Before we get the guild, check if we mutual guilds between the User and the Bot.
         if not fetched_user.mutual_guilds:
-            await self.__exit_client_on_error(
-                f"Discord User doesn't have any Mutual Guilds with {self.user}. Please add the bot to your server and try again."
+            await self._exit_client_on_error(
+                f"Discord User {fetched_user.name} doesn't have any Mutual Guilds with {self.user}. Please add the bot to your server and try again.",
+                fetched_user,
             )
 
-        # * (1.1.b)
-        for each_guilds in fetched_user.mutual_guilds:
-            if not isinstance(each_guilds, Guild):
-                await self.__exit_client_on_error(
-                    f"The list of mutual guild/s is/are expected to be {Guild}, but received a type {type(each_guilds)}"
-                )  # Add function to message this error to the user.
+        # If there is a mutual guild, then ensure that it is class 'discord.guild.Guild'> and fetch the first one.
+        if not isinstance(fetched_user.mutual_guilds[0], Guild):
+            await self._exit_client_on_error(
+                f"The list of mutual guild/s is/are expected to be {Guild}. This is an issue that the developer can solve. Please report this issue in https://github.com/CodexLink/discord-activity-badge",
+                fetched_user,
+            )
 
-            # * (1.2)
-            _fetched_member: Optional[Member] = each_guilds.get_member(fetched_user.id)
+        # Once type checked, fetch the user from guild and fetch it as a member from that guild.
+        fetched_member: Optional[Member] = fetched_user.mutual_guilds[0].get_member(
+            fetched_user.id
+        )
 
-            if _fetched_member:  # todo: Check if this one work.
-                break
-
-        # * (2)
-        if _fetched_member:
-            if not _fetched_member.activities:
-                self.logger.warning(
-                    "This user doesn't have any activity. Letting BadgeConstructor to fill it."
-                )
+        if (
+            fetched_member
+        ):  # ! Since `get_member` enforce Optional, then we assert here that it will never be Optional or lead to None.
+            if not fetched_member.activities:
+                self.logger.warning(f"User {fetched_member} doesn't have any activity.")
 
             else:
                 self.logger.info(
-                    f"{_fetched_member} contains {len(_fetched_member.activities)} activit%s."
-                    % ("y" if not len(_fetched_member.activities) > 1 else "ies")
+                    f"User {fetched_member} contains {len(fetched_member.activities)} activit%s."
+                    % ("y" if not len(fetched_member.activities) > 1 else "ies")
                 )
 
-                _activity_picked: List[str] = []
+                # For every activity exists, we store them uniquely. This means duplicated activities (same activity) will be ignored.
+                unique_activities: List[str] = []
 
-                # * (3)
-                for idx, each_activities in enumerate(_fetched_member.activities):
+                # For each activities stored in-memory, iterate through them so that we can store them in unique_activities.
+                for idx, each_activities in enumerate(fetched_member.activities):
                     self.logger.debug(
-                        f"Activity {idx + 1} of {len(_fetched_member.activities)} | {each_activities}"
+                        f"Activity Assessment ${idx + 1} | {each_activities}"
                     )
 
-                    if not each_activities.__class__.__name__ in _activity_picked:
+                    if not each_activities.__class__.__name__ in unique_activities:
                         self.logger.debug(
-                            f"{each_activities.__class__.__name__} was not in _activity_picked. (Contains {_activity_picked})"
+                            f"Activity {each_activities.__class__.__name__} was not in the list. (The list contains {unique_activities})"
                         )
 
-                        # ! I can't type `__activity_ctx` for because BaseActivity and Spotify doesn't have `to_dict` function.
-                        __activity_ctx: dict[Union[str, dict[Any, Any]], Any] = each_activities.to_dict()  # type: ignore
-                        __cls_name: str = each_activities.__class__.__name__
+                        # ! I can't type `activity_ctx` because BaseActivity and Spotify doesn't have `to_dict` method.
+                        activity_ctx: dict[Union[str, dict[Any, Any]], Any] = each_activities.to_dict()  # type: ignore # * Extract the activity in dictionary form.
 
-                        __resolved_activity_name = (
+                        cls_name: str = (
+                            each_activities.__class__.__name__
+                        )  # Get the activity class name.
+
+                        resolved_activity_name = (  # Then we resolve it with Enums.
                             PreferredActivityDisplay.CUSTOM_ACTIVITY.name
-                            if __cls_name == CustomActivity.__name__
+                            if cls_name == CustomActivity.__name__
                             else PreferredActivityDisplay.RICH_PRESENCE.name
-                            if __cls_name == Activity.__name__
+                            if cls_name == Activity.__name__
                             else PreferredActivityDisplay.GAME_ACTIVITY.name
-                            if __cls_name == Game.__name__
+                            if cls_name == Game.__name__
                             else PreferredActivityDisplay.UNSPECIFIED_ACTIVITY.name
                         )
 
-                        self.logger.debug(
-                            f"Pushing context '{__resolved_activity_name}' to self._client_container.user -> in key 'presence'..."
-                        )
+                        self.user_ctx["activities"][
+                            resolved_activity_name
+                        ] = activity_ctx  # ! Once we resolve the name, have it as key and store the activity context.
 
-                        self._user_ctx["activities"][
-                            __resolved_activity_name
-                        ] = __activity_ctx
-
+                        unique_activities.append(cls_name)
                         self.logger.debug(
-                            f"Pushed to self._client_container ['user'] in key 'activities' as '{__resolved_activity_name}.'"
-                        )
-
-                        _activity_picked.append(__cls_name)
-                        self.logger.debug(
-                            f"Appended {__resolved_activity_name} to _activity_picked. (Now contains: {_activity_picked})"
+                            f"Activity '{resolved_activity_name}' has been pushed in the list of unique activities!"
                         )
 
                     else:
                         self.logger.debug(
-                            f"Ignored {each_activities} since one data of same type was appended in _activity_picked (Contains: {_activity_picked})"
+                            f"Activity {each_activities} is ignored since one data of the same type was appended in unique_activities. (Contains: {unique_activities})"
                         )
 
-            # * (4)
-            self._user_ctx["statuses"]["status"] = _fetched_member.status
-            self._user_ctx["statuses"]["on_web"] = _fetched_member.web_status
-            self._user_ctx["statuses"]["on_desktop"] = _fetched_member.desktop_status
-            self._user_ctx["statuses"]["on_mobile"] = _fetched_member.mobile_status
+            # As we handle the Activities, we have to handle the state of the user as a fallback output.
+            self.user_ctx["statuses"]["status"] = fetched_member.status  # type: ignore # I didn't expect this one to be different from other Enums.
+
+            # ! Other states may be utilized in the future, they are subject to change.
+            self.user_ctx["statuses"]["on_web"] = fetched_member.web_status
+            self.user_ctx["statuses"]["on_desktop"] = fetched_member.desktop_status
+            self.user_ctx["statuses"]["on_mobile"] = fetched_member.mobile_status
 
             self.logger.info(
                 "Step 2 of 2 | Finished fetching discord user's rich presence and other activities."
             )
             self.logger.debug(
-                f"User Context Container now contains the following: {self._user_ctx}"
+                f"User Context Container now contains the following: {self.user_ctx}"
             )
 
-    async def __exit_client_on_error(self, err_message: str) -> None:
-        self.logger.error(err_message)
+        else:
+            self.logger.error(
+                "The requested user -> member (from the guild) does not exists! This was already asserted on the previous methods which means this shoudn't happen in the first place. Please contact the developer about this issue, if persists."
+            )
+            terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
+
+    async def _exit_client_on_error(
+        self, err_message: str, user_to_dm: User
+    ) -> NoReturn:
+        """
+        A method that handles exceptions with the ability to message the user about it.
+
+        Args:
+            err_message (str): The error message to display and to send in user when `user_to_dm` is True.
+            user_to_dm (User): A user to refer to create a DM channel for the bot to use.
+
+        Returns:
+            NoReturn: This method does not return anything since it terminates the script runtime.
+        """
+        if user_to_dm and not getattr(self.args, "do_not_alert"):
+            dm = await user_to_dm.create_dm()
+            await dm.send(err_message)
+
+        else:
+            self.logger.warning(
+                "Argument -dna / --do-not-alert has been invoked. DM process is supressed."
+            )
+
+        self.logger.error(
+            f"Discord Client Handler encountered a problem! | Info: {err_message}"
+        )
+
         await self.close()
-        self.logger.error("Closed connection to discord gateway api due to error.")
-        os._exit(-1)
+        terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
