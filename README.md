@@ -1,5 +1,5 @@
 <h1 align="center">Discord Activity Badge Action</h1>
-<h4 align="center">A containerized action that bridges the Discord User's Activities and State  to a Representable Badge on their Special Repository (Github Profile). Powered by <b>Docker and Python + AsnycIO + discord.py + aiohttp.</b></h4>
+<h4 align="center">A containerized action that bridge Discord User's Activity and State to a Representable Badge on their Special Repository (Github Profile). Powered by <b>Docker and Python + AsyncIO + discord.py + aiohttp.</b></h4>
 
 <div align="center">
 
@@ -14,8 +14,6 @@
 
 ## Usage
 
-**The script is not yet finished! (around 90% is done) This is just a notice!!!**
-
 ### Workflow
 
 Paste the following `YAML` on profile repository under directory `.github/workflows`.
@@ -25,7 +23,7 @@ name: Discord Rich Presence Activity Badge
 
 on:
   schedule:
-    - cron: "30 0-23 * * *" # This is customizable, At minute 30 past every hour from 0 through 23.
+    - cron: "30 0-23 * * *" # Construct your Cronjob Schedule at https://crontab.guru/.
 
   workflow_dispatch:
 
@@ -218,6 +216,7 @@ Here contains a list of resources that I have used in any forms that contributed
 - https://stackoverflow.com/a/606199/5353223
 - https://stackoverflow.com/a/27529806/5353223
 - https://stackoverflow.com/a/22636121/5353223
+- https://crontab.guru/
 
 > This section is still incomplete. I will put more and format it later.
 

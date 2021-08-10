@@ -331,8 +331,9 @@ class UtilityFunctions:
                 # If they are required (is_required -> False) then terminate the script.
                 else:
                     self.logger.critical(
-                        f"[{idx + 1}] Env. Var. {env_key} does not exist or does not have a supplied value! To the developer: Please fill up the required fields (in constants.py) to be able to use this script."
+                        f"[{idx + 1}] Env. Var. {env_key} does not exist in local environment file or the repository secret does not exists or invalid! To the developer: Please fill up the required fields (in constants.py) to be able to use this script."
                     )
+                    print(f"::error file={__file__},line=336,col=21::[{idx + 1}] Env. Var. {env_key} does not exist in local environment file or the repository secret does not exists or invalid!")
                     terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
 
             # ! If the Environment Variable has a value, then we will check their `expected_type` and evaluate them with respect to their type.

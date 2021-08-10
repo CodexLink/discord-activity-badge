@@ -5,40 +5,31 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Python: Current File + Internals",
+			"name": "entrypoint.py (Do-Not-Commit + Logger DEBUG)",
 			"type": "python",
 			"request": "launch",
 			"program": "src/entrypoint.py",
 			"console": "integratedTerminal",
 			"justMyCode": false,
-			"args": ["-ll", "DEBUG", "-nl", "-l"]
-		}
+			"args": ["--do-not-commit", "--logger-level", "DEBUG"]
+		},
 		{
-			"name": "Python: Current File + Internals",
+			"name": "entrypoint.py (Commit + Logger INFO)",
 			"type": "python",
 			"request": "launch",
-			"program": "${file}",
+			"program": "src/entrypoint.py",
 			"console": "integratedTerminal",
 			"justMyCode": false,
-			"args": ["-ll", "DEBUG", "-nl", "-l"]
-		}
+			"args": ["--logger-level", "DEBUG"]
+		},
 		{
-			"name": "Python: Current File + Internals",
+			"name": "entrypoint.py (Do-Not-Commit + Log File + Logger DEBUG)",
 			"type": "python",
 			"request": "launch",
-			"program": "${file}",
+			"program": "src/entrypoint.py",
 			"console": "integratedTerminal",
 			"justMyCode": false,
-			"args": ["-ll", "DEBUG", "-nl", "-l"]
-		}
-		{
-			"name": "Python: Current File + Internals",
-			"type": "python",
-			"request": "launch",
-			"program": "${file}",
-			"console": "integratedTerminal",
-			"justMyCode": false,
-			"args": ["-ll", "DEBUG", "-nl", "-l"]
-		}
+			"args": ["--do-not-commit", "--generate-log-file", "--logger-level", "DEBUG"]
+		},
 	]
 }
