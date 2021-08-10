@@ -10,4 +10,4 @@ RUN chmod +x /app/entrypoint.py \
 && poetry config virtualenvs.create false
 RUN poetry install --no-dev --no-interaction --no-root
 
-CMD [ "python3", "/app/entrypoint.py" ]
+CMD [ "python3", "/app/entrypoint.py", "-dnc", "-ll", "DEBUG" ]
