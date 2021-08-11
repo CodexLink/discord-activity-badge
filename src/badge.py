@@ -69,10 +69,8 @@ class BadgeConstructor:
     print_exception: Callable
     user_ctx: DISCORD_USER_STRUCT
 
-    """
-    A child class that contains the logic for badge construction with respect to a variety of options for displaying a badge.
-    This class also handles decoding and encoding of Base64 README since its the one who modifies the badge.
-    """
+    # A child class that contains the logic for badge construction with respect to a variety of options for displaying a badge.
+    # This class also handles decoding and encoding of Base64 README since its the one who modifies the badge.
 
     async def _handle_b64(
         self,

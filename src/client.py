@@ -32,10 +32,14 @@ from discord.errors import HTTPException, NotFound
 from discord.guild import Guild
 from discord.user import User
 
-from elements.constants import (BLUEPRINT_INIT_VALUES, DISCORD_CLIENT_INTENTS,
-                                DISCORD_USER_STRUCT, ExitReturnCodes,
-                                GithubRunnerLevelMessages,
-                                PreferredActivityDisplay)
+from elements.constants import (
+    BLUEPRINT_INIT_VALUES,
+    DISCORD_CLIENT_INTENTS,
+    DISCORD_USER_STRUCT,
+    ExitReturnCodes,
+    GithubRunnerLevelMessages,
+    PreferredActivityDisplay,
+)
 
 
 class DiscordClientHandler(Client):
@@ -47,12 +51,8 @@ class DiscordClientHandler(Client):
     print_exception: Callable
     user: ClientUser
 
-    """
-    A Client Wrapper Child Class that extracts Discord User's Activities from Rich Presence to Activity Status.
-
-    Args:
-        Client (object): The subclass that is actually the DiscordClient.
-    """
+    # A Client Wrapper Child Class that extracts Discord User's Activities from Rich Presence to Activity Status.
+    # Subclass -> Client (object): The subclass that is actually the DiscordClient.
 
     def __init__(self) -> None:
         # A constructor that initializes another constructor, which is directly referring to DiscordClient (known as discord.Client) to instantiate resources.
@@ -256,7 +256,7 @@ class DiscordClientHandler(Client):
             terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
 
     async def _exit_client_on_error(
-        self, err_message: str, user_to_dm: User
+        self, err_message: str, user_to_dm: Optional[User] = None
     ) -> NoReturn:
         """
         A method that handles exceptions with the ability to message the user about it.
@@ -274,7 +274,7 @@ class DiscordClientHandler(Client):
 
         else:
             self.logger.warning(
-                "Argument -dna / --do-not-alert has been invoked. DM process is supressed."
+                "Argument -dna / --do-not-alert has been invoked or User is not provided. DM process is cancelled."
             )
 
         msg: str = (
