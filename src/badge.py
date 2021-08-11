@@ -53,7 +53,6 @@ from elements.typing import (
     Base64Bytes,
     Base64String,
     ColorHEX,
-    DiscordActivityElements,
     HttpsURL,
     READMEContent,
 )
@@ -394,6 +393,29 @@ class BadgeConstructor:
                     is not ContextOnSubject.CONTEXT_DISABLED  # Other activities is not included at this point since it only gives minimal info.
                     else ""
                 )
+                + (  # Append the spotify current music if the picked_activity is SPOTIFY_ACTIVITY or else...
+                    seperator
+                    + (
+                        "{0} by {1}".format(
+                            presence_ctx[picked_activity]["details"],
+                            presence_ctx[picked_activity]["state"],
+                        )
+                        + (
+                            (
+                                " (%s)"
+                                % presence_ctx[picked_activity]["assets"]["large_text"]
+                            )
+                            if self.envs["SPOTIFY_INCLUDE_ALBUM_PLAYLIST_NAME"]
+                            else ""
+                        )
+                    )
+                    if picked_activity == PreferredActivityDisplay.SPOTIFY_ACTIVITY.name
+                    else seperator
+                    if self.envs["TIME_DISPLAY_OUTPUT"]
+                    is not PreferredTimeDisplay.TIME_DISABLED
+                    and contains_activities
+                    else ""  # Display the seperator instead.
+                )
             )
 
             # Since we handled the RICH_PRESENCE, now it's time for the `time` to be handled.
@@ -404,7 +426,6 @@ class BadgeConstructor:
             ):
                 # ! Seperator #2, Literally invoke the seperator since we assert that the time display is enabled.
                 # * Also, since this mf doesn't like '+=', let's do the manual with type.
-                status_output = BadgeStructure(status_output + seperator)
 
                 # Since activities can display time remaining or elapsed, check the context if timestamps exists so that it can display `remaining` instead of `elapsed`.
                 has_remaining: Union[None, str] = presence_ctx[picked_activity][
@@ -439,45 +460,43 @@ class BadgeConstructor:
                             microseconds=end_time.microseconds
                         )
 
-                        music_info: list[DiscordActivityElements] = [
-                            presence_ctx[picked_activity]["details"],
-                            presence_ctx[picked_activity]["state"],
-                            presence_ctx[picked_activity]["assets"]["large_text"],
-                        ]
-
                         status_output = BadgeStructure(
-                            status_output
-                            + "{0} by {1} ({2}) | {3} of {4}".format(
-                                music_info[0],
-                                music_info[1],
-                                music_info[2],
-                                running_time,
-                                end_time,
-                            )
+                            status_output + f" | {running_time} of {end_time}"
                         )
 
                 # * Resolve for the case of `elapsed`.
                 else:
-                    # # We can do the MINUTES_ONLY, SECONDS_ONLY and HOURS_ONLY in the future. But for now, its not a priority and its NotImplemented.
-                    parsed_time = int(running_time.total_seconds() / 60)
+                    time_option: PreferredTimeDisplay = self.envs["TIME_DISPLAY_OUTPUT"]
+                    parsed_time: int = int(
+                        running_time.total_seconds()
+                        / (
+                            3600
+                            if time_option is PreferredTimeDisplay.HOURS
+                            else 60
+                            if time_option is PreferredTimeDisplay.MINUTES
+                            or time_option is PreferredTimeDisplay.HOURS_MINUTES
+                            else 1  # # PreferredTimeDsplay.SECONDS.
+                        )
+                    )
 
-                    # Calculate if some left over minutes can still be converted to hours.
-                    hours = 0
-                    minutes = 0
-                    seconds = 0
+                    hours = parsed_time if parsed_time >= 1 and time_option is PreferredTimeDisplay.HOURS else 0
+                    minutes = parsed_time if parsed_time >= 1 and time_option is PreferredTimeDisplay.MINUTES else 0
+                    seconds = parsed_time if parsed_time >= 1 and time_option is PreferredTimeDisplay.SECONDS else 0
 
                     # * Timedelta() only returns seconds and microseconds. Sadly we have to do the computation on our own.
-                    while True:
-                        if parsed_time / 60 >= 1:
-                            hours += 1
-                            parsed_time -= 60
-                            continue
+                    if time_option is PreferredTimeDisplay.HOURS_MINUTES:
+                        # On this case, calculate if there some minute that can still be converted to hours.
+                        while True:
+                            if parsed_time / 60 >= 1:
+                                hours += 1
+                                parsed_time -= 60
+                                continue
 
-                        break
+                            break
 
-                    minutes = parsed_time
+                        minutes = parsed_time
 
-                    # Resolve time strings based on numbers. # ! This costs us readibility.
+                    # ! Resolve time strings based on numbers. This costs us readibility.
                     for idx, each_time_string in enumerate(TIME_STRINGS):
                         if self.envs["TIME_DISPLAY_SHORTHAND"]:
                             TIME_STRINGS[idx] = each_time_string[0]
@@ -491,11 +510,11 @@ class BadgeConstructor:
                             )
 
                     self.logger.debug(
-                        f"Resolved Time Output: {hours} %s {minutes} %s {seconds} seconds."
-                        % (TIME_STRINGS[0], TIME_STRINGS[1])
+                        f"Resolved Time Output: {hours} %s {minutes} %s {seconds} %s."
+                        % (TIME_STRINGS[0], TIME_STRINGS[1], TIME_STRINGS[2])
                     )
 
-                    is_time_displayable: bool = hours >= 1 or minutes >= 1
+                    is_time_displayable: bool = hours >= 1 or minutes >= 1 or seconds >= 1
 
                     # Once we identified some constraints and how it should look, combine it and have it as one string.
                     status_output = BadgeElements(
@@ -506,6 +525,11 @@ class BadgeConstructor:
                             + (
                                 f"{minutes} %s" % TIME_STRINGS[1]
                                 if minutes >= 1
+                                else ""
+                            )
+                            + ( # Since we can't display them as it is, no need to handle for spacing.
+                                f"{seconds} %s" % TIME_STRINGS[2]
+                                if seconds >= 1
                                 else ""
                             )
                             + (

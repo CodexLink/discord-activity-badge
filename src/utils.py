@@ -324,7 +324,7 @@ class UtilityMethods:
                     )
 
                     self.logger.debug(
-                        "Env. Var. %s has now a resolved value of %s! (with type %s)"
+                        "Env. Var. `%s` has a resolved value of `%s`! (with type %s)"
                         % (
                             env_key,
                             ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],

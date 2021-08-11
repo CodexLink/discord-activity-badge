@@ -144,6 +144,10 @@ inputs:
     description: "Interchange state and activity colors. This is useful only if you want to retain your state color position even though `APPEND_STATE_ON_SUBJECT` is true."
     required: False
 
+  SPOTIFY_INCLUDE_ALBUM_PLAYLIST_NAME:
+    description: "Interchange state and activity colors. This is useful only if you want to retain your state color position even though `APPEND_STATE_ON_SUBJECT` is true."
+    required: False
+
   STATUS_CONTEXT_SEPERATOR:
     description: "The character/s that seperates the context of every status elements."
     required: false

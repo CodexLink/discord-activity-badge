@@ -349,7 +349,7 @@ ENV_STRUCT_CONSTRAINTS: Final[  # * If you have been referred to action.yml, thi
     },
     "INPUT_TIME_DISPLAY_OUTPUT": {
         "expected_type": PreferredTimeDisplay,
-        "fallback_value": PreferredTimeDisplay.TIME_DISABLED,
+        "fallback_value": PreferredTimeDisplay.HOURS_MINUTES,
         "is_required": False,
     },
     "INPUT_TIME_DISPLAY_ELAPSED_OVERRIDE_STRING": {
@@ -373,6 +373,11 @@ ENV_STRUCT_CONSTRAINTS: Final[  # * If you have been referred to action.yml, thi
         "fallback_value": False,
         "is_required": False,
     },
+    "INPUT_SPOTIFY_INCLUDE_ALBUM_PLAYLIST_NAME": {
+        "expected_type": bool,
+        "fallback_value": False,
+        "is_required": False,
+    },
     "INPUT_STATUS_CONTEXT_SEPERATOR": {
         "expected_type": str,
         "fallback_value": None,
@@ -387,4 +392,4 @@ ENV_STRUCT_CONSTRAINTS: Final[  # * If you have been referred to action.yml, thi
 }
 
 # # Time Constants
-TIME_STRINGS: list[str] = ["hours", "minutes"]
+TIME_STRINGS: list[str] = ["hours", "minutes", "seconds"]
