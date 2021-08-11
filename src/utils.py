@@ -21,7 +21,7 @@ from logging import FileHandler, Formatter, Logger, StreamHandler, getLogger
 from os import _exit as terminate
 from os import environ as env
 from sys import stdout
-from typing import Any, Type, Union
+from typing import Any, Optional, Type, Union
 
 from elements.constants import (
     ARG_CONSTANTS,
@@ -71,7 +71,6 @@ class UtilityMethods:
                 f"`dotenv` file ({ROOT_LOCATION + ENV_FILENAME}) was loaded in runtime."
             )
 
-        # todo: Investigate if they contain_traceback.
         except ModuleNotFoundError as e:
             msg: str = "Did you installed dotenv from poetry? Try 'poetry install' to install dev dependencies and try again."
             self.logger.critical(msg)
@@ -296,9 +295,9 @@ class UtilityMethods:
                 terminate(ExitReturnCodes.ENV_KEY_DOES_NOT_EXISTS_ON_MACHINE)
 
             # !!! At this point, the environment must assert that it contains data! If codeblock still hits with an exception, there will be an improvment later on.
-            if not len(
-                env_literal_val
-            ):  # * The value seemes None (""). Are they optional environments?
+
+            # * The value seemes None (""). Are they optional environments?
+            if not env_literal_val:
 
                 self.logger.debug(
                     f"Env. Var. {env_key} doesn't have any value but exists. Checking if they are `required`."
@@ -345,10 +344,8 @@ class UtilityMethods:
             # ! If the Environment Variable has a value, then we will check their `expected_type` and evaluate them with respect to their type.
 
             if ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"] in [int, str]:
-                """
-                Type cast the given value with the `expected_type` or else assign the `fallback_value` with typecast of `expected_type`
-                This ensures that the output will be the respected type.
-                """
+                # Type cast the given value with the `expected_type` or else assign the `fallback_value` with typecast of `expected_type`.
+                # This ensures that the output will be the respected type.
 
                 self.envs[env_cleaned_name] = (
                     ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"](env_literal_val)
@@ -388,8 +385,9 @@ class UtilityMethods:
 
                 # Since all enums are declared in upper case. User might intend to apply values in non-case-sensitive form. Hence, we gonna explicitly uppercase them.
                 enum_case_env_val: str = env_literal_val.upper()
+                assigned_enum_val: Optional[Enum] = None
 
-                if len(enum_case_env_val):
+                if enum_case_env_val:
                     for each_enums in enum_candidates:
                         for each_cls in each_enums:
                             # `is_valid` will be used to break
@@ -404,13 +402,17 @@ class UtilityMethods:
                             )
 
                             if is_valid:
+                                assigned_enum_val = each_cls
                                 break
 
                         if is_valid:
                             break
 
                     self.logger.info(
-                        (f"Env. Var. {env_key} now has a value of %s!" % each_cls)
+                        (
+                            f"Env. Var. {env_key} now has a value of %s!"
+                            % assigned_enum_val
+                        )
                         if is_valid
                         else f"Env. Var. {env_key} was unable to resolve the given argument ({enum_case_env_val}). Reverting to %s..."
                         % (ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])

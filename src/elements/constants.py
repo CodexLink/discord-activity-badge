@@ -265,7 +265,7 @@ ENV_STRUCT_CONSTRAINTS: Final[  # * If you have been referred to action.yml, thi
     },
     "INPUT_UNSPECIFIED_ACTIVITY_STRING": {
         "expected_type": str,
-        "fallback_value": "???",  # todo: This.
+        "fallback_value": "#1DB954",
         "is_required": False,
     },
     "INPUT_ONLINE_STATUS_STRING": {
@@ -310,7 +310,7 @@ ENV_STRUCT_CONSTRAINTS: Final[  # * If you have been referred to action.yml, thi
     },
     "INPUT_UNSPECIFIED_ACTIVITY_COLOR": {
         "expected_type": ColorHEX,
-        "fallback_value": "???",  # todo: This.
+        "fallback_value": "#6441a5",
         "is_required": False,
     },
     "INPUT_ONLINE_STATUS_COLOR": {

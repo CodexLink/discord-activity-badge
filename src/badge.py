@@ -24,7 +24,8 @@ from base64 import b64decode, b64encode
 from datetime import datetime, timedelta
 from logging import Logger
 from os import _exit as terminate
-from re import Match, Pattern, compile
+from re import Match, Pattern
+from re import compile as RE_COMPILE
 from typing import Any, Callable, Optional, Union
 from urllib.parse import quote
 
@@ -97,18 +98,18 @@ class BadgeConstructor:
 
                 return Base64Bytes(b64decode(ctx_inout))
 
-            elif action is Base64Actions.ENCODE_BUFFER_TO_B64:
+            if action is Base64Actions.ENCODE_BUFFER_TO_B64:
                 self.logger.info(
                     "Conversion from README Readable Raw Content to a Base64 (Bytes) is done and is loaded into the variable for committing changes!"
                 )
                 return Base64Bytes(b64encode(bytes(str(ctx_inout), encoding="utf-8")))
 
-            else:
-                msg: str = f"Passed `action` parameter is not a {Base64Actions}! Please contact the developer if this issue occured in Online Runner."
-                self.logger.critical(msg)
+            msg: str = f"Passed `action` parameter is not a {Base64Actions}! Please contact the developer if this issue occured in Online Runner."
+            self.logger.critical(msg)
 
-                self.print_exception(GithubRunnerLevelMessages.ERROR, msg, None)
-                terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
+            self.print_exception(GithubRunnerLevelMessages.ERROR, msg, None)
+            terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
+
         else:
             msg = f"The given value in `ctx_inout` parameter is not a {Base64String.__name__}! Please contact the developer about this issue."
             self.logger.error(msg)
@@ -133,7 +134,7 @@ class BadgeConstructor:
             name="READMEContents_Decode",
         )
 
-        self._re_pattern: Pattern = compile(BADGE_REGEX_STRUCT_IDENTIFIER)
+        self._re_pattern: Pattern = RE_COMPILE(BADGE_REGEX_STRUCT_IDENTIFIER)
         self.logger.debug(
             f"RegularExpression for Badge Identification in README was compiled successfully. | Pattern: {self._re_pattern}"
         )
@@ -315,15 +316,12 @@ class BadgeConstructor:
                 self.print_exception(GithubRunnerLevelMessages.WARNING, msg, None)
 
             # # Badge Construction
-            """
-            ! Keep in mind that every string manipulation is inlined and that's because I don't want to make things longer.
-            I hope the formatter compensate this.
-            """
+            # ! Keep in mind that every string manipulation is inlined and that's because I don't want to make things longer. I hope the formatter compensate this.
 
             # This is a component of subject_output. Check if we should append User's State instead of Activity State in the Subject.
             state_string = "%s_STRING" % (
                 picked_activity
-                if len(picked_activity)
+                if picked_activity
                 else "%s_STATUS" % self.user_ctx["statuses"]["status"].name.upper()
             )
 
@@ -342,12 +340,6 @@ class BadgeConstructor:
                     ]
                 )
             )
-
-            # This part is where do we need to embed the state under Subject or Status.
-            # There are lot more conditions to consider to this point.
-            """
-            If there's no presence ctx and there's not
-            """
 
             # When dealing with seperators, sometiemes we have to do some management for dealing with spaces.
             # Display the default if `STATUS_CONTEXT_SEPERATOR` is empty, otherwise, add spacing for both ends along with the custom seperator.

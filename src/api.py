@@ -142,7 +142,7 @@ class AsyncGithubAPILite:
                             ]
 
                         # Since we commit and there's nothing else to modify, just output that the request was success.
-                        elif action is GithubRunnerActions.COMMIT_CHANGES and data is Base64String(data):  # type: ignore # It explicitly wants to typecast `str`, which renders the condition false.
+                        if action is GithubRunnerActions.COMMIT_CHANGES and data is Base64String(data):  # type: ignore # It explicitly wants to typecast `str`, which renders the condition false.
                             self.logger.info(
                                 f"README Changes from ({user_repo}) has been pushed through! | {suffix_req_cost}"
                             )
@@ -257,15 +257,14 @@ class AsyncGithubAPILite:
             if http_request.ok:
                 return http_request
 
-            else:
-                # ! Sometimes, we can exceed the rate-limit request per time. We have to handle the display error instead from the receiver of this request.
-                _resp_raw: ClientResponse = (
-                    http_request  # Supposed to be ClientResponse
-                )
-                _resp_ctx: dict = literal_eval(str(_resp_raw))
+            # ! Sometimes, we can exceed the rate-limit request per time. We have to handle the display error instead from the receiver of this request.
+            _resp_raw: ClientResponse = (
+                http_request  # Supposed to be ClientResponse
+            )
+            _resp_ctx: dict = literal_eval(str(_resp_raw))
 
-                self.logger.debug(_resp_ctx)
-                terminate(ExitReturnCodes.EXCEPTION_EXIT)
+            self.logger.debug(_resp_ctx)
+            terminate(ExitReturnCodes.EXCEPTION_EXIT)
 
         else:
 

@@ -3,8 +3,7 @@
 	// Hover to view descriptions of existing attributes.
 	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 	"version": "0.2.0",
-	"configurations": [
-		{
+	"configurations": [{
 			"name": "entrypoint.py (Do-Not-Commit + Logger DEBUG)",
 			"type": "python",
 			"request": "launch",
@@ -30,6 +29,6 @@
 			"console": "integratedTerminal",
 			"justMyCode": false,
 			"args": ["--do-not-commit", "--generate-log-file", "--logger-level", "DEBUG"]
-		},
+		}
 	]
 }
