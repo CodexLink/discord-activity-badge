@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
 from datetime import datetime
 from enum import Enum, IntEnum, auto, unique
-from logging import DEBUG, ERROR, INFO, WARNING
+from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from time import strftime
 from typing import Any, Final, Optional, TypedDict
 from aiohttp import BasicAuth
