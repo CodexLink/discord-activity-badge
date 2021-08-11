@@ -54,7 +54,7 @@ inputs:
     description: "Overrides `Discord Activity` (Subject String) and User State with the state of `Stream` with custom strings."
     required: False
 
-  UNSPECIFIED_ACTIVITY_STRING:
+  SPOTIFY_ACTIVITY_STRING:
     description: "Overrides `Discord Activity` (Subject String) and User State with the state of `Unspecified` with custom strings."
     required: False
 
@@ -90,7 +90,7 @@ inputs:
     description: "Renders status badge color whenever there's a Stream activity. Please check README.md for more information about this parameter."
     required: false
 
-  UNSPECIFIED_ACTIVITY_COLOR:
+  SPOTIFY_ACTIVITY_COLOR:
     description: "Renders status badge color whenever there's a Unspecified activity. Please check README.md for more information about this parameter."
     required: false
 

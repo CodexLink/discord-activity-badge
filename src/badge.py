@@ -53,6 +53,7 @@ from elements.typing import (
     Base64Bytes,
     Base64String,
     ColorHEX,
+    DiscordActivityElements,
     HttpsURL,
     READMEContent,
 )
@@ -420,7 +421,7 @@ class BadgeConstructor:
 
                 # Resolve the time display as it was detected with `timestamps`, thus identified as `remaining`.
                 if has_remaining:
-                    end_time = (
+                    end_time: timedelta = (
                         datetime.fromtimestamp(int(has_remaining) / 1000) - start_time
                     )
 
@@ -429,17 +430,30 @@ class BadgeConstructor:
                     # For that case, we don't need to sterilize it for a while.
                     if (
                         picked_activity
-                        == PreferredActivityDisplay.UNSPECIFIED_ACTIVITY.name
+                        == PreferredActivityDisplay.SPOTIFY_ACTIVITY.name
                     ):
                         running_time = running_time - timedelta(
-                            microseconds=running_time.microseconds,
+                            microseconds=running_time.microseconds
                         )
                         end_time = end_time - timedelta(
                             microseconds=end_time.microseconds
                         )
 
+                        music_info: list[DiscordActivityElements] = [
+                            presence_ctx[picked_activity]["details"],
+                            presence_ctx[picked_activity]["state"],
+                            presence_ctx[picked_activity]["assets"]["large_text"],
+                        ]
+
                         status_output = BadgeStructure(
-                            status_output + f"{running_time} of {end_time}"
+                            status_output
+                            + "{0} by {1} ({2}) | {3} of {4}".format(
+                                music_info[0],
+                                music_info[1],
+                                music_info[2],
+                                running_time,
+                                end_time,
+                            )
                         )
 
                 # * Resolve for the case of `elapsed`.

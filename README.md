@@ -128,7 +128,7 @@ If you wanna change the things on how it should be delivered (context) and how i
 `str` `[2]_STATUS_COLOR` *Note*: ***HEX RGB only*** | Overrides the status color when the user is in ***online / idle / dnd / offline*** states. [![Demo 4](https://badgen.net/badge/Discord%20Activity/Currently%20Offline/D103FA?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 `str` `STATIC_SUBJECT_STRING` *Defaults to*: **None** | Statically declare a certain string to display on the subject. If declared, ***[]_ACTIVITY_STRING and []_STATUS_STRING*** will be ignored. [![Demo ?](https://badgen.net/badge/Discord%20Activity/Playing%20Honkai%20Impact%203/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 
-> 1. Options: ***CUSTOM_ACTIVITY***, ***GAME_ACTIVITY***, ***RICH_PRESENCE***, ***STREAM_ACTIVITY***, and ***UNSPECIFIED_ACTIVITY***.
+> 1. Options: ***CUSTOM_ACTIVITY***, ***GAME_ACTIVITY***, ***RICH_PRESENCE***, ***STREAM_ACTIVITY***, and ***SPOTIFY_ACTIVITY***.
 > 2. Options: ***ONLINE***, ***IDLE***, ***DND***, and ***OFFLINE***.
 
 *I separated the options along with the parameter to avoid confusion while reading it.*
@@ -149,7 +149,7 @@ Whenever you want to change the context of the badge, you can use this set of pa
 
 | Parameters  | Description + Result |
 | :-----------: | :----------------: |
-`str` `PREFERRED_ACTIVITY_TO_DISPLAY` *Options*: *[CUSTOM_ACTIVITY, GAME_ACTIVITY, **RICH_PRESENCE**, STREAM_ACTIVITY, UNSPECIFIED_ACTIVITY]* | Renders a particular activity as a prioritized activity. If the preferred activity does not exist, it will render any activity by default. **There will be no demo since it only picks what activity should be displayed.**
+`str` `PREFERRED_ACTIVITY_TO_DISPLAY` *Options*: *[CUSTOM_ACTIVITY, GAME_ACTIVITY, **RICH_PRESENCE**, STREAM_ACTIVITY, SPOTIFY_ACTIVITY]* | Renders a particular activity as a prioritized activity. If the preferred activity does not exist, it will render any activity by default. **There will be no demo since it only picks what activity should be displayed.**
 `bool` `SHIFT_STATE_ACTIVITY_COLORS` *Defaults to*: **False** | Interchange state and activity colors. This is useful only if you want to retain your state color position even though `APPEND_STATE_ON_SUBJECT` is true. [![Example #8](https://badgen.net/badge/Currently%20Streaming/Visual%20Studio%20Code/green?icon=discord&labelColor=purple)](https://github.com/CodexLink/discord-activity-badge)
 `str (char)` `STATUS_CONTEXT_SEPERATOR` *Defaults to*: **`,`** | The character/s that seperates the context of every status elements. Keep note that, once you declared a value on this parameter, it will automatically adds space from both ends to ensure that the content displays properly. If otherwise, the script will do the spacing on its own. [![Example #8](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code%20%7C%20Idling%20In%20Workspace%20%7C%207%20hours%20elapsed./green?icon=discord&labelColor=yellow)](https://github.com/CodexLink/discord-activity-badge)
 

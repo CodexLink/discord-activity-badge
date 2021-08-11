@@ -215,7 +215,7 @@ class DiscordClientHandler(Client):
                             if cls_name == Activity.__name__
                             else PreferredActivityDisplay.GAME_ACTIVITY.name
                             if cls_name == Game.__name__
-                            else PreferredActivityDisplay.UNSPECIFIED_ACTIVITY.name
+                            else PreferredActivityDisplay.SPOTIFY_ACTIVITY.name
                         )
 
                         self.user_ctx["activities"][

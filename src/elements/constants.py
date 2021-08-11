@@ -153,7 +153,7 @@ class PreferredActivityDisplay(IntEnum):
     GAME_ACTIVITY: int = auto()
     RICH_PRESENCE: int = auto()
     STREAM_ACTIVITY: int = auto()
-    UNSPECIFIED_ACTIVITY: int = auto()
+    SPOTIFY_ACTIVITY: int = auto()
 
 
 @unique
@@ -261,9 +261,9 @@ ENV_STRUCT_CONSTRAINTS: Final[  # * If you have been referred to action.yml, thi
         "fallback_value": "Currently Streaming",
         "is_required": False,
     },
-    "INPUT_UNSPECIFIED_ACTIVITY_STRING": {
+    "INPUT_SPOTIFY_ACTIVITY_STRING": {
         "expected_type": str,
-        "fallback_value": "#1DB954",
+        "fallback_value": "Listening to",
         "is_required": False,
     },
     "INPUT_ONLINE_STATUS_STRING": {
@@ -306,9 +306,9 @@ ENV_STRUCT_CONSTRAINTS: Final[  # * If you have been referred to action.yml, thi
         "fallback_value": "#4d14df",
         "is_required": False,
     },
-    "INPUT_UNSPECIFIED_ACTIVITY_COLOR": {
+    "INPUT_SPOTIFY_ACTIVITY_COLOR": {
         "expected_type": ColorHEX,
-        "fallback_value": "#6441a5",
+        "fallback_value": "#1db954",
         "is_required": False,
     },
     "INPUT_ONLINE_STATUS_COLOR": {
