@@ -40,7 +40,7 @@ from elements.constants import (
 )
 
 
-class UtilityFunctions:
+class UtilityMethods:
     """
     A child class designed to store and handle every utility methods. (used by superclass, DiscordActivityBadge)
     """

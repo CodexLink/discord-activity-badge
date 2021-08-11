@@ -36,11 +36,11 @@ from api import AsyncGithubAPILite
 from badge import BadgeConstructor
 from client import DiscordClientHandler
 from elements.constants import ENV_FILENAME, GithubRunnerActions
-from utils import UtilityFunctions
+from utils import UtilityMethods
 
 
 class DiscordActivityBadge(
-    UtilityFunctions, AsyncGithubAPILite, DiscordClientHandler, BadgeConstructor
+    UtilityMethods, AsyncGithubAPILite, DiscordClientHandler, BadgeConstructor
 ):
     # The heart of the Discord Activity Badge. Everything runs in Object-Oriented Approach. Please check each methods.
 

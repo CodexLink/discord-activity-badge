@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     raise IsolatedExecNotAllowed
 
-from asyncio import Future, Task, create_task, wait
+from asyncio import Task, create_task, wait
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta
 from logging import Logger
@@ -37,11 +37,11 @@ from elements.constants import (
     BADGE_REDIRECT_BASE_DOMAIN,
     BADGE_REGEX_STRUCT_IDENTIFIER,
     DISCORD_USER_STRUCT,
-    GithubRunnerLevelMessages,
     TIME_STRINGS,
     Base64Actions,
     ContextOnSubject,
     ExitReturnCodes,
+    GithubRunnerLevelMessages,
     PreferredActivityDisplay,
     PreferredTimeDisplay,
 )
@@ -77,16 +77,16 @@ class BadgeConstructor:
         self,
         action: Base64Actions,
         ctx_inout: Union[Base64String, READMEContent],
-    ) -> Union[Base64Bytes, READMEContent]:
+    ) -> Base64Bytes:
         """
         A private child class that handles README content by decoding and encoding it, to be stored in the memory buffer.
 
         Args:
             action (Base64Actions): The action that this method will perform. Choices are DECODE_B64_TO_BUFFER and ENCODE_BUFFER_TO_B64.
-            ctx_inout (READMEContent): A variable that hold the data from decoding to encoding.
+            ctx_inout (READMEContent): A variable that holds the data both for decoding and encoding.
 
         Returns:
-            Union[Base64Bytes, READMEContent]: Each action returns different type of data, those can be Base64String for decoding and READMEContent (str) encoding, respectively.
+           Base64Bytes: Both actions returns Base64 in bytes respectively. This was done to give other methods more options on how they want to handle the data.
         """
 
         if ctx_inout is Base64String(str(ctx_inout)):
@@ -95,7 +95,7 @@ class BadgeConstructor:
                     "Conversion from Base64 (String) to Readable README Markdown Format is done and is loaded into the memory!"
                 )
 
-                return READMEContent(str(b64decode(ctx_inout), encoding="utf-8"))
+                return Base64Bytes(b64decode(ctx_inout))
 
             elif action is Base64Actions.ENCODE_BUFFER_TO_B64:
                 self.logger.info(
@@ -128,7 +128,7 @@ class BadgeConstructor:
         """
 
         self.logger.info("Converting README to a Readable Format...")
-        readme_decode: Future = create_task(
+        readme_decode: Task[Base64Bytes] = create_task(
             self._handle_b64(Base64Actions.DECODE_B64_TO_BUFFER, readme_ctx),
             name="READMEContents_Decode",
         )
@@ -145,7 +145,9 @@ class BadgeConstructor:
             is_matched: bool = False
 
             while not is_matched:
-                line_ctx: READMEContent = READMEContent(readme_decode.result())
+                line_ctx: READMEContent = READMEContent(
+                    str(readme_decode.result(), "utf-8")
+                )
                 match: Optional[Match[Any]] = self._re_pattern.search(line_ctx)
 
                 self.logger.debug(
@@ -180,19 +182,6 @@ class BadgeConstructor:
                         if is_badge_identified
                         else f"{constructed_badge}\n\n{line_ctx}"
                     )
-
-                    # Check if the README Content is the same as before, it that would be the case DO-NOT-COMMIT, or otherwise, commit changes.
-
-                    if line_ctx == readme_decode.result():
-                        self.logger.info(
-                            "There are content changes with the recent README. Allowing to reflect changes!"
-                        )
-                    else:
-                        self.logger.warning(
-                            "There are no current changes to commit since the content was the same as the recent README. Do-not-commit!"
-                        )
-                        setattr(self.args, "do_not_commit", True)
-
                     break
 
         except IndexError as e:
@@ -201,7 +190,25 @@ class BadgeConstructor:
 
             self.print_exception(GithubRunnerLevelMessages.WARNING, msg, e)
 
-        return await self._handle_b64(Base64Actions.ENCODE_BUFFER_TO_B64, line_ctx)  # type: ignore # Will check this one in the future since I can't explicitly invoke or typecast NewType -> Base64Bytes.
+            # Check if the README Content is the same as before, it that would be the case DO-NOT-COMMIT, or otherwise, commit changes.
+
+        readme_encode: Base64Bytes = await self._handle_b64(
+            Base64Actions.ENCODE_BUFFER_TO_B64, line_ctx
+        )
+
+        if readme_encode != bytes(readme_ctx, "utf-8"):
+            self.logger.info(
+                "There are content changes with the recent README. Allowing to reflect changes!"
+            )
+
+        else:
+            msg = "There are no current changes to commit since the content was the same as the recent README. Do-not-commit!"
+            self.logger.warning(msg)
+            self.print_exception(GithubRunnerLevelMessages.WARNING, msg, None)
+
+            setattr(self.args, "do_not_commit", True)
+
+        return readme_encode
 
     async def construct_badge(self) -> BadgeStructure:
         """
