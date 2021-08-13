@@ -11,7 +11,6 @@ aiohttp = "^3.7.4"
 urllib3 = "^1.26.6"
 
 [tool.poetry.dev-dependencies]
-coveralls = "^3.1.0"
 flake8 = "^3.9.2"
 black = "^21.6b0"
 mypy = "^0.910"

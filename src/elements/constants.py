@@ -206,8 +206,7 @@ ENV_STRUCT_CONSTRAINTS: Final[  # * If you have been referred to action.yml, thi
     },
     "INPUT_COMMIT_MESSAGE": {
         "expected_type": str,
-        "fallback_value": "Discord Activity Badge Updated as of %s"
-        % datetime.now().strftime("%m/%d/%y — %I:%M:%S %p"),
+        "fallback_value": "Discord Activity Badge Updated!",
         "is_required": False,
     },
     "INPUT_DISCORD_BOT_TOKEN": {
