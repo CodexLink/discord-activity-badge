@@ -1,5 +1,5 @@
 <div align="center">
-<h1>Discord Activity Badge (Initial Release)  </h1>
+<h1>Discord Activity Badge <code>(Initial Release)</code></h1>
 
 [![Example Online](https://badgen.net/badge/Discord%20Activity/Currently%20Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 [![Example Idle](https://badgen.net/badge/Discord%20Activity/Currently%20Idle/yellow?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
@@ -19,13 +19,18 @@
 <h4>A containerized action that bridges the Discord User's Activity and their Status State to a Representable Badge for their Special Repository (Github Profile) and soon, for open-sourced Discord Bots.</h4>
 <h4><b>Powered by Docker and Python + AsyncIO + discord.py + aiohttp.</b></h4>
 
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/CodexLink/discord-activity-badge/)
 [![Container Tester](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_test.yml/badge.svg)](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_test.yml)
 [![Containerization | Discord Activity Badge](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_deploy.yml/badge.svg)](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_deploy.yml)
+[![LGTM Alerts](https://badgen.net/lgtm/alerts/g/CodexLink/discord-activity-badge/python?icon=lgtm&label=LGTM%20Alerts)](https://lgtm.com/projects/g/CodexLink/discord-activity-badge)
 
 [![Codacy Code Quality Grade](https://badgen.net/codacy/grade/42fcd1c143464a288522e236f929b1a8/latest?icon=codacy&label=Codacy%20Code%20Quality)](https://app.codacy.com/gh/CodexLink/discord-activity-badge/dashboard)
 [![CodeFactor Code Quality Grade](https://img.shields.io/codefactor/grade/github/CodexLink/discord-activity-badge/latest?label=CodeFactor%20Code%20Quality&logo=codefactor)](https://www.codefactor.io/repository/github/codexlink/discord-activity-badge)
+[![LGTM Calculated Line of Code](https://badgen.net/lgtm/lines/g/CodexLink/discord-activity-badge/python?icon=lgtm&label=Code%20Lines%20%28Python%29)](https://lgtm.com/projects/g/CodexLink/discord-activity-badge)
+[![LGTM Code Quality](https://badgen.net/lgtm/grade/g/CodexLink/discord-activity-badge/python?icon=lgtm&label=LGTM%20Code%20Quality)](https://lgtm.com/projects/g/CodexLink/discord-activity-badge)
+
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/CodexLink/discord-activity-badge/)
 [![Repository License](https://img.shields.io/badge/Repo%20License-Apache%20License%202.0-blueviolet)](https://github.com/CodexLink/discord-activity-badge/blob/main/LICENSE)
+
 </div>
 
 ## Why?
