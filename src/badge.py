@@ -136,9 +136,8 @@ class BadgeConstructor:
 
         try:
             self.logger.info("Attempting to identify the badge inside README...")
-            is_matched: bool = False
 
-            while not is_matched:
+            while True:
                 line_ctx: READMEContent = READMEContent(
                     str(readme_decode.result(), "utf-8")
                 )
@@ -149,7 +148,6 @@ class BadgeConstructor:
                 )  # todo: Check if duplicating the badge would affect the other badge as well. This should be only one-to-one.
 
                 if match:
-                    is_matched = True
                     identifier_name: str = match.group("badge_identifier")
                     is_badge_identified: bool = (
                         identifier_name == self.envs["BADGE_IDENTIFIER_NAME"]

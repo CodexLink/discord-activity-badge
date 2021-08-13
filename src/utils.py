@@ -466,10 +466,17 @@ class UtilityMethods:
 
                 # Then print it, Github Action runner typically resolves or understand this print.
                 print(
-                    f"::{message_type.value} file={__file__},line={line_no},col=1::{error_message}. %s"
-                    % "Please refer to the logs for more information about the exception!"
-                    if traceback_info is None
-                    else ""
+                    f"::{0} file={1},line={2},col=1::{3}. {4}".format(
+                        message_type.value,
+                        __file__,
+                        line_no,
+                        error_message,
+                        (
+                            "Please refer to the logs for more information about the exception!"
+                            if traceback_info is None
+                            else ""
+                        ),
+                    )
                 )  # ! Keep note that, we can't get the exact infromation in terms of displaying the line. For column, this seems to be not supported.
 
             else:

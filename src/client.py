@@ -20,7 +20,6 @@ from logging import Logger
 from os import _exit as terminate
 from typing import Any, Callable, List, NoReturn, Optional, Union
 
-from discord import Streaming  # To be used soon.
 from discord import Activity, ActivityType, Client, ClientUser, Member, Status
 from discord.activity import CustomActivity, Game
 from discord.errors import HTTPException, NotFound
@@ -28,17 +27,17 @@ from discord.guild import Guild
 from discord.user import User
 
 from elements.constants import (
-BLUEPRINT_INIT_VALUES,
-DISCORD_CLIENT_INTENTS,
-DISCORD_USER_STRUCT,
-ExitReturnCodes,
-GithubRunnerLevelMessages,
-PreferredActivityDisplay,
+    BLUEPRINT_INIT_VALUES,
+    DISCORD_CLIENT_INTENTS,
+    DISCORD_USER_STRUCT,
+    ExitReturnCodes,
+    GithubRunnerLevelMessages,
+    PreferredActivityDisplay,
 )
 
 
 class DiscordClientHandler(Client):
-# * The following variables are declared for weak reference since there's no hint-typing inheritance.
+    # * The following variables are declared for weak reference since there's no hint-typing inheritance.
 
     args: Namespace
     envs: Any
