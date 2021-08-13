@@ -14,11 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-if __name__ == "__main__":
-    from .exceptions import IsolatedExecNotAllowed
-
-    raise IsolatedExecNotAllowed
-
 from datetime import datetime
 from enum import Enum, IntEnum, auto, unique
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING

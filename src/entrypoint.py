@@ -14,11 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-if __name__ != "__main__":
-	from elements.exceptions import EntryImportNotAllowed
-
-	raise EntryImportNotAllowed
-
 from asyncio import (
 	AbstractEventLoop,
 	Task,

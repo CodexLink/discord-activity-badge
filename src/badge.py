@@ -14,11 +14,6 @@ see the license for the specific language governing permissions and
 limitations under the license.
 """
 
-if __name__ == "__main__":
-    from elements.exceptions import IsolatedExecNotAllowed
-
-    raise IsolatedExecNotAllowed
-
 from asyncio import Task, create_task, wait
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta
@@ -30,36 +25,36 @@ from typing import Any, Callable, Optional, Union
 from urllib.parse import quote
 
 from elements.constants import (
-    BADGE_BASE_MARKDOWN,
-    BADGE_BASE_SUBJECT,
-    BADGE_BASE_URL,
-    BADGE_ICON,
-    BADGE_NO_COLOR_DEFAULT,
-    BADGE_REDIRECT_BASE_DOMAIN,
-    BADGE_REGEX_STRUCT_IDENTIFIER,
-    DISCORD_USER_STRUCT,
-    TIME_STRINGS,
-    Base64Actions,
-    ContextOnSubject,
-    ExitReturnCodes,
-    GithubRunnerLevelMessages,
-    PreferredActivityDisplay,
-    PreferredTimeDisplay,
+BADGE_BASE_MARKDOWN,
+BADGE_BASE_SUBJECT,
+BADGE_BASE_URL,
+BADGE_ICON,
+BADGE_NO_COLOR_DEFAULT,
+BADGE_REDIRECT_BASE_DOMAIN,
+BADGE_REGEX_STRUCT_IDENTIFIER,
+DISCORD_USER_STRUCT,
+TIME_STRINGS,
+Base64Actions,
+ContextOnSubject,
+ExitReturnCodes,
+GithubRunnerLevelMessages,
+PreferredActivityDisplay,
+PreferredTimeDisplay,
 )
 from elements.typing import (
-    ActivityDictName,
-    BadgeElements,
-    BadgeStructure,
-    Base64Bytes,
-    Base64String,
-    ColorHEX,
-    HttpsURL,
-    READMEContent,
+ActivityDictName,
+BadgeElements,
+BadgeStructure,
+Base64Bytes,
+Base64String,
+ColorHEX,
+HttpsURL,
+READMEContent,
 )
 
 
 class BadgeConstructor:
-    # * The following variables are declared for weak reference since there's no hint-typing inheritance.
+# * The following variables are declared for weak reference since there's no hint-typing inheritance.
 
     args: Any
     badge_task: Task
@@ -85,7 +80,7 @@ class BadgeConstructor:
             ctx_inout (READMEContent): A variable that holds the data both for decoding and encoding.
 
         Returns:
-           Base64Bytes: Both actions returns Base64 in bytes respectively. This was done to give other methods more options on how they want to handle the data.
+            Base64Bytes: Both actions returns Base64 in bytes respectively. This was done to give other methods more options on how they want to handle the data.
         """
 
         if ctx_inout is Base64String(str(ctx_inout)):

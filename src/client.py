@@ -14,11 +14,6 @@ see the license for the specific language governing permissions and
 limitations under the license.
 """
 
-if __name__ == "__main__":
-    from elements.exceptions import IsolatedExecNotAllowed
-
-    raise IsolatedExecNotAllowed
-
 from argparse import Namespace
 from asyncio import create_task
 from logging import Logger
@@ -33,17 +28,17 @@ from discord.guild import Guild
 from discord.user import User
 
 from elements.constants import (
-    BLUEPRINT_INIT_VALUES,
-    DISCORD_CLIENT_INTENTS,
-    DISCORD_USER_STRUCT,
-    ExitReturnCodes,
-    GithubRunnerLevelMessages,
-    PreferredActivityDisplay,
+BLUEPRINT_INIT_VALUES,
+DISCORD_CLIENT_INTENTS,
+DISCORD_USER_STRUCT,
+ExitReturnCodes,
+GithubRunnerLevelMessages,
+PreferredActivityDisplay,
 )
 
 
 class DiscordClientHandler(Client):
-    # * The following variables are declared for weak reference since there's no hint-typing inheritance.
+# * The following variables are declared for weak reference since there's no hint-typing inheritance.
 
     args: Namespace
     envs: Any

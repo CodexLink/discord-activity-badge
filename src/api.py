@@ -14,11 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-if __name__ == "__main__":
-    from elements.exceptions import IsolatedExecNotAllowed
-
-    raise IsolatedExecNotAllowed
-
 from ast import literal_eval
 from asyncio import sleep
 from logging import Logger
@@ -54,7 +49,7 @@ class AsyncGithubAPILite:
     """
     This child class is a scratch implementation based from Github API. It was supposed to be a re-write implementation of PyGithub for async,
     but I just realized that I only need some certain components. This class also contains session for all HTTPS requests and that includes Badgen.
-	"""
+    """
 
     async def __ainit__(self) -> None:
         """
@@ -258,9 +253,7 @@ class AsyncGithubAPILite:
                 return http_request
 
             # ! Sometimes, we can exceed the rate-limit request per time. We have to handle the display error instead from the receiver of this request.
-            _resp_raw: ClientResponse = (
-                http_request  # Supposed to be ClientResponse
-            )
+            _resp_raw: ClientResponse = http_request  # Supposed to be ClientResponse
             _resp_ctx: dict = literal_eval(str(_resp_raw))
 
             self.logger.debug(_resp_ctx)
