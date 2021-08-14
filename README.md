@@ -64,8 +64,12 @@ The following contains the steps needed to make this action work properly. Keep 
 
 Ever since I don't provide anything such as the Bot that I use for reading my activities, you have to make it on your own. You can go to [Discord Developers](https://discord.com/developers/) and start ahead by creating a new application.
 
+<div align="center">
+  
 [![Image 1](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/1.png)](https://github.com/CodexLink/discord-activity-badge/)
 
+</div>
+  
 Once you have created a new application, you have to go to the sidebar or menu and go to the **Bot settings**, and add a bot. And then, copy the token and store it somewhere temporarily as we are going to use it later on in the next two steps.
 
 [![Image 2](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/2.gif)](https://github.com/CodexLink/discord-activity-badge/)
@@ -89,8 +93,13 @@ To invite, you have to go to the **OAuth2** settings and check the **OAuth2 URL 
 Once you have the link, you just have to paste it into the browser and open it.
 
 [![Image 5, GIF](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/5.gif)](https://github.com/CodexLink/discord-activity-badge/)
+
+<div align="center">
+
 [![Image 6](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/6.png)](https://github.com/CodexLink/discord-activity-badge/)
 
+</div>
+  
 And there you have it! Once you have done this part, the only thing left is to have a workflow in your repository.
 
 ### Preparing the Workflow
@@ -144,7 +153,11 @@ When you finished all the steps, the last thing to do was to manually push it to
 
 If you did the run for the first time, the badge will tend to append on the top of your README, you can adjust it to somewhere else and the badge will be replaced by the script, no matter where it is.
 
+<div align="center">
+
 [![Image 10 (A)](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/A.png)](https://github.com/CodexLink/discord-activity-badge/)
+
+</div>
 
 And that's done! For further customizations, please read the other sub-sections below.
 
