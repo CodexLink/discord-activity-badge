@@ -23,8 +23,6 @@ from os import environ as env
 from sys import stdout
 from typing import Any, Optional, Type, Union
 
-from discord import message
-
 from elements.constants import (
     ARG_CONSTANTS,
     ENV_FILENAME,
