@@ -25,8 +25,8 @@
 
 [![Codacy Code Quality Grade](https://badgen.net/codacy/grade/42fcd1c143464a288522e236f929b1a8/latest?icon=codacy&label=Codacy%20Code%20Quality)](https://app.codacy.com/gh/CodexLink/discord-activity-badge/dashboard)
 [![CodeFactor Code Quality Grade](https://img.shields.io/codefactor/grade/github/CodexLink/discord-activity-badge/latest?label=CodeFactor%20Code%20Quality&logo=codefactor)](https://www.codefactor.io/repository/github/codexlink/discord-activity-badge)
-[![LGTM Calculated Line of Code](https://badgen.net/lgtm/lines/g/CodexLink/discord-activity-badge/python?icon=lgtm&label=Code%20Lines%20%28Python%29)](https://lgtm.com/projects/g/CodexLink/discord-activity-badge)
 [![LGTM Code Quality](https://badgen.net/lgtm/grade/g/CodexLink/discord-activity-badge/python?icon=lgtm&label=LGTM%20Code%20Quality)](https://lgtm.com/projects/g/CodexLink/discord-activity-badge)
+[![LGTM Calculated Line of Code](https://badgen.net/lgtm/lines/g/CodexLink/discord-activity-badge/python?icon=lgtm&label=Code%20Lines%20%28Python%29)](https://lgtm.com/projects/g/CodexLink/discord-activity-badge)
 
 [![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/CodexLink/discord-activity-badge/)
 [![Repository License](https://img.shields.io/badge/Repo%20License-Apache%20License%202.0-blueviolet)](https://github.com/CodexLink/discord-activity-badge/blob/main/LICENSE)
@@ -49,23 +49,48 @@
 * With Dependency Management, Poetry
 * Utility functions that can be reusable, and etc.
 
-### Constraints
+## Steps
 
-The following sub-topics pinpoints some things to consider before attempting to use this script.
+The following contains the steps needed to make this action work properly. Keep in mind that this is quite hectic but easy, the steps were alot because this is the cheapest way to do this thing.
+
+* Creating a Bot and obtaining it's Token in Discord Developers
+* Inviting the Bot to a Guild
+* Preparing the Workflow
+* Repository Secrets
+* Workflow Dispatch
+
+### Creating a Bot and obtaining it's Token in Discord Developers
+
+Ever since I don't provide anything such as the Bot that I use for reading my activities, you have to make it on your own. You can go to [Discord Developers](https://discord.com/developers/) and start ahead by creating a new application.
 
 
+Once you have created a new application, you have to go the sidebar or menu and go to the **Bot settings** and add a bot. And then, copy the token and store it somewhere temporarily as we are going to use it later on the next two steps.
 
-> There are no rate-limitations declared in badgen.net so far. Will further investigate.ecause
+As a sidenote, you have to enable the presence intent **on the same settings (Bot settings)** to allow your bot to read you presence context.
 
-## Usage
+*Don't forget to save before proceeding on the next step!!!*
 
-Paste the following `YAML` on profile repository under directory `.github/workflows`.
+### Inviting the Bot to a Guild
+
+***Inviting the bot and having them in the guild is the only way to read User's Presence and their State, as per the limitation of Discord API.***
+
+Keep in mind that, you can either **create your own guild** or have someone else let the bot join on their guild **as long as you are there**.
+
+To invite, you have to go the **OAuth2** settings and check the **OAuth2 URL Generator**. Look for **Bot** scope and check it, you will be given a generated link.
+
+Once you have link, you just have to paste it in the browser and open it.
+
+And there you have it! Once you have done this part, the only thing left is to have a workflow in your repository.
+
+### Preparing the Workflow
+
+Paste the following `YAML` on your (profile) repository under the directory `.github/workflows` and commit it.
 
 ``` yaml
 name: Discord Rich Presence Activity Badge
 
 on:
-  schedule:                 # Schduling with Github Actions is inconsistent!
+  schedule:                 # Scheduling with Github Actions is inconsistent.
     - cron: "5 0-23 * * *" # Construct your Cronjob Schedule at https://crontab.guru/.
 
   workflow_dispatch:        # Enables you to dispatch the workflow at your click.
@@ -77,9 +102,8 @@ jobs:
 
     steps:
       - name: Update README Discord Badge to Latest Upstream
-      - uses: CodexLink/discord-activity-badge@latest
-
-        with:
+        uses: CodexLink/discord-activity-badge@cutting-edge # Choose your own version by picking a tag or a branch name.
+        with: # Go to your Repository Secrets and fill those up!
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
 
@@ -87,7 +111,22 @@ jobs:
 
 > This workflow will run once it has been dispatched (manually) or is on scheduled to run for every **5 minutes per 0 to 23 hour** to check for the user's status.
 
+### Repository Secrets
 
+To be able to provide your information, you have to go you repository > Settings > Secrets > New Repository.
+
+In the end, you should have these two repository secrets. The token from the one that we obtained in the Discord Developers Section, and the one is from you yourself in the Discord Client.
+
+**DISCORD_USER_ID** can obtained by the following.
+
+### Workflow Dispatch
+
+When you finished all the steps, the last thing to do was to manual push it to see changes.
+
+
+### Post-Step, Moving the Badge
+
+If you did the run for the first time, the badge will tend to append on the top of your README, you can adjust it to somewhere else and the badge will be replaced by the script, no matter where it is.
 
 ## Workflow Parameters
 
@@ -164,7 +203,7 @@ When developing, there are other fields that shouldn't be used in the first plac
 | -----------   | ----------- | ----------- | -----------
 | `IS_DRY_RUN`  | `bool` | `False` | Runs the usual process but it doesn't commit changes.
 
-> This list does seem to contain only one parameter. Worry not, there will be more parameters to be introduced in the future!
+> The list does seem to contain only one parameter. Worry not, there will be more parameters to be introduced in the future!
 
 ## Credits
 
@@ -214,7 +253,7 @@ Keep in mind that most of these resources has been used for references and was n
 
 #### Repository
 
-* <https://github.com/dtinth/github-actions-docker-layer-caching-poc>
+* <https://github.com/dtinth/github-actions-docker-layer-caching-poc> -> <https://github.com/sagikazarmark/github-actions-docker-layer-caching-poc>
 
 #### Questions (Unsorted)
 

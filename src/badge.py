@@ -147,34 +147,35 @@ class BadgeConstructor:
                     f"re.Search Result: {match}"
                 )  # todo: Check if duplicating the badge would affect the other badge as well. This should be only one-to-one.
 
-                if match:
-                    identifier_name: str = match.group("badge_identifier")
-                    is_badge_identified: bool = (
-                        identifier_name == self.envs["BADGE_IDENTIFIER_NAME"]
+                identifier_name: str = match.group("badge_identifier") if match else None
+                is_badge_identified: bool = (
+                    identifier_name == self.envs["BADGE_IDENTIFIER_NAME"]
+                )
+
+                self.logger.info(
+                    (
+                        f"Badge with Identifier {identifier_name} found! Substituting the old badge."
                     )
+                    if self.envs["BADGE_IDENTIFIER_NAME"] == identifier_name
+                    else "Badge with Identifier (%s) not found! New badge will append on the top of the contents of README.md. Please arrange/move the badge once changes has been pushed!"
+                    % self.envs["BADGE_IDENTIFIER_NAME"]
+                )
 
-                    self.logger.info(
-                        (
-                            f"Badge with Identifier {identifier_name} found! Substituting the old badge."
-                        )
-                        if self.envs["BADGE_IDENTIFIER_NAME"] == identifier_name
-                        else "Badge with Identifier (%s) not found! New badge will append on the top of the contents of README.md. Please arrange/move the badge once changes has been pushed!"
-                        % self.envs["BADGE_IDENTIFIER_NAME"]
-                    )
+                self.logger.info(
+                    "Awaiting for the badge construction task to finish..."
+                )
+                await wait([self.badge_task])
 
-                    self.logger.info(
-                        "Awaiting for the badge construction task to finish..."
-                    )
-                    await wait([self.badge_task])
+                constructed_badge: BadgeStructure = self.badge_task.result()
 
-                    constructed_badge: BadgeStructure = self.badge_task.result()
-
+                if match and is_badge_identified:
                     line_ctx = READMEContent(
                         line_ctx.replace(match.group(0), constructed_badge)
-                        if is_badge_identified
-                        else f"{constructed_badge}\n\n{line_ctx}"
                     )
-                    break
+                else:
+                    line_ctx = READMEContent(f"{constructed_badge}\n\n{line_ctx}")
+
+                break
 
         except IndexError as e:
             msg: str = f"The RegEx can't find any badge with Identifier in README. If you think that this is a bug then please let the developer know. | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
