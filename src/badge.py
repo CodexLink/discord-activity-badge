@@ -25,36 +25,36 @@ from typing import Any, Callable, Optional, Union
 from urllib.parse import quote
 
 from elements.constants import (
-BADGE_BASE_MARKDOWN,
-BADGE_BASE_SUBJECT,
-BADGE_BASE_URL,
-BADGE_ICON,
-BADGE_NO_COLOR_DEFAULT,
-BADGE_REDIRECT_BASE_DOMAIN,
-BADGE_REGEX_STRUCT_IDENTIFIER,
-DISCORD_USER_STRUCT,
-TIME_STRINGS,
-Base64Actions,
-ContextOnSubject,
-ExitReturnCodes,
-GithubRunnerLevelMessages,
-PreferredActivityDisplay,
-PreferredTimeDisplay,
+    BADGE_BASE_MARKDOWN,
+    BADGE_BASE_SUBJECT,
+    BADGE_BASE_URL,
+    BADGE_ICON,
+    BADGE_NO_COLOR_DEFAULT,
+    BADGE_REDIRECT_BASE_DOMAIN,
+    BADGE_REGEX_STRUCT_IDENTIFIER,
+    DISCORD_USER_STRUCT,
+    TIME_STRINGS,
+    Base64Actions,
+    ContextOnSubject,
+    ExitReturnCodes,
+    GithubRunnerLevelMessages,
+    PreferredActivityDisplay,
+    PreferredTimeDisplay,
 )
 from elements.typing import (
-ActivityDictName,
-BadgeElements,
-BadgeStructure,
-Base64Bytes,
-Base64String,
-ColorHEX,
-HttpsURL,
-READMEContent,
+    ActivityDictName,
+    BadgeElements,
+    BadgeStructure,
+    Base64Bytes,
+    Base64String,
+    ColorHEX,
+    HttpsURL,
+    READMEContent,
 )
 
 
 class BadgeConstructor:
-# * The following variables are declared for weak reference since there's no hint-typing inheritance.
+    # * The following variables are declared for weak reference since there's no hint-typing inheritance.
 
     args: Any
     badge_task: Task
@@ -147,7 +147,9 @@ class BadgeConstructor:
                     f"re.Search Result: {match}"
                 )  # todo: Check if duplicating the badge would affect the other badge as well. This should be only one-to-one.
 
-                identifier_name: str = match.group("badge_identifier") if match else None
+                identifier_name: str = (
+                    match.group("badge_identifier") if match else None
+                )
                 is_badge_identified: bool = (
                     identifier_name == self.envs["BADGE_IDENTIFIER_NAME"]
                 )
@@ -168,6 +170,8 @@ class BadgeConstructor:
 
                 constructed_badge: BadgeStructure = self.badge_task.result()
 
+                print("Constructed? > ", constructed_badge)
+
                 if match and is_badge_identified:
                     line_ctx = READMEContent(
                         line_ctx.replace(match.group(0), constructed_badge)
@@ -182,8 +186,6 @@ class BadgeConstructor:
             self.logger.warning(msg)
 
             self.print_exception(GithubRunnerLevelMessages.WARNING, msg, e)
-
-            # Check if the README Content is the same as before, it that would be the case DO-NOT-COMMIT, or otherwise, commit changes.
 
         readme_encode: Base64Bytes = await self._handle_b64(
             Base64Actions.ENCODE_BUFFER_TO_B64, line_ctx
@@ -313,11 +315,10 @@ class BadgeConstructor:
             # This is a component of subject_output. Check if we should append User's State instead of Activity State in the Subject.
             state_string = "%s_STRING" % (
                 picked_activity
-                if picked_activity
+                if picked_activity != PreferredActivityDisplay.CUSTOM_ACTIVITY.name # ! Special handle for CustomActivity.
                 else "%s_STATUS" % self.user_ctx["statuses"]["status"].name.upper()
             )
 
-            # ! CLARFIY THIS CONDITION, Add Static Subject String. If that is included, disabled this condition.
             # Are there an no activity present and STATIC_SUBJECT_STRING is empty? Then use `BADGE_BASE_SUBJECT`.
             # Only if, STATIC_SUBJECT_STRING is not empty, otherwise, use the string concatenation performed in variable `state_string`.
             subject_output = (
@@ -349,7 +350,7 @@ class BadgeConstructor:
                     or self.envs["TIME_DISPLAY_OUTPUT"]
                     is not PreferredTimeDisplay.TIME_DISABLED
                 )
-                and contains_activities
+                and picked_activity != PreferredActivityDisplay.CUSTOM_ACTIVITY.name # Supposedly have to check for any activity, but we have to be specific here instead.
                 else ""
             )
 
@@ -368,7 +369,7 @@ class BadgeConstructor:
                         ]
                     )
                     if not contains_activities
-                    else presence_ctx[picked_activity]["name"]
+                    else presence_ctx[picked_activity]["name" if picked_activity != PreferredActivityDisplay.CUSTOM_ACTIVITY.name else "state"]
                 )
                 + (  # Append the seperator. This one is a condition-hell since we have to consider two other values and the state of the badge.
                     (
@@ -422,129 +423,155 @@ class BadgeConstructor:
                 # * Also, since this mf doesn't like '+=', let's do the manual with type.
 
                 # Since activities can display time remaining or elapsed, check the context if timestamps exists so that it can display `remaining` instead of `elapsed`.
-                has_remaining: Union[None, str] = presence_ctx[picked_activity][
-                    "timestamps"
-                ].get("end")
 
-                # At this point, we have calculate from the time the application or activity has been started. Note that the epoch given by discord is by milliseconds.
-                start_time: datetime = datetime.fromtimestamp(
-                    int(presence_ctx[picked_activity]["timestamps"]["start"]) / 1000
-                )
-                running_time: timedelta = (
-                    datetime.now() - start_time
-                )  # This one calculates the current time to be compatible for any operations with `start_time`.
+                contains_timestamps: Union[None, str] = presence_ctx[
+                    picked_activity
+                ].get("timestamps")
 
-                # Resolve the time display as it was detected with `timestamps`, thus identified as `remaining`.
-                if has_remaining:
-                    end_time: timedelta = (
-                        datetime.fromtimestamp(int(has_remaining) / 1000) - start_time
+                if contains_timestamps:
+                    has_remaining: Union[None, str] = presence_ctx[picked_activity][
+                        "timestamps"
+                    ].get("end")
+
+                    # At this point, we have calculate from the time the application or activity has been started. Note that the epoch given by discord is by milliseconds.
+                    start_time: datetime = datetime.fromtimestamp(
+                        int(presence_ctx[picked_activity]["timestamps"]["start"]) / 1000
                     )
+                    running_time: timedelta = (
+                        datetime.now() - start_time
+                    )  # This one calculates the current time to be compatible for any operations with `start_time`.
 
-                    # ! Keep note, that this one is for Unspecified Activity (Spotify) only!!!
-                    # * The development of that case will be on post-time, since I'm still doing most of the parts.
-                    # For that case, we don't need to sterilize it for a while.
-                    if (
-                        picked_activity
-                        == PreferredActivityDisplay.SPOTIFY_ACTIVITY.name
-                    ):
-                        running_time = running_time - timedelta(
-                            microseconds=running_time.microseconds
-                        )
-                        end_time = end_time - timedelta(
-                            microseconds=end_time.microseconds
+                    # Resolve the time display as it was detected with `timestamps`, thus identified as `remaining`.
+                    if has_remaining:
+                        end_time: timedelta = (
+                            datetime.fromtimestamp(int(has_remaining) / 1000)
+                            - start_time
                         )
 
-                        status_output = BadgeStructure(
-                            status_output + f" | {running_time} of {end_time}"
-                        )
-
-                # * Resolve for the case of `elapsed`.
-                else:
-                    time_option: PreferredTimeDisplay = self.envs["TIME_DISPLAY_OUTPUT"]
-                    parsed_time: int = int(
-                        running_time.total_seconds()
-                        / (
-                            3600
-                            if time_option is PreferredTimeDisplay.HOURS
-                            else 60
-                            if time_option is PreferredTimeDisplay.MINUTES
-                            or time_option is PreferredTimeDisplay.HOURS_MINUTES
-                            else 1  # # PreferredTimeDsplay.SECONDS.
-                        )
-                    )
-
-                    hours = parsed_time if parsed_time >= 1 and time_option is PreferredTimeDisplay.HOURS else 0
-                    minutes = parsed_time if parsed_time >= 1 and time_option is PreferredTimeDisplay.MINUTES else 0
-                    seconds = parsed_time if parsed_time >= 1 and time_option is PreferredTimeDisplay.SECONDS else 0
-
-                    # * Timedelta() only returns seconds and microseconds. Sadly we have to do the computation on our own.
-                    if time_option is PreferredTimeDisplay.HOURS_MINUTES:
-                        # On this case, calculate if there some minute that can still be converted to hours.
-                        while True:
-                            if parsed_time / 60 >= 1:
-                                hours += 1
-                                parsed_time -= 60
-                                continue
-
-                            break
-
-                        minutes = parsed_time
-
-                    # ! Resolve time strings based on numbers. This costs us readibility.
-                    for idx, each_time_string in enumerate(TIME_STRINGS):
-                        if self.envs["TIME_DISPLAY_SHORTHAND"]:
-                            TIME_STRINGS[idx] = each_time_string[0]
-
-                        # * We have to handle if we should append suffix 's' if the value for each time is greater than 1 or not.
-                        else:
-                            TIME_STRINGS[idx] = (
-                                each_time_string[:-1]
-                                if locals()[f"{each_time_string}"] < 1
-                                else each_time_string
+                        # ! Keep note, that this one is for Unspecified Activity (Spotify) only!!!
+                        # * The development of that case will be on post-time, since I'm still doing most of the parts.
+                        # For that case, we don't need to sterilize it for a while.
+                        if (
+                            picked_activity
+                            == PreferredActivityDisplay.SPOTIFY_ACTIVITY.name
+                        ):
+                            running_time = running_time - timedelta(
+                                microseconds=running_time.microseconds
                             )
+                            end_time = end_time - timedelta(
+                                microseconds=end_time.microseconds
+                            )
+
+                            status_output = BadgeStructure(
+                                status_output + f" | {running_time} of {end_time}"
+                            )
+
+                    # * Resolve for the case of `elapsed`.
+                    else:
+                        time_option: PreferredTimeDisplay = self.envs[
+                            "TIME_DISPLAY_OUTPUT"
+                        ]
+                        parsed_time: int = int(
+                            running_time.total_seconds()
+                            / (
+                                3600
+                                if time_option is PreferredTimeDisplay.HOURS
+                                else 60
+                                if time_option is PreferredTimeDisplay.MINUTES
+                                or time_option is PreferredTimeDisplay.HOURS_MINUTES
+                                else 1  # # PreferredTimeDsplay.SECONDS.
+                            )
+                        )
+
+                        hours = (
+                            parsed_time
+                            if parsed_time >= 1
+                            and time_option is PreferredTimeDisplay.HOURS
+                            else 0
+                        )
+                        minutes = (
+                            parsed_time
+                            if parsed_time >= 1
+                            and time_option is PreferredTimeDisplay.MINUTES
+                            else 0
+                        )
+                        seconds = (
+                            parsed_time
+                            if parsed_time >= 1
+                            and time_option is PreferredTimeDisplay.SECONDS
+                            else 0
+                        )
+
+                        # * Timedelta() only returns seconds and microseconds. Sadly we have to do the computation on our own.
+                        if time_option is PreferredTimeDisplay.HOURS_MINUTES:
+                            # On this case, calculate if there some minute that can still be converted to hours.
+                            while True:
+                                if parsed_time / 60 >= 1:
+                                    hours += 1
+                                    parsed_time -= 60
+                                    continue
+
+                                break
+
+                            minutes = parsed_time
+
+                        # ! Resolve time strings based on numbers. This costs us readibility.
+                        for idx, each_time_string in enumerate(TIME_STRINGS):
+                            if self.envs["TIME_DISPLAY_SHORTHAND"]:
+                                TIME_STRINGS[idx] = each_time_string[0]
+
+                            # * We have to handle if we should append suffix 's' if the value for each time is greater than 1 or not.
+                            else:
+                                TIME_STRINGS[idx] = (
+                                    each_time_string[:-1]
+                                    if locals()[f"{each_time_string}"] < 1
+                                    else each_time_string
+                                )
+
+                        self.logger.debug(
+                            f"Resolved Time Output: {hours} %s {minutes} %s {seconds} %s."
+                            % (TIME_STRINGS[0], TIME_STRINGS[1], TIME_STRINGS[2])
+                        )
+
+                        is_time_displayable: bool = (
+                            hours >= 1 or minutes >= 1 or seconds >= 1
+                        )
+
+                        # Once we identified some constraints and how it should look, combine it and have it as one string.
+                        status_output = BadgeElements(
+                            status_output
+                            + (
+                                (f"{hours} %s" % TIME_STRINGS[0] if hours >= 1 else "")
+                                + (" " if hours and minutes else "")
+                                + (
+                                    f"{minutes} %s" % TIME_STRINGS[1]
+                                    if minutes >= 1
+                                    else ""
+                                )
+                                + (  # Since we can't display them as it is, no need to handle for spacing.
+                                    f"{seconds} %s" % TIME_STRINGS[2]
+                                    if seconds >= 1
+                                    else ""
+                                )
+                                + (
+                                    f" %s"
+                                    % self.envs[
+                                        "TIME_DISPLAY_%s_OVERRIDE_STRING" % "ELAPSED"
+                                        if not has_remaining
+                                        else "REMAINING"
+                                    ]
+                                )
+                            )
+                            if is_time_displayable
+                            else "Just started."
+                        )
 
                     self.logger.debug(
-                        f"Resolved Time Output: {hours} %s {minutes} %s {seconds} %s."
-                        % (TIME_STRINGS[0], TIME_STRINGS[1], TIME_STRINGS[2])
+                        f"Application is identified to be running with remaining time. And is currently under {running_time} / %s."
+                        % end_time
+                        if has_remaining
+                        else f"The application is running endless and has been opened for {running_time}."
                     )
-
-                    is_time_displayable: bool = hours >= 1 or minutes >= 1 or seconds >= 1
-
-                    # Once we identified some constraints and how it should look, combine it and have it as one string.
-                    status_output = BadgeElements(
-                        status_output
-                        + (
-                            (f"{hours} %s" % TIME_STRINGS[0] if hours >= 1 else "")
-                            + (" " if hours and minutes else "")
-                            + (
-                                f"{minutes} %s" % TIME_STRINGS[1]
-                                if minutes >= 1
-                                else ""
-                            )
-                            + ( # Since we can't display them as it is, no need to handle for spacing.
-                                f"{seconds} %s" % TIME_STRINGS[2]
-                                if seconds >= 1
-                                else ""
-                            )
-                            + (
-                                f" %s"
-                                % self.envs[
-                                    "TIME_DISPLAY_%s_OVERRIDE_STRING" % "ELAPSED"
-                                    if not has_remaining
-                                    else "REMAINING"
-                                ]
-                            )
-                        )
-                        if is_time_displayable
-                        else "Just started."
-                    )
-
-                self.logger.debug(
-                    f"Application is identified to be running with remaining time. And is currently under {running_time} / %s."
-                    % end_time
-                    if has_remaining
-                    else f"The application is running endless and has been opened for {running_time}."
-                )
 
             # ! These logger debug output will not be changed, since it shows every possible aspect to which leads to the output of the badge.
             self.logger.debug(
@@ -609,22 +636,33 @@ class BadgeConstructor:
                 status_color, subject_color = subject_color, status_color
 
             # At this point, construct the badge as fully as it is.
-            constructed_url: BadgeStructure = BadgeStructure(
-                f"{BADGE_BASE_URL}{quote(subject_output)}/{quote(status_output)}?color={subject_color}&labelColor={status_color}&icon={BADGE_ICON}"
-            )
 
-            # Store it in a variable for a while, so that we can output it when Logging Level Coverage considers DEBUG.
-            final_output: BadgeStructure = BadgeStructure(
-                BADGE_BASE_MARKDOWN.format(
-                    self.envs["BADGE_IDENTIFIER_NAME"],
-                    constructed_url,
-                    redirect_url,
+            try:
+                constructed_url: BadgeStructure = BadgeStructure(
+                    f"{BADGE_BASE_URL}{quote(subject_output)}/{quote(status_output)}?color={subject_color}&labelColor={status_color}&icon={BADGE_ICON}"
                 )
-            )
 
-            self.logger.info(f"The Badge URL has been generated. Link: {final_output}")
+                # Store it in a variable for a while, so that we can output it when Logging Level Coverage considers DEBUG.
+                final_output: BadgeStructure = BadgeStructure(
+                    BADGE_BASE_MARKDOWN.format(
+                        self.envs["BADGE_IDENTIFIER_NAME"],
+                        constructed_url,
+                        redirect_url,
+                    )
+                )
 
-            return final_output
+                self.logger.info(
+                    f"The Badge URL has been generated. Link: {final_output}"
+                )
+
+                return final_output
+
+            except TypeError as e:
+                msg = f"The constructed badge can't be serialized into HTML bytes because of its incompatible type. This is an error, please report this to the developer. | Info: {e} a line {e.__traceback__.tb_lineno}."  # type: ignore
+                self.logger.critical(msg)
+
+                self.print_exception(GithubRunnerLevelMessages.WARNING, msg, e)
+                terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
 
         except KeyError as e:
             msg: str = f"Environment Processing has encountered an error. Please let the developer know about the following. | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore

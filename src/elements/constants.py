@@ -206,7 +206,7 @@ ENV_STRUCT_CONSTRAINTS: Final[  # * If you have been referred to action.yml, thi
     },
     "INPUT_COMMIT_MESSAGE": {
         "expected_type": str,
-        "fallback_value": "Discord Activity Badge Updated!",
+        "fallback_value": "Discord Activity Badge has been Updated!",
         "is_required": False,
     },
     "INPUT_DISCORD_BOT_TOKEN": {
@@ -237,7 +237,7 @@ ENV_STRUCT_CONSTRAINTS: Final[  # * If you have been referred to action.yml, thi
     # # Optional Parameters — Colors and Intentions.
     "INPUT_CUSTOM_ACTIVITY_STRING": {
         "expected_type": str,
-        "fallback_value": None,
+        "fallback_value": "",
         "is_required": False,
     },
     "INPUT_GAME_ACTIVITY_STRING": {

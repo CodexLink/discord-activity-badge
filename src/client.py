@@ -187,7 +187,7 @@ class DiscordClientHandler(Client):
                 # For each activities stored in-memory, iterate through them so that we can store them in unique_activities.
                 for idx, each_activities in enumerate(fetched_member.activities):
                     self.logger.debug(
-                        f"Activity Assessment ${idx + 1} | {each_activities}"
+                        f"Activity Assessment {idx + 1}/{len(fetched_member.activities)} | {each_activities}"
                     )
 
                     if not each_activities.__class__.__name__ in unique_activities:

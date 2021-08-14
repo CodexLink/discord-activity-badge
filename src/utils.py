@@ -326,11 +326,13 @@ class UtilityMethods:
                     )
 
                     self.logger.debug(
-                        "Env. Var. `%s` has a resolved value of `%s`! (with type %s)"
+                        "Env. Var. `%s` has a resolved value of `%s`! (fallback type: %s, expected type: %s, has type: %s)"
                         % (
                             env_key,
                             ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],
                             type(ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]),
+                            ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"],
+                            type(env_key)
                         )
                     )
                     continue
@@ -458,18 +460,18 @@ class UtilityMethods:
             if message_type in GithubRunnerLevelMessages:
 
                 if traceback_info is not None:
-                    # if isinstance(traceback_info, Exception):
-                    # if isinstance(traceback_info, (Exception, IOError, KeyError, ModuleNotFoundError, TypeError)):
+                    line_no = (
+                        traceback_info.__traceback__.tb_lineno  # type: ignore
+                    )  # Get that last line number :3
+
+                else:
                     self.logger.warning(
                         "Traceback information were not provided for this exception. Displaying filename instead."
                     )
-                    line_no = (
-                        traceback_info.__traceback__.tb_lineno  # type: ignore # ! Investigate this later.
-                    )  # Get that last line number :3
 
                 # Then print it, Github Action runner typically resolves or understand this print.
                 print(
-                    "::{0} file={1},line={2},col=1::{3}. {4}".format(
+                    "::{0} file={1},line={2},col=1::{3} | {4}".format(
                         message_type.value,
                         __file__,
                         line_no,
