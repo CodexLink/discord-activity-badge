@@ -68,7 +68,7 @@ Ever since I don't provide anything such as the Bot that I use for reading my ac
 
 Once you have created a new application, you have to go to the sidebar or menu and go to the **Bot settings**, and add a bot. And then, copy the token and store it somewhere temporarily as we are going to use it later on in the next two steps.
 
-[![Image 2, GIF](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/2.png)](https://github.com/CodexLink/discord-activity-badge/)
+[![Image 2](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/2.gif)](https://github.com/CodexLink/discord-activity-badge/)
 
 As a side note, you have to enable the presence and server members intent **on the same settings (Bot settings)** to allow your bot to read your presence context and the members' states and other kinds of stuff about them.
 
