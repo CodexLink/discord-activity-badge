@@ -1,5 +1,5 @@
 name: "Discord Activity Badge"
-description: "Bridge your Discord Activities and Rich Presence to a Representable Badge on your repository to show your status. Powered by Docker and AsyncIO Python."
+description: "Bridge your Discord State and Activities to a Representable Badge on your repository to show your current status."
 author: "Janrey 'CodexLink' Licas"
 
 # ! Are you looking for the default values of these parameters? Please check src/elements/constants.py or the README.md for more information.
@@ -157,7 +157,9 @@ inputs:
     description: "Runs the usual process except it doesn't commit changes."
     required: false
 
-
+branding:
+  icon: "activity"
+  color: "orange"
 
 runs:
   using: "docker"

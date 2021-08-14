@@ -124,7 +124,7 @@ jobs:
 
     steps:
       - name: Update README Discord Badge to Latest Upstream
-        uses: CodexLink/discord-activity-badge@cutting-edge # Choose your own version by picking a tag or a branch name.
+        uses: CodexLink/discord-activity-badge@cutting-edge # Choose your own version by picking a tag or a branch name. Using a tag is recommended.
         with: # Go to your Repository Secrets and fill those up!
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
