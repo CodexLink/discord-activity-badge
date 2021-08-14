@@ -63,10 +63,15 @@ The following contains the steps needed to make this action work properly. Keep 
 
 Ever since I don't provide anything such as the Bot that I use for reading my activities, you have to make it on your own. You can go to [Discord Developers](https://discord.com/developers/) and start ahead by creating a new application.
 
+[![Image 1](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/1.png)](https://github.com/CodexLink/discord-activity-badge/)
 
 Once you have created a new application, you have to go the sidebar or menu and go to the **Bot settings** and add a bot. And then, copy the token and store it somewhere temporarily as we are going to use it later on the next two steps.
 
+[![Image 2, GIF](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/2.gif)](https://github.com/CodexLink/discord-activity-badge/)
+
 As a sidenote, you have to enable the presence and server memebers intent **on the same settings (Bot settings)** to allow your bot to read you presence context and the members's states and other stuffs about them.
+
+[![Image 3](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/3.png)](https://github.com/CodexLink/discord-activity-badge/)
 
 *Don't forget to save before proceeding on the next step!!!*
 
@@ -78,7 +83,12 @@ Keep in mind that, you can either **create your own guild** or have someone else
 
 To invite, you have to go the **OAuth2** settings and check the **OAuth2 URL Generator**. Look for **Bot** scope and check it, you will be given a generated link.
 
+[![Image 4, GIF](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/4.gif)](https://github.com/CodexLink/discord-activity-badge/)
+
 Once you have link, you just have to paste it in the browser and open it.
+
+[![Image 5, GIF](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/5.gif)](https://github.com/CodexLink/discord-activity-badge/)
+[![Image 6](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/6.png)](https://github.com/CodexLink/discord-activity-badge/)
 
 And there you have it! Once you have done this part, the only thing left is to have a workflow in your repository.
 
@@ -115,17 +125,25 @@ jobs:
 
 To be able to provide your information, you have to go you repository > Settings > Secrets > New Repository.
 
+[![Image 7](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/7.png)](https://github.com/CodexLink/discord-activity-badge/)
+
 In the end, you should have these two repository secrets. The token from the one that we obtained in the Discord Developers Section, and the one is from you yourself in the Discord Client.
 
 **DISCORD_USER_ID** can obtained by the following.
+
+[![Image 8, GIF](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/8.gif)](https://github.com/CodexLink/discord-activity-badge/)
 
 ### Workflow Dispatch
 
 When you finished all the steps, the last thing to do was to manual push it to see changes.
 
+[![Image 9](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/9.png)](https://github.com/CodexLink/discord-activity-badge/)
+
 ### Post-Step, Moving the Badge
 
 If you did the run for the first time, the badge will tend to append on the top of your README, you can adjust it to somewhere else and the badge will be replaced by the script, no matter where it is.
+
+[![Image 10](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/10.png)](https://github.com/CodexLink/discord-activity-badge/)
 
 And that's done! For further customizations, please read other sub-sections below.
 
