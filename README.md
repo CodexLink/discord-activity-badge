@@ -1,6 +1,7 @@
 <div align="center">
-<h1>Discord Activity Badge <code>(Initial Release)</code></h1>
-
+<h1> Discord Activity Badge <code>(Initial Release)🌇</code></h1>
+  
+  
 [![Example Online](https://badgen.net/badge/Discord%20Activity/Currently%20Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 [![Example Idle](https://badgen.net/badge/Discord%20Activity/Currently%20Idle/yellow?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 [![Example DND](https://badgen.net/badge/Discord%20Activity/Do%20Not%20Disturb/red?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
@@ -53,27 +54,27 @@
 
 The following contains the steps needed to make this action work properly. Keep in mind that this is quite hectic but easy, the steps were alot because this is the cheapest way to do this thing.
 
-* Creating a Bot and obtaining it's Token in Discord Developers
+* Creating a Bot and obtaining its Token in Discord Developers
 * Inviting the Bot to a Guild
 * Preparing the Workflow
 * Repository Secrets
 * Workflow Dispatch
 
-### Creating a Bot and obtaining it's Token in Discord Developers
+### Creating a Bot and obtaining its Token in Discord Developers
 
 Ever since I don't provide anything such as the Bot that I use for reading my activities, you have to make it on your own. You can go to [Discord Developers](https://discord.com/developers/) and start ahead by creating a new application.
 
 [![Image 1](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/1.png)](https://github.com/CodexLink/discord-activity-badge/)
 
-Once you have created a new application, you have to go the sidebar or menu and go to the **Bot settings** and add a bot. And then, copy the token and store it somewhere temporarily as we are going to use it later on the next two steps.
+Once you have created a new application, you have to go to the sidebar or menu and go to the **Bot settings**, and add a bot. And then, copy the token and store it somewhere temporarily as we are going to use it later on in the next two steps.
 
-[![Image 2, GIF](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/2.gif)](https://github.com/CodexLink/discord-activity-badge/)
+[![Image 2, GIF](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/2.png)](https://github.com/CodexLink/discord-activity-badge/)
 
-As a sidenote, you have to enable the presence and server memebers intent **on the same settings (Bot settings)** to allow your bot to read you presence context and the members's states and other stuffs about them.
+As a side note, you have to enable the presence and server members intent **on the same settings (Bot settings)** to allow your bot to read your presence context and the members' states and other kinds of stuff about them.
 
 [![Image 3](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/3.png)](https://github.com/CodexLink/discord-activity-badge/)
 
-*Don't forget to save before proceeding on the next step!!!*
+*Don't forget to save before proceeding to the next step!!!*
 
 ### Inviting the Bot to a Guild
 
@@ -81,11 +82,11 @@ As a sidenote, you have to enable the presence and server memebers intent **on t
 
 Keep in mind that, you can either **create your own guild** or have someone else let the bot join on their guild **as long as you are there**.
 
-To invite, you have to go the **OAuth2** settings and check the **OAuth2 URL Generator**. Look for **Bot** scope and check it, you will be given a generated link.
+To invite, you have to go to the **OAuth2** settings and check the **OAuth2 URL Generator**. Look for **Bot** scope and check it, you will be given a generated link.
 
 [![Image 4, GIF](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/4.gif)](https://github.com/CodexLink/discord-activity-badge/)
 
-Once you have link, you just have to paste it in the browser and open it.
+Once you have the link, you just have to paste it into the browser and open it.
 
 [![Image 5, GIF](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/5.gif)](https://github.com/CodexLink/discord-activity-badge/)
 [![Image 6](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/6.png)](https://github.com/CodexLink/discord-activity-badge/)
@@ -119,23 +120,23 @@ jobs:
 
 ```
 
-> This workflow will run once it has been dispatched (manually) or is on scheduled to run for every **5 minutes per 0 to 23 hour** to check for the user's status.
+> This workflow will run once it has been dispatched (manually) or is scheduled to run for every **5 minutes per 0 to 23 hours** to check for the user's status.
 
 ### Repository Secrets
 
-To be able to provide your information, you have to go you repository > Settings > Secrets > New Repository.
+To be able to provide your information, you have to go to your repository > Settings > Secrets > New Repository.
 
 [![Image 7](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/7.png)](https://github.com/CodexLink/discord-activity-badge/)
 
-In the end, you should have these two repository secrets. The token from the one that we obtained in the Discord Developers Section, and the one is from you yourself in the Discord Client.
+In the end, you should have these two repository secrets. The token is from the one that we obtained in the Discord Developers Section, and the one is from you yourself in the Discord Client.
 
-**DISCORD_USER_ID** can obtained by the following.
+**DISCORD_USER_ID** can be obtained by the following.
 
 [![Image 8, GIF](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/8.gif)](https://github.com/CodexLink/discord-activity-badge/)
 
 ### Workflow Dispatch
 
-When you finished all the steps, the last thing to do was to manual push it to see changes.
+When you finished all the steps, the last thing to do was to manually push it to see changes.
 
 [![Image 9](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/9.png)](https://github.com/CodexLink/discord-activity-badge/)
 
@@ -143,9 +144,9 @@ When you finished all the steps, the last thing to do was to manual push it to s
 
 If you did the run for the first time, the badge will tend to append on the top of your README, you can adjust it to somewhere else and the badge will be replaced by the script, no matter where it is.
 
-[![Image 10](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/10.png)](https://github.com/CodexLink/discord-activity-badge/)
+[![Image 10 (A)](https://github.com/CodexLink/discord-activity-badge/blob/latest/img/A.png)](https://github.com/CodexLink/discord-activity-badge/)
 
-And that's done! For further customizations, please read other sub-sections below.
+And that's done! For further customizations, please read the other sub-sections below.
 
 ## Workflow Parameters
 
@@ -157,24 +158,24 @@ These inputs are required in order to run the Docker Container.
 
  Inputs   | Type + Defaults   | Description
  -------- | :---------------: | --------------------------------------
-`BADGE_IDENTIFIER_NAME` | `str`: (Script) Discord Activity Badge | The name of the badge (in markdown form) that will be utilized to replace the badge state's contents. If the identifier does not exists, it will proceed to create a new one and append it on the top of your README. **You must arranged it right after.**
+`BADGE_IDENTIFIER_NAME` | `str`: (Script) Discord Activity Badge | The name of the badge (in markdown form) that will be utilized to replace the badge state side's contents. If the identifier does not exist, it will proceed to create a new one and append it on the top of your README. **You must arrange it right after.**
 `COMMIT_MESSAGE` | `str`: Discord Activity Badge Updated as of `datetime.datetime.now().strftime("%m/%d/%y — %I:%M:%S %p")` ***See constants.py | The commit message that will be invoked in the commit context when there's are some changes to push.
-`DISCORD_BOT_TOKEN` | `str` (**Required**) | The token of your bot from the Discord's Developer Page. Note that, you have to use your own bot! Go check [Discord Developers](https://discord.com/developers/).
+`DISCORD_BOT_TOKEN` | `str` (**Required**) | The token of your bot from Discord's Developer Page. Note that, you have to use your own bot! Go check [Discord Developers](https://discord.com/developers/).
 `DISCORD_USER_ID` | `int` (**Required**) | An integer ID used to identify you in Discord.
-`PROFILE_REPOSITORY` | `str`: `GITHUB_ACTOR/GITHUB_ACTOR` | The repository from where the commits will be pushed. Fill this up when you are indirectly deploying the script under different repository.
+`PROFILE_REPOSITORY` | `str`: `GITHUB_ACTOR/GITHUB_ACTOR` | The repository from where the commits will be pushed. Fill this up when you are indirectly deploying the script under a different repository.
 `URL_TO_REDIRECT_ON_CLICK` | `str`: `PROFILE_REPOSITORY` value. | The URL to point when the badge has been clicked.
 `WORKFLOW_TOKEN` | `str` (**Required**) | The token of the Github Workflow Instance used to authenticate commits deployed by the script. Fill this up if you want to test locally so that you aren't going to be rate limited. **Using user-generated token can give 5000 API requests**!
 
-> Parameters that is `required` has to be explicitly stated in the workflow. Otherwise, it will lead to an error.
+> Parameters that are `required` have to be explicitly stated in the workflow. Otherwise, it will lead to an error.
 > Regardless of the `types`, it will be resolved by the script, this is just an indicator that those will be explicitly converted to what has been told here.
 
 ### Optional Parameters
 
-These inputs are optional and has the capability to override the display of the badge and the commit message. Allowing extensibility and customization that allows you to render multiple ways of designing your badge.
+These inputs are optional and have the capability to override the display of the badge and the commit message. Allowing extensibility and customization that allows you to render multiple ways of designing your badge.
 
 #### Colors and Intentions
 
-If you wanna change how things should be delivered (context) and how it should look like (color), then this set of parameter will help you modify the way how it looks. Keep in mind that the labels `[n]` in the parameters is a number, and is corresponding to a set of choices. Please check the options under the table.
+If you wanna change how things should be delivered (context) and how they should look like (color), then this set of parameters will help you modify the way how it looks. Keep in mind that the labels `[n]` in the parameters is a number, and is corresponding to a set of choices. Please check the options under the table.
 
 | Parameters    | Description + Result |
 | :-----------: | :------------------: |
@@ -195,7 +196,7 @@ Whenever you want to change the context of the badge, you can use this set of pa
 
 | Parameters    | Description + Result (If there's any)
 | :-----------: | :------------------:
-`str` `PREFERRED_PRESENCE_CONTEXT` *Options*: *[***DETAILS***, STATE, CONTEXT_DISABLED]* | Overrides additional information to append in the badge. So far, only`DETAILS` and`STATE` are allowed to be appended since it shows the other context of the application.
+`str` `PREFERRED_PRESENCE_CONTEXT` *Options*: *[***DETAILS***, STATE, CONTEXT_DISABLED]* | Overrides additional information to append in the badge. So far, only `DETAILS` and `STATE` are allowed to be appended since it shows the other context of the application.
 `str` `TIME_DISPLAY_OUTPUT` *Options*: *[TIME_DISABLED, HOURS, **HOURS_MINUTE**, MINUTES, SECONDS]* | Appends time (based on preference) after the application name or the detail of the activity when `APPEND_PRESENCE_CONTEXT` is **True**. </br></br> [![Demo #6](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code,%206%20hours%20Elapsed./green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 `str` `TIME_DISPLAY_ELAPSED_OVERRIDE_STRING` *Defaults to*: **elapsed.** | Overrides the string appended whenever the time is displayed for elapsed. This is effective only when SHOW_TIME_DURATION is **True**. </br></br> [![Demo #7](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code,%206%20hours%20and%20counting./green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
 `str` `TIME_DISPLAY_REMAINING_OVERRIDE_STRING` *Defaults to*: **remaining.** | Overrides the string appended whenever the time is displayed for remaining. This is effective only when `TIME_TO_DISPLAY` is **True**. </br></br> [![Demo #8](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code,%206%20hours%209%20minutes%20to%20finish./green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
@@ -208,7 +209,7 @@ Whenever you want to change the context of the badge, you can use this set of pa
 `str` `PREFERRED_ACTIVITY_TO_DISPLAY` *Options*: *[CUSTOM_ACTIVITY, GAME_ACTIVITY, **RICH_PRESENCE**, STREAM_ACTIVITY, SPOTIFY_ACTIVITY]* | Renders a particular activity as a prioritized activity. If the preferred activity does not exist, it will render any activity by default. **There will be no demo since it only picks what activity should be displayed.**
 `bool` `SHIFT_STATE_ACTIVITY_COLORS` *Defaults to*: **False** | Interchange state and activity colors. This is useful only if you want to retain your state color position even though `APPEND_STATE_ON_SUBJECT` is true. [![Demo #11](https://badgen.net/badge/Currently%20Streaming/Visual%20Studio%20Code/green?icon=discord&labelColor=purple)](https://github.com/CodexLink/discord-activity-badge)
 `str (char)` `SPOTIFY_INCLUDE_ALBUM_PLAYLIST_NAME` *Defaults to*: **False** | Displays the album or the playlist from where the song is being played. **Enabling this will keep the badge long enough to capture one whole line of the README!** [![Demo #12](https://badgen.net/badge/Listening%20to/Spotify%2C%20Otsukimi%20PARTY%20HARD%20feat.%20%E3%81%AA%E3%81%AA%E3%81%B2%E3%82%89%20by%20t%2Bpazolite%3B%20Nanahira%20%28KAKATTEKOYEAH%21%21%21%21%29%20%7C%200%3A02%3A48%20of%200%3A04%3A09?color=61d800&labelColor=1db954&icon=discord)](https://github.com/CodexLink/CodexLink)
-`str (char)` `STATUS_CONTEXT_SEPERATOR` *Defaults to*: **`,`** | The character/s that seperates the context of every status elements. Keep note that, once you declared a value on this parameter, it will automatically adds space from both ends to ensure that the content displays properly. If otherwise, the script will do the spacing on its own. [![Demo #13](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code%20%7C%20Idling%20In%20Workspace%20%7C%207%20hours%20elapsed./green?icon=discord&labelColor=yellow)](https://github.com/CodexLink/discord-activity-badge)
+`str (char)` `STATUS_CONTEXT_SEPERATOR` *Defaults to*: **`,`** | The character/s that separates the context of every status elements. Keep note that, once you declared a value on this parameter, it will automatically add space from both ends to ensure that the content displays properly. If otherwise, the script will do the spacing on its own. [![Demo #13](https://badgen.net/badge/Currently%20Playing/Visual%20Studio%20Code%20%7C%20Idling%20In%20Workspace%20%7C%207%20hours%20elapsed./green?icon=discord&labelColor=yellow)](https://github.com/CodexLink/discord-activity-badge)
 
 **You got some ideas or did I miss something out? Please generate an issue or PR (if you have declared it on your own), and we will talk about it.**
 
@@ -226,7 +227,7 @@ When developing, there are other fields that shouldn't be used in the first plac
 
 ## Credits
 
-Here contains a list of resources that I have used in any forms that contributed to the development of this repository.
+Here contains a list of resources that I have used in any form that contributed to the development of this repository.
 
 ### Used Libraries and Technologies
 
@@ -270,7 +271,7 @@ The following were the ones who inspired me and gave me confidence for making th
 
 ### Other Resources
 
-Keep in mind that most of these resources has been used for references and was not used for copy pasting code! Also it's worth noting that the **links may be unsorted**.
+Keep in mind that most of these resources have been used for references and were not used for copy-pasting code! Also, it's worth noting that the **links may be unsorted**.
 
 #### Articles or Guides
 
@@ -312,7 +313,7 @@ Some of the questions here were snipped. They will redirect you to the answer.
 * <https://material.io/design/color/the-color-system.html#tools-for-picking-colors>
 * <https://regex101.com/>
 
-**I would like to thank those who asked and those who answered a particular question (for Questions), and to the repository and articles that describes the problem, to which leads me to a certain direction, resulting to solving it.**
+**I would like to thank those who asked and those who answered a particular question (for Questions), and to the repository and articles that describe the problem, which leads me to a certain direction, resulting in solving it.**
 
 ## License
 
