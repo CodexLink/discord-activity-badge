@@ -66,7 +66,7 @@ Ever since I don't provide anything such as the Bot that I use for reading my ac
 
 Once you have created a new application, you have to go the sidebar or menu and go to the **Bot settings** and add a bot. And then, copy the token and store it somewhere temporarily as we are going to use it later on the next two steps.
 
-As a sidenote, you have to enable the presence intent **on the same settings (Bot settings)** to allow your bot to read you presence context.
+As a sidenote, you have to enable the presence and server memebers intent **on the same settings (Bot settings)** to allow your bot to read you presence context and the members's states and other stuffs about them.
 
 *Don't forget to save before proceeding on the next step!!!*
 
@@ -122,7 +122,6 @@ In the end, you should have these two repository secrets. The token from the one
 ### Workflow Dispatch
 
 When you finished all the steps, the last thing to do was to manual push it to see changes.
-
 
 ### Post-Step, Moving the Badge
 

@@ -23,6 +23,8 @@ from os import environ as env
 from sys import stdout
 from typing import Any, Optional, Type, Union
 
+from discord import message
+
 from elements.constants import (
     ARG_CONSTANTS,
     ENV_FILENAME,
@@ -452,7 +454,8 @@ class UtilityMethods:
         if not getattr(
             self.args, "running_on_local"
         ):  # Ensure that we don't display this in local since it destroys logging display consistency.
-            if message_type is GithubRunnerLevelMessages:
+
+            if message_type in GithubRunnerLevelMessages:
 
                 if traceback_info is not None:
                     # if isinstance(traceback_info, Exception):
