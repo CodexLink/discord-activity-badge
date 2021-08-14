@@ -127,6 +127,8 @@ When you finished all the steps, the last thing to do was to manual push it to s
 
 If you did the run for the first time, the badge will tend to append on the top of your README, you can adjust it to somewhere else and the badge will be replaced by the script, no matter where it is.
 
+And that's done! For further customizations, please read other sub-sections below.
+
 ## Workflow Parameters
 
 The following sub-sections contain a set of possible inputs that you can integrate with this workflow.
@@ -239,6 +241,15 @@ Here contains a list of resources that I have used in any forms that contributed
 * [urllib](https://docs.python.org/3/library/urllib.html#module-urllib) — URL handling modules.
 * [Visual Studio Code](https://code.visualstudio.com/) — Code editing. Redefined.
 
+### Special Thanks
+
+The following were the ones who inspired me and gave me confidence for making this pet project possible.
+
+* [jacobtomlinson/python-container-action](https://github.com/jacobtomlinson/python-container-action) — A template for creating GitHub Actions in Python.
+* [athul/waka-readme](https://github.com/athul/waka-readme) — Wakatime Weekly Metrics on your Profile Readme.
+* <https://dev.to/dtinth/caching-docker-builds-in-github-actions-which-approach-is-the-fastest-a-research-18ei>
+* <https://github.com/dtinth/github-actions-docker-layer-caching-poc> -> <https://github.com/sagikazarmark/github-actions-docker-layer-caching-poc>
+
 ### Other Resources
 
 Keep in mind that most of these resources has been used for references and was not used for copy pasting code! Also it's worth noting that the **links may be unsorted**.
@@ -246,13 +257,8 @@ Keep in mind that most of these resources has been used for references and was n
 #### Articles or Guides
 
 * <https://blog.baeke.info/2021/04/09/building-a-github-action-with-docker/>
-* <https://dev.to/dtinth/caching-docker-builds-in-github-actions-which-approach-is-the-fastest-a-research-18ei>
 * <https://pythonspeed.com/articles/base-image-python-docker-images/>
 * <https://sodocumentation.net/regex/topic/9852/substitutions-with-regular-expressions>
-
-#### Repository
-
-* <https://github.com/dtinth/github-actions-docker-layer-caching-poc> -> <https://github.com/sagikazarmark/github-actions-docker-layer-caching-poc>
 
 #### Questions (Unsorted)
 
