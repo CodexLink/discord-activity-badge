@@ -469,7 +469,7 @@ class UtilityMethods:
 
                 # Then print it, Github Action runner typically resolves or understand this print.
                 print(
-                    f"::{0} file={1},line={2},col=1::{3}. {4}".format(
+                    "::{0} file={1},line={2},col=1::{3}. {4}".format(
                         message_type.value,
                         __file__,
                         line_no,
