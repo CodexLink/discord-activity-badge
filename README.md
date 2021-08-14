@@ -163,9 +163,9 @@ When you finished all the steps, the last thing to do was to manually push it to
 
 </div>
 
-### Post-Step, Moving the Badge
+### Post-Step
 
-If you did the run for the first time, the badge will tend to append on the top of your README, you can adjust it to somewhere else and the badge will be replaced by the script, no matter where it is.
+If you did the run for the first time, the badge wil appear on the top of your README, you can adjust it to somewhere else and the badge will be replaced by the script, no matter where it is.
 
 <div align="center">
 
