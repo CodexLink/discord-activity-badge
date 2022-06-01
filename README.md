@@ -1,3 +1,7 @@
+## Refactorization Notice
+I have seem to notice that a few or so has interest on this small project. Please note that I will be doing <strong>code refactorization</strong> if ever I will pass off my final thesis starting <strong>June</strong>. Please refer to <https://github.com/CodexLink/discord-activity-badge/issues/12> for more information (will be updated).
+
+
 <div align="center">
 <h1> Discord Activity Badge <code>(Initial Release)🌇</code></h1>
 
