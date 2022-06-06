@@ -1,25 +1,8 @@
-## Refactorization Notice
-I have seem to notice that a few or so has interest on this small project. Please note that I will be doing <strong>code refactorization</strong> if ever I will pass off my final thesis starting <strong>June</strong>. Please refer to <https://github.com/CodexLink/discord-activity-badge/issues/12> for more information (will be updated).
-
+## Notice
+You are currently looking at the refactorization branch.
 
 <div align="center">
-<h1> Discord Activity Badge <code>(Initial Release)🌇</code></h1>
-
-
-[![Example Online](https://badgen.net/badge/Discord%20Activity/Currently%20Online/green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
-[![Example Idle](https://badgen.net/badge/Discord%20Activity/Currently%20Idle/yellow?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
-[![Example DND](https://badgen.net/badge/Discord%20Activity/Do%20Not%20Disturb/red?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
-[![Example Offline](https://badgen.net/badge/Discord%20Activity/Currently%20Offline/black?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
-[![Example Playing Game Basic](https://badgen.net/badge/Discord%20Activity/Playing%20Honkai%20Impact%203,%206%20hours%20elapsed./green?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
-[![Example CustomActivity + State](https://badgen.net/badge/Discord%20Activity/Doing%20something%20for%20fun./purple?icon=discord&labelColor=red)](https://github.com/CodexLink/discord-activity-badge)
-[![Example CustomActivity + State](https://badgen.net/badge/Currently%20Busy/Managing%20and%20Observing%20Crypto.../purple?icon=discord&labelColor=red)](https://github.com/CodexLink/discord-activity-badge)
-[![Example NoSubjectColor + SubjectCustomized](https://badgen.net/badge/Currently%20Away/Doing%20something%20for%20fun./yellow?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
-[![Example Streaming + Idle + Detail + Elapsed + Shifted + CustomColor](https://badgen.net/badge/Currently%20Streaming/Visual%20Studio%20Code,%20Debugging%20entrypoint.py:1390,%2069%20minutes%20passed%20by./FA037F?icon=discord&labelColor=purple)](https://github.com/CodexLink/discord-activity-badge)
-[![Example Busy + CustomActivity](https://badgen.net/badge/Currently%20Busy/Visual%20Studio%20Code,%20Editing%20README.md:115:124%20%28187%29/yellow?icon=discord&labelColor=red)](https://github.com/CodexLink/discord-activity-badge)
-[![Example Offline + CustomSubject + CustomColor](https://badgen.net/badge/My%20Status/Currently%20Offline%20At%20This%20Point%20of%20Time./red?icon=discord)](https://github.com/CodexLink/discord-activity-badge)
-[![Example BotStyle + Watching + Do-Not-Disturb + Elapsed + NotShifted + CustomColor](https://badgen.net/badge/Watching%20Data/Client%20WebSocket%20Server,%20Servicing%20People%20for%20about%201024%20Minutes!/blue?icon=discord&labelColor=green)](https://github.com/CodexLink/discord-activity-badge)
-[![Example UpTimeBot + NoCustomColor](https://badgen.net/badge/ServerClient%20Discord/Currently%20Online.%20Servicing%202019%20Servers%20for%2089%20hours!/orange?icon=discord)](https://github.com/CodexLink/discord-activity-badge) <!-- ! I'm not sure if this is possible with the Bot's Presence. Will further investigate later. -->
-[![Example Playing Game + CustomActivityColor](https://badgen.net/badge/Currently%20Playing%20Game/Honkai%20Impact%203,%206%20hours%20elapsed./CA8216?icon=discord&labelColor=green)](https://github.com/CodexLink/discord-activity-badge)
+<h1> Discord Activity Badge <code>(Refactor Release)🌇</code></h1>
 
 <h4>A containerized action that bridges the Discord User's Activity and their Status State to a Representable Badge for their Special Repository (Github Profile) and soon, for open-sourced Discord Bots.</h4>
 <h4><b>Powered by Docker and Python + AsyncIO + discord.py + aiohttp.</b></h4>
@@ -27,34 +10,25 @@ I have seem to notice that a few or so has interest on this small project. Pleas
 [![Container Tester](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_test.yml/badge.svg)](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_test.yml)
 [![Containerization | Discord Activity Badge](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_deploy.yml/badge.svg)](https://github.com/CodexLink/discord-activity-badge/actions/workflows/docker_deploy.yml)
 [![LGTM Alerts](https://badgen.net/lgtm/alerts/g/CodexLink/discord-activity-badge/python?icon=lgtm&label=LGTM%20Alerts)](https://lgtm.com/projects/g/CodexLink/discord-activity-badge)
-
 [![Codacy Code Quality Grade](https://badgen.net/codacy/grade/42fcd1c143464a288522e236f929b1a8/latest?icon=codacy&label=Codacy%20Code%20Quality)](https://app.codacy.com/gh/CodexLink/discord-activity-badge/dashboard)
 [![CodeFactor Code Quality Grade](https://img.shields.io/codefactor/grade/github/CodexLink/discord-activity-badge/latest?label=CodeFactor%20Code%20Quality&logo=codefactor)](https://www.codefactor.io/repository/github/codexlink/discord-activity-badge)
 [![LGTM Code Quality](https://badgen.net/lgtm/grade/g/CodexLink/discord-activity-badge/python?icon=lgtm&label=LGTM%20Code%20Quality)](https://lgtm.com/projects/g/CodexLink/discord-activity-badge)
 [![LGTM Calculated Line of Code](https://badgen.net/lgtm/lines/g/CodexLink/discord-activity-badge/python?icon=lgtm&label=Code%20Lines%20%28Python%29)](https://lgtm.com/projects/g/CodexLink/discord-activity-badge)
-
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/CodexLink/discord-activity-badge/)
 [![Repository License](https://img.shields.io/badge/Repo%20License-Apache%20License%202.0-blueviolet)](https://github.com/CodexLink/discord-activity-badge/blob/main/LICENSE)
 
 </div>
-
-## Why?
-
-**Because why not?** If you ever wanted to show your status with context aside from your Github Status, or wanting to go beyond styling your README by adding some extra toppings, or wanting to let some birds (strangers) know what you are doing at some point in time, then this action workflow might be for you!
-
->Disclaimer: I did this for fun. But that fun were took over my standards. Check out [wiki](https://github.com/CodexLink/discord-activity-badge/wiki) for more information.</pre>
 
 ## Steps
 
 The following contains the steps needed to make this action work properly. Keep in mind that this is quite hectic but easy, the steps were alot because this is the cheapest way to do this thing.
 
-* Creating a Bot and obtaining its Token in Discord Developers
+* Creating a Bot and Obtaining its Token in Discord Developers
 * Inviting the Bot to a Guild
 * Preparing the Workflow
 * Repository Secrets
 * Workflow Dispatch
 
-### Creating a Bot and obtaining its Token in Discord Developers
+### Creating a Bot and Obtaining its Token in Discord Developers
 
 Ever since I don't provide anything such as the Bot that I use for reading my activities, you have to make it on your own. You can go to [Discord Developers](https://discord.com/developers/) and start ahead by creating a new application.
 

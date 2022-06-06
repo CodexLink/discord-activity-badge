@@ -1,8 +1,8 @@
 name: "Discord Activity Badge"
 description: "Bridge your Discord State and Activities to a Representable Badge on your repository to show your current status."
-author: "Janrey 'CodexLink' Licas"
+author: "CodexLink"
 
-# ! Are you looking for the default values of these parameters? Please check src/elements/constants.py or the README.md for more information.
+# # TODO: Should add the default values of the parameters. Look at the src/constants.py later.
 
 inputs:
   # # Required Parameters
