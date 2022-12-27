@@ -39,7 +39,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Step 3 | Load and Save Container Layer Cache
-        uses: actions/cache@v3.0.1
+        uses: actions/cache@v3.2.2
         with:
           path: |
             /tmp/.buildx-cache
