@@ -50,7 +50,7 @@ jobs:
             ${{ runner.os }}-buildx-
 
       - name: Step 4 | Build and Push + Cache Generated Container
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           push: true
           tags: codexlink/discord-activity-badge:latest
