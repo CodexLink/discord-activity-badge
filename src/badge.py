@@ -100,15 +100,13 @@ class BadgeConstructor:
             msg: str = f"Passed `action` parameter is not a {Base64Actions}! Please contact the developer if this issue occured in Online Runner."
             self.logger.critical(msg)
 
-            self.print_exception(GithubRunnerLevelMessages.ERROR, msg, None)
-            terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
-
         else:
             msg = f"The given value in `ctx_inout` parameter is not a {Base64String.__name__}! Please contact the developer about this issue."
             self.logger.error(msg)
 
-            self.print_exception(GithubRunnerLevelMessages.ERROR, msg, None)
-            terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
+
+        self.print_exception(GithubRunnerLevelMessages.ERROR, msg, None)
+        terminate(ExitReturnCodes.ILLEGAL_CONDITION_EXIT)
 
     async def check_and_update_badge(self, readme_ctx: Base64String) -> Base64Bytes:
         """
@@ -155,12 +153,9 @@ class BadgeConstructor:
                 )
 
                 self.logger.info(
-                    (
-                        f"Badge with Identifier {identifier_name} found! Substituting the old badge."
-                    )
+                    f"Badge with Identifier {identifier_name} found! Substituting the old badge."
                     if self.envs["BADGE_IDENTIFIER_NAME"] == identifier_name
-                    else "Badge with Identifier (%s) not found! New badge will append on the top of the contents of README.md. Please arrange/move the badge once changes has been pushed!"
-                    % self.envs["BADGE_IDENTIFIER_NAME"]
+                    else f'Badge with Identifier ({self.envs["BADGE_IDENTIFIER_NAME"]}) not found! New badge will append on the top of the contents of README.md. Please arrange/move the badge once changes has been pushed!'
                 )
 
                 self.logger.info(
@@ -293,12 +288,14 @@ class BadgeConstructor:
                     picked_activity = ActivityDictName(list(presence_ctx.keys())[0])
 
                 self.logger.info(
-                    f"Preferred Activity %s %s"
-                    % (
-                        self.envs["PREFERRED_ACTIVITY_TO_DISPLAY"],
-                        "exists!"
-                        if is_preferred_exists
-                        else f"does not exists. Using other activity such as {picked_activity}.",
+                    (
+                        "Preferred Activity %s %s"
+                        % (
+                            self.envs["PREFERRED_ACTIVITY_TO_DISPLAY"],
+                            "exists!"
+                            if is_preferred_exists
+                            else f"does not exists. Using other activity such as {picked_activity}.",
+                        )
                     )
                 )
 
@@ -315,8 +312,8 @@ class BadgeConstructor:
             # This is a component of subject_output. Check if we should append User's State instead of Activity State in the Subject.
             state_string = "%s_STRING" % (
                 picked_activity
-                if picked_activity != PreferredActivityDisplay.CUSTOM_ACTIVITY.name # ! Special handle for CustomActivity.
-                else "%s_STATUS" % self.user_ctx["statuses"]["status"].name.upper()
+                if picked_activity != PreferredActivityDisplay.CUSTOM_ACTIVITY.name
+                else f'{self.user_ctx["statuses"]["status"].name.upper()}_STATUS'
             )
 
             # Are there an no activity present and STATIC_SUBJECT_STRING is empty? Then use `BADGE_BASE_SUBJECT`.
@@ -340,38 +337,39 @@ class BadgeConstructor:
                 (
                     ", "
                     if self.envs["STATUS_CONTEXT_SEPERATOR"] is None
-                    else " %s " % self.envs["STATUS_CONTEXT_SEPERATOR"]
+                    else f' {self.envs["STATUS_CONTEXT_SEPERATOR"]} '
                 )
-                # ! This only works whenever there's an activity and PREFERRED_PRESENCE_CONTEXT or TIME_DISPLAY_OUTPUT is not disabled.
-                # * Otherwise, we don't have to output anything since there's no context to seperate.
                 if (
                     self.envs["PREFERRED_PRESENCE_CONTEXT"]
                     is not ContextOnSubject.CONTEXT_DISABLED
                     or self.envs["TIME_DISPLAY_OUTPUT"]
                     is not PreferredTimeDisplay.TIME_DISABLED
                 )
-                and picked_activity != PreferredActivityDisplay.CUSTOM_ACTIVITY.name # Supposedly have to check for any activity, but we have to be specific here instead.
+                and picked_activity
+                != PreferredActivityDisplay.CUSTOM_ACTIVITY.name
                 else ""
             )
 
             # As we handle the seperator, we have to handle how we display the string in the status part of the badge.
             status_output = BadgeStructure(
-                (  # * Appends Activity or User's State if `STATIC_SUBJECT_STRING` is not None, otherwise, use the STATIC_SUBJECT_STRING.
-                    "%s " % self.envs[state_string]
+                (
+                    f"{self.envs[state_string]} "
                     if self.envs["STATIC_SUBJECT_STRING"] is not None
                     else ""
                 )
                 + (
-                    (  # * Appends the User's State whenever presence_ctx is zero or otherwise, append the activity's application name.
-                        self.envs[
-                            "%s_STATUS_STRING"
-                            % self.user_ctx["statuses"]["status"].name.upper()
-                        ]
-                    )
+                    self.envs[
+                        f'{self.user_ctx["statuses"]["status"].name.upper()}_STATUS_STRING'
+                    ]
                     if not contains_activities
-                    else presence_ctx[picked_activity]["name" if picked_activity != PreferredActivityDisplay.CUSTOM_ACTIVITY.name else "state"]
+                    else presence_ctx[picked_activity][
+                        "name"
+                        if picked_activity
+                        != PreferredActivityDisplay.CUSTOM_ACTIVITY.name
+                        else "state"
+                    ]
                 )
-                + (  # Append the seperator. This one is a condition-hell since we have to consider two other values and the state of the badge.
+                + (
                     (
                         seperator  # ! Seperator #1, This contains the `PREFERRED_PRESENCE_CONTEXT` of the activity, if available and its a RICH_PRESENCE.
                         + (
@@ -383,33 +381,38 @@ class BadgeConstructor:
                             ]
                         )
                     )
-                    if picked_activity == PreferredActivityDisplay.RICH_PRESENCE.name
+                    if picked_activity
+                    == PreferredActivityDisplay.RICH_PRESENCE.name
                     and self.envs["PREFERRED_PRESENCE_CONTEXT"]
                     is not ContextOnSubject.CONTEXT_DISABLED  # Other activities is not included at this point since it only gives minimal info.
                     else ""
                 )
-                + (  # Append the spotify current music if the picked_activity is SPOTIFY_ACTIVITY or else...
-                    seperator
-                    + (
-                        "{0} by {1}".format(
-                            presence_ctx[picked_activity]["details"],
-                            presence_ctx[picked_activity]["state"],
-                        )
+                + (
+                    (
+                        seperator
                         + (
                             (
-                                " (%s)"
-                                % presence_ctx[picked_activity]["assets"]["large_text"]
+                                "{0} by {1}".format(
+                                    presence_ctx[picked_activity]["details"],
+                                    presence_ctx[picked_activity]["state"],
+                                )
+                                + (
+                                    f' ({presence_ctx[picked_activity]["assets"]["large_text"]})'
+                                    if self.envs[
+                                        "SPOTIFY_INCLUDE_ALBUM_PLAYLIST_NAME"
+                                    ]
+                                    else ""
+                                )
                             )
-                            if self.envs["SPOTIFY_INCLUDE_ALBUM_PLAYLIST_NAME"]
-                            else ""
                         )
                     )
-                    if picked_activity == PreferredActivityDisplay.SPOTIFY_ACTIVITY.name
+                    if picked_activity
+                    == PreferredActivityDisplay.SPOTIFY_ACTIVITY.name
                     else seperator
                     if self.envs["TIME_DISPLAY_OUTPUT"]
                     is not PreferredTimeDisplay.TIME_DISABLED
                     and contains_activities
-                    else ""  # Display the seperator instead.
+                    else ""
                 )
             )
 
@@ -419,16 +422,9 @@ class BadgeConstructor:
                 is not PreferredTimeDisplay.TIME_DISABLED
                 and contains_activities  # This handles all activities, no exemptions.
             ):
-                # ! Seperator #2, Literally invoke the seperator since we assert that the time display is enabled.
-                # * Also, since this mf doesn't like '+=', let's do the manual with type.
-
-                # Since activities can display time remaining or elapsed, check the context if timestamps exists so that it can display `remaining` instead of `elapsed`.
-
-                contains_timestamps: Union[None, str] = presence_ctx[
-                    picked_activity
-                ].get("timestamps")
-
-                if contains_timestamps:
+                if contains_timestamps := presence_ctx[picked_activity].get(
+                    "timestamps"
+                ):
                     has_remaining: Union[None, str] = presence_ctx[picked_activity][
                         "timestamps"
                     ].get("end")
@@ -463,10 +459,9 @@ class BadgeConstructor:
                             )
 
                             status_output = BadgeStructure(
-                                status_output + f" | {running_time} of {end_time}"
+                                f"{status_output} | {running_time} of {end_time}"
                             )
 
-                    # * Resolve for the case of `elapsed`.
                     else:
                         time_option: PreferredTimeDisplay = self.envs[
                             "TIME_DISPLAY_OUTPUT"
@@ -506,7 +501,7 @@ class BadgeConstructor:
                         if time_option is PreferredTimeDisplay.HOURS_MINUTES:
                             # On this case, calculate if there some minute that can still be converted to hours.
                             while True:
-                                if parsed_time / 60 >= 1:
+                                if parsed_time >= 60:
                                     hours += 1
                                     parsed_time -= 60
                                     continue
@@ -541,7 +536,11 @@ class BadgeConstructor:
                         status_output = BadgeElements(
                             status_output
                             + (
-                                (f"{hours} %s" % TIME_STRINGS[0] if hours >= 1 else "")
+                                (
+                                    f"{hours} %s" % TIME_STRINGS[0]
+                                    if hours >= 1
+                                    else ""
+                                )
                                 + (" " if hours and minutes else "")
                                 + (
                                     f"{minutes} %s" % TIME_STRINGS[1]
@@ -553,14 +552,7 @@ class BadgeConstructor:
                                     if seconds >= 1
                                     else ""
                                 )
-                                + (
-                                    f" %s"
-                                    % self.envs[
-                                        "TIME_DISPLAY_%s_OVERRIDE_STRING" % "ELAPSED"
-                                        if not has_remaining
-                                        else "REMAINING"
-                                    ]
-                                )
+                                + f""" {self.envs['TIME_DISPLAY_ELAPSED_OVERRIDE_STRING' if not has_remaining else "REMAINING"]}"""
                             )
                             if is_time_displayable
                             else "Just started."
@@ -613,12 +605,14 @@ class BadgeConstructor:
             # Except that instead of focusing in the picked_activity, it was now considering any activity.
             subject_color: ColorHEX = ColorHEX(
                 self.envs[
-                    "%s_COLOR"
-                    % (
-                        "%s_STATUS" % self.user_ctx["statuses"]["status"].name.upper()
-                        if contains_activities
-                        or self.envs["STATIC_SUBJECT_STRING"] is None
-                        else state_string.removesuffix("_STRING")
+                    (
+                        "%s_COLOR"
+                        % (
+                            f'{self.user_ctx["statuses"]["status"].name.upper()}_STATUS'
+                            if contains_activities
+                            or self.envs["STATIC_SUBJECT_STRING"] is None
+                            else state_string.removesuffix("_STRING")
+                        )
                     )
                 ]
             )

@@ -57,7 +57,7 @@ class UtilityMethods:
             from dotenv import find_dotenv, load_dotenv
 
             self.logger.info(
-                f"Argument --rol / --running-on-local detected, `dotenv` packages were imported."
+                "Argument --rol / --running-on-local detected, `dotenv` packages were imported."
             )
 
             self.logger.info(f"Attempting to locate {ROOT_LOCATION}/{ENV_FILENAME}...")
@@ -136,7 +136,7 @@ class UtilityMethods:
             console_handler.setFormatter(LOGGER_HANDLER_FORMATTER)
             self.logger.addHandler(console_handler)
             self.logger.debug(
-                f"Out to Console (Render Log to Console) has been enabled. Expect more outputs here."
+                "Out to Console (Render Log to Console) has been enabled. Expect more outputs here."
             )
 
         self.logger.info(
@@ -306,12 +306,7 @@ class UtilityMethods:
                 # We handle some Environment Variables that is not required (is_required -> False).
                 if not ENV_STRUCT_CONSTRAINTS[env_key]["is_required"]:
                     self.logger.debug(
-                        "Fallback Value of %s for Optional | %s (is None?) -> %s"
-                        % (
-                            env_key,
-                            ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"] is None,
-                            ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],
-                        )
+                        f'Fallback Value of {env_key} for Optional | {ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"] is None} (is None?) -> {ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]}'
                     )
 
                     # Do they have fallback_value assigne> Then typecast their expected_type to the actual value to ensure type-safe.
@@ -324,18 +319,10 @@ class UtilityMethods:
                     )
 
                     self.logger.debug(
-                        "Env. Var. `%s` has a resolved value of `%s`! (fallback type: %s, expected type: %s, has type: %s)"
-                        % (
-                            env_key,
-                            ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"],
-                            type(ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]),
-                            ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"],
-                            type(env_key)
-                        )
+                        f'Env. Var. `{env_key}` has a resolved value of `{ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"]}`! (fallback type: {type(ENV_STRUCT_CONSTRAINTS[env_key]["fallback_value"])}, expected type: {ENV_STRUCT_CONSTRAINTS[env_key]["expected_type"]}, has type: {type(env_key)})'
                     )
                     continue
 
-                # If they are required (is_required -> False) then terminate the script.
                 else:
                     msg = f"Env. Var. {env_key} does not exist in local environment file or the repository secret does not exists or invalid! To the developer: Please fill up the required fields (in constants.py) to be able to use this script."
                     self.logger.critical(msg)
@@ -393,9 +380,7 @@ class UtilityMethods:
                     for each_enums in enum_candidates:
                         for each_cls in each_enums:
                             # `is_valid` will be used to break
-                            is_valid: bool = bool(
-                                enum_case_env_val == each_cls.name
-                            )  # If the name matches, then set to `True` or otherwise.
+                            is_valid: bool = enum_case_env_val == each_cls.name
 
                             self.envs[env_cleaned_name] = (
                                 each_cls
@@ -428,7 +413,7 @@ class UtilityMethods:
                 terminate(ExitReturnCodes.NO_CONDITION_IMPLEMENTED_EXIT)
 
         self.logger.info(
-            f"Environment Variables stored in-memory are successfully resolved!"
+            "Environment Variables stored in-memory are successfully resolved!"
         )
         self.logger.debug(f"Env. Serialization Context -> {self.envs}")
 

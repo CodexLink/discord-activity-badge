@@ -111,13 +111,7 @@ class AsyncGithubAPILite:
 
                 try:
                     if http_request.ok:
-                        suffix_req_cost: str = (
-                            "Remaining Requests over Rate-Limit (%s/%s)"
-                            % (
-                                http_request.headers["X-RateLimit-Remaining"],
-                                http_request.headers["X-RateLimit-Limit"],
-                            )
-                        )
+                        suffix_req_cost: str = f'Remaining Requests over Rate-Limit ({http_request.headers["X-RateLimit-Remaining"]}/{http_request.headers["X-RateLimit-Limit"]})'
 
                         # For this action, decode the README (base64) in utf-8 (str) then sterilized unnecessary newline.
                         if action is GithubRunnerActions.FETCH_README:
@@ -143,7 +137,6 @@ class AsyncGithubAPILite:
                             )
                             return None
 
-                    # If any of those conditions weren't met, retry again.
                     else:
                         self.logger.warning(
                             "Conditions were not met, continuing again after 3 seconds (as a penalty)."
@@ -151,7 +144,6 @@ class AsyncGithubAPILite:
                         await sleep(0.6)
                         continue
 
-                # Same for this case, but we assert that the data received is malformed.
                 except SyntaxError as e:
                     self.logger.warning(
                         f"Fetched Data is either incomplete or malformed. Attempting to re-fetch... | Info: {e} at line {e.__traceback__.tb_lineno}."  # type: ignore
@@ -160,8 +152,6 @@ class AsyncGithubAPILite:
                     await sleep(0.6)
                     continue
 
-                # Whenever we tried too much, we don't know if we are rate-limited, because the request will make the ClientResponse.ok set to True.
-                # So for this case, we special handle it by identifying the message.
                 except KeyError as e:
                     if serialized_response["message"].startswith(
                         "API rate limit exceeded"
