@@ -115,8 +115,7 @@ class DiscordClientHandler(Client):
             self.user_ctx["discriminator"] = user_info.discriminator
 
             self.logger.info(
-                "Discord User %s Fetched."
-                % (self.user_ctx["name"] + self.user_ctx["discriminator"])
+                f'Discord User {self.user_ctx["name"] + self.user_ctx["discriminator"]} Fetched.'
             )
 
         except NotFound as e:
@@ -164,21 +163,16 @@ class DiscordClientHandler(Client):
                 fetched_user,
             )
 
-        # Once type checked, fetch the user from guild and fetch it as a member from that guild.
-        fetched_member: Optional[Member] = fetched_user.mutual_guilds[0].get_member(
+        if fetched_member := fetched_user.mutual_guilds[0].get_member(
             fetched_user.id
-        )
-
-        if (
-            fetched_member
-        ):  # ! Since `get_member` enforce Optional, then we assert here that it will never be Optional or lead to None.
+        ):
             if not fetched_member.activities:
                 self.logger.warning(f"User {fetched_member} doesn't have any activity.")
 
             else:
                 self.logger.info(
                     f"User {fetched_member} contains {len(fetched_member.activities)} activit%s."
-                    % ("y" if not len(fetched_member.activities) > 1 else "ies")
+                    % ("y" if len(fetched_member.activities) <= 1 else "ies")
                 )
 
                 # For every activity exists, we store them uniquely. This means duplicated activities (same activity) will be ignored.
@@ -190,7 +184,7 @@ class DiscordClientHandler(Client):
                         f"Activity Assessment {idx + 1}/{len(fetched_member.activities)} | {each_activities}"
                     )
 
-                    if not each_activities.__class__.__name__ in unique_activities:
+                    if each_activities.__class__.__name__ not in unique_activities:
                         self.logger.debug(
                             f"Activity {each_activities.__class__.__name__} was not in the list. (The list contains {unique_activities})"
                         )
@@ -242,7 +236,6 @@ class DiscordClientHandler(Client):
             )
 
         else:
-
             msg: str = "The requested user -> member (from the guild) does not exists! This was already asserted on the previous methods which means this shoudn't happen in the first place. Please contact the developer about this issue, if persists."
             self.logger.error(msg)
 
